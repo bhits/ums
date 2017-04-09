@@ -1,0 +1,24 @@
+server:
+  port: 9000
+logging:
+  file: /java/C2S_LOGS/ums/ums.log
+  level:
+    org.hibernate.sql: debug
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    javax.persistence: debug
+info:
+  component: User Management Service
+spring:
+  datasource:
+    # configure url, username and password per environment
+    url: jdbc:mysql://localhost:3306/ums?autoReconnect=true
+    username: root
+    password: admin
+# Override default configurations or Add more configurations for pls API
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL5InnoDBDialect
+        hbm2ddl:
+          auto: create
+
