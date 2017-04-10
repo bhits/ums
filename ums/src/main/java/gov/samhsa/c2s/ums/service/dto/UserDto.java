@@ -4,7 +4,10 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import gov.samhsa.c2s.ums.service.util.CustomJsonDateDeserializer;
 import gov.samhsa.c2s.ums.service.util.CustomJsonDateSerializer;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.springframework.format.annotation.DateTimeFormat;
 
@@ -14,6 +17,9 @@ import javax.validation.constraints.Pattern;
 import java.util.Date;
 
 @Data
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class UserDto {
     @NotNull
     private Long id;
