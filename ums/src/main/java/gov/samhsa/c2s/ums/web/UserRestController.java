@@ -4,6 +4,7 @@ import gov.samhsa.c2s.ums.service.UserService;
 import gov.samhsa.c2s.ums.service.dto.UserDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -35,7 +36,7 @@ public class UserRestController {
      * Delete User
      * @param userId
      */
-    @PutMapping("/{userId}")
+    @DeleteMapping("/{userId}")
     @ResponseStatus(HttpStatus.OK)
     public void deleteUser(@PathVariable Long userId) {
         //userService.deleteUser(userId);
