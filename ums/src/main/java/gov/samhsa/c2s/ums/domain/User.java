@@ -97,7 +97,7 @@ public class User {
     private List<UserRole> roles = new ArrayList<>();
 
     /**
-     * The administrative gender code.
+     * The Locale.
      */
     @ManyToOne(cascade = CascadeType.ALL)
     @Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
