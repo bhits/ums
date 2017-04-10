@@ -23,7 +23,7 @@ public class UserRestController {
     UserService userService;
 
     /**
-     * Crate User
+     * Create User
      * @param userDto
      */
     @PostMapping("/users")
