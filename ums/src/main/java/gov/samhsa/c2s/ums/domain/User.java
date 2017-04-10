@@ -114,5 +114,5 @@ public class User {
             @AuditOverride(name = "postalCode", isAudited = true)})
     private Address address;
 
-
+    private boolean isDeleted = false;
 }
