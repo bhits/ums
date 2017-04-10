@@ -77,7 +77,7 @@ public class User {
     @Pattern(regexp = "(\\d{3}-?\\d{2}-?\\d{4})*")
     private String socialSecurityNumber;
 
-    private String uaa_user_id;
+    private String uaa_users_id;
 
     /**
      * The telephone.
