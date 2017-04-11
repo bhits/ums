@@ -8,9 +8,11 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Index;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 import javax.validation.constraints.Future;
+import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import java.time.Instant;
 import java.util.Date;
@@ -24,11 +26,13 @@ public class UserActivation {
     @GeneratedValue
     private Long id;
 
-    @ManyToOne
+    @NotNull
+    @OneToOne
     private User user;
 
     @NotEmpty
     private String emailToken;
+
     @NotEmpty
     private String verificationCode;
 
@@ -39,6 +43,6 @@ public class UserActivation {
     @Transient
     private Instant emailTokenExpirationAsInstant;
 
-    private boolean verified;
+    private boolean isVerified;
 
 }

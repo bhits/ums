@@ -7,5 +7,13 @@ public interface UserService {
     @Transactional
     void saveUser(UserDto consentDto);
 
+    @Transactional
+    void deleteUser(Long userId);
+
+    @Transactional
+    void updateUser(Long userId, UserDto userDto);
+
+    @Transactional(readOnly = true)
+    Object getUser(Long userId);
 
 }
