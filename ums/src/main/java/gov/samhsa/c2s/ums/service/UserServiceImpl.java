@@ -38,6 +38,7 @@ public class UserServiceImpl implements UserService {
 
     }
 
+    //TODO: Implement Delete User after studying the business requirements
     @Override
     public void deleteUser(Long userId){
         //ums.user.isdeted = true
@@ -51,7 +52,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Object getUser(Long userId) {
-        final User user = userRepository.findOnebyId(userId).orElseThrow(UserNotFoundException::new);
+        final User user = userRepository.findOneByIdAndIsDeleted(userId, false).orElseThrow(UserNotFoundException::new);
         return toUserDto(user);
     }
 
@@ -62,13 +63,13 @@ public class UserServiceImpl implements UserService {
                 .firstName(user.getFirstName())
                 .email(user.getEmail())
                 .birthDate(user.getBirthDay())
-                //.genderCode(user.getAdministrativeGenderCode())
+                .genderCode(user.getAdministrativeGenderCode().getDisplayName())
                 .socialSecurityNumber(user.getSocialSecurityNumber())
-                //.telephone(user.getTelecom())
-                //.address(user.getAddress())
-                //.city()
-                //.stateCode()
-                //.zip(user.)
+                .telephone(user.getTelecom().getTelephone())
+                .address(user.getAddress().getStreetAddressLine())
+                .city(user.getAddress().getCity())
+                .stateCode(user.getAddress().getStateCode().getDisplayName())
+                .zip(user.getAddress().getPostalCode())
                 .build();
     }
 
