@@ -4,6 +4,8 @@ import gov.samhsa.c2s.ums.domain.User;
 import gov.samhsa.c2s.ums.domain.UserRepository;
 import gov.samhsa.c2s.ums.service.dto.UserDto;
 import gov.samhsa.c2s.ums.service.exception.UserNotFoundException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -12,16 +14,17 @@ public class UserServiceImpl implements UserService {
     @Autowired
     UserRepository  userRepository;
 
+    private Logger logger = LoggerFactory.getLogger(this.getClass());
+
     @Override
     public void saveUser(UserDto consentDto) {
 
     }
 
+    //TODO: Implement Delete User after studying the business requirements
     @Override
     public void deleteUser(Long userId){
-        //ums.user.isdeted = true
-        //delete from user.user_activation table
-        //delete user_uaa_id from uaa.user
+
     }
 
     @Override
@@ -30,7 +33,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Object getUser(Long userId) {
-        final User user = userRepository.findOnebyId(userId).orElseThrow(UserNotFoundException::new);
+        final User user = userRepository.findOneByIdAndIsDeleted(userId, false).orElseThrow(UserNotFoundException::new);
         return toUserDto(user);
     }
 
