@@ -11,6 +11,10 @@ import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Date;
+import java.util.List;
+import java.util.StringTokenizer;
+
 @Service
 @Slf4j
 public class UserServiceImpl implements UserService {
@@ -52,5 +56,21 @@ public class UserServiceImpl implements UserService {
         final User user = userRepository.findOneByIdAndIsDeleted(userId, false).orElseThrow(UserNotFoundException::new);
         return modelMapper.map(user,UserDto.class);
     }
+
+    @Override
+    public List<UserDto> getAllUsers(){
+        return null;
+    }
+
+    @Override
+    public List<UserDto> searchUsersByFirstNameAndLastName(StringTokenizer token){
+        return null;
+    }
+
+    @Override
+    public List<UserDto> searchUsersByDemographic(String firstName, String lastName, Date birthDate, String genderCode){
+        return null;
+    }
+
 
 }
