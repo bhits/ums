@@ -38,12 +38,9 @@ public class UserServiceImpl implements UserService {
 
     }
 
-    //TODO: Implement Delete User after studying the business requirements
     @Override
     public void deleteUser(Long userId){
-        //ums.user.isdeted = true
-        //delete from user.user_activation table
-        //delete user_uaa_id from uaa.user
+        //TODO: Implement Delete User after studying the business requirements
     }
 
     @Override
@@ -53,24 +50,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public Object getUser(Long userId) {
         final User user = userRepository.findOneByIdAndIsDeleted(userId, false).orElseThrow(UserNotFoundException::new);
-        return toUserDto(user);
-    }
-
-    private UserDto toUserDto(User user){
-        return UserDto.builder()
-                .id(user.getId())
-                .lastName(user.getLastName())
-                .firstName(user.getFirstName())
-                .email(user.getEmail())
-                .birthDate(user.getBirthDay())
-                .genderCode(user.getAdministrativeGenderCode().getDisplayName())
-                .socialSecurityNumber(user.getSocialSecurityNumber())
-                .telephone(user.getTelecom().getTelephone())
-                .address(user.getAddress().getStreetAddressLine())
-                .city(user.getAddress().getCity())
-                .stateCode(user.getAddress().getStateCode().getDisplayName())
-                .zip(user.getAddress().getPostalCode())
-                .build();
+        return modelMapper.map(user,UserDto.class);
     }
 
 }
