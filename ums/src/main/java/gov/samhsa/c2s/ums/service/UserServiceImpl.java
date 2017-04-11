@@ -41,13 +41,13 @@ public class UserServiceImpl implements UserService {
                 .firstName(user.getFirstName())
                 .email(user.getEmail())
                 .birthDate(user.getBirthDay())
-                //.genderCode(user.getAdministrativeGenderCode())
+                .genderCode(user.getAdministrativeGenderCode().getDisplayName())
                 .socialSecurityNumber(user.getSocialSecurityNumber())
-                //.telephone(user.getTelecom())
-                //.address(user.getAddress())
-                //.city()
-                //.stateCode()
-                //.zip(user.)
+                .telephone(user.getTelecom().getTelephone())
+                .address(user.getAddress().getStreetAddressLine())
+                .city(user.getAddress().getCity())
+                .stateCode(user.getAddress().getStateCode().getDisplayName())
+                .zip(user.getAddress().getPostalCode())
                 .build();
     }
 
