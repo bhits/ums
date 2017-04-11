@@ -1,8 +1,14 @@
 package gov.samhsa.c2s.ums.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import gov.samhsa.c2s.ums.domain.User;
 import gov.samhsa.c2s.ums.domain.User;
 import gov.samhsa.c2s.ums.domain.UserRepository;
 import gov.samhsa.c2s.ums.service.dto.UserDto;
+import lombok.extern.slf4j.Slf4j;
+import org.modelmapper.ModelMapper;
+import org.springframework.beans.factory.annotation.Autowired;
 import gov.samhsa.c2s.ums.service.exception.UserNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -10,14 +16,20 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
+@Slf4j
 public class UserServiceImpl implements UserService {
-    @Autowired
     UserRepository  userRepository;
 
     private Logger logger = LoggerFactory.getLogger(this.getClass());
 
     @Override
-    public void saveUser(UserDto consentDto) {
+    public void saveUser(UserDto userDto) {
+        User user = modelMapper.map(userDto,User.class);
+        try {
+            log.debug(objectMapper.writeValueAsString(user));
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
 
     }
 

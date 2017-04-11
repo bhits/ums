@@ -22,12 +22,8 @@ public class UserRestController {
     @Autowired
     UserService userService;
 
-    /**
-     * Create User
-     * @param userDto
-     */
-    @PostMapping("/users")
-    @ResponseStatus(HttpStatus.CREATED)
+    @PostMapping("/")
+   // @ResponseStatus(HttpStatus.CREATED)
     public void saveUser(@Valid @RequestBody UserDto userDto) {
         userService.saveUser(userDto);
     }
