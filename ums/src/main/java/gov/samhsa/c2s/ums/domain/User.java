@@ -77,7 +77,7 @@ public class User {
     @Pattern(regexp = "(\\d{3}-?\\d{2}-?\\d{4})*")
     private String socialSecurityNumber;
 
-    private String uaa_user_id;
+    private String uaa_users_id;
 
     /**
      * The telephone.
@@ -97,7 +97,7 @@ public class User {
     private List<UserRole> roles = new ArrayList<>();
 
     /**
-     * The administrative gender code.
+     * The Locale.
      */
     @ManyToOne(cascade = CascadeType.ALL)
     @Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
@@ -114,5 +114,5 @@ public class User {
             @AuditOverride(name = "postalCode", isAudited = true)})
     private Address address;
 
-
+    private boolean isDeleted = false;
 }
