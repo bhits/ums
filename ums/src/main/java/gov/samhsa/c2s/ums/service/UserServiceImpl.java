@@ -64,7 +64,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Object getUser(Long userId) {
-        final User user = userRepository.findOneByIdAndIsDeleted(userId, false)
+        final User user = userRepository.findOneByIdAndIsDisabled(userId, false)
                 .orElseThrow(UserNotFoundException::new);
         return modelMapper.map(user,UserDto.class);
     }
@@ -74,7 +74,7 @@ public class UserServiceImpl implements UserService {
         final PageRequest pageRequest = new PageRequest(page.filter(p -> p >= 0).orElse(0),
                 size.filter(s -> s > 0 && s <= umsProperties.getUser().getPagination().getMaxSize())
                                                             .orElse(umsProperties.getUser().getPagination().getDefaultSize()));
-        final Page<User> usersPage = userRepository.findAllAndNotDeleted(false, pageRequest);
+        final Page<User> usersPage = userRepository.findAllAndIsDisabled(false, pageRequest);
         final List<User> userList = usersPage.getContent();
         final List<UserDto> userDtoList = userListToUserDtoList(userList);
         Page<UserDto> newPage = new PageImpl<>(userDtoList, pageRequest, usersPage.getTotalElements());

@@ -37,7 +37,7 @@ public class UserRestController {
 
 
     /**
-     * Delete User
+     * Disable User
      * @param userId
      */
     @PutMapping("/disable/{userId}")
