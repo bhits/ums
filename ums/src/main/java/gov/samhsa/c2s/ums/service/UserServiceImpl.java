@@ -2,6 +2,7 @@ package gov.samhsa.c2s.ums.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import gov.samhsa.c2s.ums.config.UmsProperties;
 import gov.samhsa.c2s.ums.domain.User;
 import gov.samhsa.c2s.ums.domain.UserRepository;
 import gov.samhsa.c2s.ums.service.dto.UserDto;
@@ -9,7 +10,18 @@ import gov.samhsa.c2s.ums.service.exception.UserNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
+
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Optional;
+import java.util.StringTokenizer;
+
+import static java.util.stream.Collectors.toList;
 
 @Service
 @Slf4j
@@ -19,6 +31,9 @@ public class UserServiceImpl implements UserService {
     private final ModelMapper modelMapper;
 
     private final ObjectMapper objectMapper;
+
+    @Autowired
+    private UmsProperties umsProperties;
 
     @Autowired
     public UserServiceImpl(ModelMapper modelMapper, UserRepository userRepository, ObjectMapper objectMapper) {
@@ -38,12 +53,9 @@ public class UserServiceImpl implements UserService {
 
     }
 
-    //TODO: Implement Delete User after studying the business requirements
     @Override
-    public void deleteUser(Long userId){
-        //ums.user.isdeted = true
-        //delete from user.user_activation table
-        //delete user_uaa_id from uaa.user
+    public void disableUser(Long userId){
+        //TODO:
     }
 
     @Override
@@ -52,25 +64,49 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Object getUser(Long userId) {
-        final User user = userRepository.findOneByIdAndIsDeleted(userId, false).orElseThrow(UserNotFoundException::new);
-        return toUserDto(user);
+        final User user = userRepository.findOneByIdAndIsDisabled(userId, false)
+                .orElseThrow(UserNotFoundException::new);
+        return modelMapper.map(user,UserDto.class);
     }
 
-    private UserDto toUserDto(User user){
-        return UserDto.builder()
-                .id(user.getId())
-                .lastName(user.getLastName())
-                .firstName(user.getFirstName())
-                .email(user.getEmail())
-                .birthDate(user.getBirthDay())
-                .genderCode(user.getAdministrativeGenderCode().getDisplayName())
-                .socialSecurityNumber(user.getSocialSecurityNumber())
-                .telephone(user.getTelecom().getTelephone())
-                .address(user.getAddress().getStreetAddressLine())
-                .city(user.getAddress().getCity())
-                .stateCode(user.getAddress().getStateCode().getDisplayName())
-                .zip(user.getAddress().getPostalCode())
-                .build();
+    @Override
+    public Page<UserDto> getAllUsers(Optional<Integer> page, Optional<Integer> size){
+        final PageRequest pageRequest = new PageRequest(page.filter(p -> p >= 0).orElse(0),
+                size.filter(s -> s > 0 && s <= umsProperties.getUser().getPagination().getMaxSize())
+                                                            .orElse(umsProperties.getUser().getPagination().getDefaultSize()));
+        final Page<User> usersPage = userRepository.findAllAndIsDisabled(false, pageRequest);
+        final List<User> userList = usersPage.getContent();
+        final List<UserDto> userDtoList = userListToUserDtoList(userList);
+        Page<UserDto> newPage = new PageImpl<>(userDtoList, pageRequest, usersPage.getTotalElements());
+        return newPage;
+    }
+
+    @Override
+    public List<UserDto> searchUsersByFirstNameAndORLastName(StringTokenizer token,
+                                                           Optional<Integer> page,
+                                                           Optional<Integer> size){
+        return null;
+    }
+
+    @Override
+    public List<UserDto> searchUsersByDemographic(String firstName,
+                                                  String lastName,
+                                                  Date birthDate,
+                                                  String genderCode,
+                                                  Optional<Integer> page,
+                                                  Optional<Integer> size){
+        return null;
+    }
+
+    private List<UserDto> userListToUserDtoList(List<User> userList){
+        List<UserDto> userDtoList = new ArrayList<>();
+
+        if(userList!= null && userList.size() > 0){
+            for (User tempUser:userList){
+                userDtoList.add(modelMapper.map(tempUser,UserDto.class));
+            }
+        }
+        return userDtoList;
     }
 
 }
