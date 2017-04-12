@@ -67,6 +67,16 @@ public class UserRestController {
     }
 
     /**
+     * Get User based on OAuth2 User Id
+     * @param oAuth2UserId
+     * @return
+     */
+    @GetMapping("/OAuth2/{userId}")
+    public Object getUserByOAuth2Id(@PathVariable Long oAuth2UserId){
+        return userService.getUserByOAuth2Id(oAuth2UserId);
+    }
+
+    /**
      * Find All Users
      * @return
      */

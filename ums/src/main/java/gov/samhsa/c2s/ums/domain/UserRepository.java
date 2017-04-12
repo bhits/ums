@@ -15,6 +15,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     Optional<User> findOneByIdAndIsDisabled(Long userId, boolean isDisabled);
 
+    Optional<User> findOneByOAuth2UserIdAndIsDisabled(Long oAuth2UserId, boolean isDisabled);
+
     Page<User> findAllByIsDisabled(boolean isDisabled, Pageable pageable);
 
     @Query("select u from User u where (u.firstName like ?1 or u.lastName like ?1) and u.isDisabled = ?2")

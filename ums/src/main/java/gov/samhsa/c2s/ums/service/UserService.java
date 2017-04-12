@@ -23,6 +23,9 @@ public interface UserService {
     Object getUser(Long userId);
 
     @Transactional(readOnly = true)
+    Object getUserByOAuth2Id(Long oAuth2UserId);
+
+    @Transactional(readOnly = true)
     Page<UserDto> getAllUsers(Optional<Integer> page, Optional<Integer> size);
 
     @Transactional(readOnly = true)
@@ -32,7 +35,5 @@ public interface UserService {
     List<UserDto> searchUsersByDemographic(String firstName, String lastName, Date birthDate, String genderCode);
 
     //Todo: Get all Users by role type
-
-    //Todo: Get User based on uaa_users_id
 
 }

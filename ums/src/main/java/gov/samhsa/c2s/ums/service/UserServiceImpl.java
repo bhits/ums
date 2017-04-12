@@ -75,6 +75,13 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public Object getUserByOAuth2Id(Long oAuth2UserId) {
+        final User user = userRepository.findOneByOAuth2UserIdAndIsDisabled(oAuth2UserId, false)
+                .orElseThrow(UserNotFoundException::new);
+        return modelMapper.map(user,UserDto.class);
+    }
+
+    @Override
     public Page<UserDto> getAllUsers(Optional<Integer> page, Optional<Integer> size){
         final PageRequest pageRequest = new PageRequest(page.filter(p -> p >= 0).orElse(0),
                 size.filter(s -> s > 0 && s <= umsProperties.getPagination().getMaxSize())
