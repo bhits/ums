@@ -11,16 +11,18 @@ import java.util.List;
 import java.util.Optional;
 
 public interface UserRepository extends JpaRepository<User, Long> {
+    List<User> findAll();
+
     Optional<User> findOneByIdAndIsDisabled(Long userId, boolean isDisabled);
 
-    Page<User> findAllAndIsDisabled(boolean isDisabled, Pageable pageable);
+    Page<User> findAllByIsDisabled(boolean isDisabled, Pageable pageable);
 
     @Query("select u from User u where (u.firstName like ?1 or u.lastName like ?1) and u.isDisabled = ?2")
-    Page<User> findAllByFirstNameLikesOrLastNameLikesAndIsDisabled(String token1, boolean isDisabled, Pageable pageRequest);
+    List<User> findAllByFirstNameLikesOrLastNameLikesAndIsDisabled(String token1, boolean isDisabled, Pageable pageRequest);
 
     @Query("select u from User u where (u.firstName like ?1 or u.firstName like ?2) and (u.lastName like ?1 or u.lastName like ?2) and (u.isDisabled = ?3)")
-    Page<User> findAllByFirstNameLikesAndLastNameLikesAndIsDisabled(String token1, String token2, boolean isDisabled, Pageable pageRequest);
+    List<User> findAllByFirstNameLikesAndLastNameLikesAndIsDisabled(String token1, String token2, boolean isDisabled, Pageable pageRequest);
 
-    Page<User> findAllByFirstNameAndLastNameAndBirthDayAndAdministrativeGenderCodeAndIsDisabled(String firstName, String lastName, Date birthDate,
+    List<User> findAllByFirstNameAndLastNameAndBirthDayAndAdministrativeGenderCodeAndIsDisabled(String firstName, String lastName, Date birthDate,
                                                                                       AdministrativeGenderCode administrativeGenderCode, boolean isDisabled);
 }

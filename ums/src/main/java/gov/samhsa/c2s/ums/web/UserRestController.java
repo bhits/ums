@@ -84,11 +84,9 @@ public class UserRestController {
      */
     @GetMapping(value = "/search/{token}")
     @ResponseStatus(HttpStatus.OK)
-    public List<UserDto> searchUsersByFirstNameAndORLastName(@PathVariable String token,
-                                                           @RequestParam Optional<Integer> page,
-                                                           @RequestParam Optional<Integer> size) {
+    public List<UserDto> searchUsersByFirstNameAndORLastName(@PathVariable String token) {
         StringTokenizer tokenizer = new StringTokenizer(token, " ");
-        return userService.searchUsersByFirstNameAndORLastName(tokenizer, page, size);
+        return userService.searchUsersByFirstNameAndORLastName(tokenizer);
     }
 
     /**
@@ -104,10 +102,8 @@ public class UserRestController {
     public List<UserDto> searchUsersByDemographic(@RequestParam("firstName") String firstName,
                                                   @RequestParam("lastName") String lastName,
                                                   @RequestParam("birthDate") @DateTimeFormat(pattern = "MM/dd/yyyy") Date birthDate,
-                                                  @RequestParam("genderCode") String genderCode,
-                                                  @RequestParam Optional<Integer> page,
-                                                  @RequestParam Optional<Integer> size) {
-        return userService.searchUsersByDemographic(firstName, lastName, birthDate, genderCode, page, size);
+                                                  @RequestParam("genderCode") String genderCode) {
+        return userService.searchUsersByDemographic(firstName, lastName, birthDate, genderCode);
     }
 
 }

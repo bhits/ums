@@ -35,3 +35,6 @@ c2s:
       codeSystem: https://bhits.github.io/consent2share/
       codeSystemOID: urn:oid:1.3.6.1.4.1.21367.13.20.200
       displayName: MRN
+    Pagination:
+      defaultSize: 10
+      maxSize: 100

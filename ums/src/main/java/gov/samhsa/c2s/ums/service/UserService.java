@@ -26,10 +26,10 @@ public interface UserService {
     Page<UserDto> getAllUsers(Optional<Integer> page, Optional<Integer> size);
 
     @Transactional(readOnly = true)
-    List<UserDto> searchUsersByFirstNameAndORLastName(StringTokenizer token, Optional<Integer> page, Optional<Integer> size);
+    List<UserDto> searchUsersByFirstNameAndORLastName(StringTokenizer token);
 
     @Transactional(readOnly = true)
-    List<UserDto> searchUsersByDemographic(String firstName, String lastName, Date birthDate, String genderCode, Optional<Integer> page, Optional<Integer> size);
+    List<UserDto> searchUsersByDemographic(String firstName, String lastName, Date birthDate, String genderCode);
 
     //Todo: Get all Users by role type
 
