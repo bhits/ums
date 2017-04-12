@@ -6,7 +6,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -48,11 +47,6 @@ public class UserRestController {
 
     /**
      * Update User
-     * CAUTION: This method is only for use by admin users, and the SecurityConfig
-     * currently enforces that requirement with appropriate OAuth scope(s). If an
-     * updatePatient function is required in the future for patient users to update
-     * their own accounts, then a separate controller method should be created which
-     * will enforce patient users only being able to update their own patient records.
      * @param userId
      * @param userDto
      */
@@ -72,9 +66,6 @@ public class UserRestController {
         return userService.getUser(userId);
     }
 
-    /* CAUTION: This method is only for use by admin users, and the SecurityConfig
-    currently enforces that requirement with appropriate OAuth scope(s). Non-admin
-    users should never be allowed to search for a patient record(s). */
     /**
      * Find All Users
      * @return
@@ -86,9 +77,6 @@ public class UserRestController {
         return userService.getAllUsers(page, size);
     }
 
-    /* CAUTION: This method is only for use by admin users, and the SecurityConfig
-    currently enforces that requirement with appropriate OAuth scope(s). Non-admin
-    users should never be allowed to search for a patient record(s). */
     /**
      * Find All Users that match the First Name and/or the Last Name.
      * @param token
