@@ -14,7 +14,7 @@ public interface UserService {
     void saveUser(UserDto consentDto);
 
     @Transactional
-    void deleteUser(Long userId);
+    void disableUser(Long userId);
 
     @Transactional
     void updateUser(Long userId, UserDto userDto);
@@ -31,6 +31,8 @@ public interface UserService {
     @Transactional(readOnly = true)
     List<UserDto> searchUsersByDemographic(String firstName, String lastName, Date birthDate, String genderCode, Optional<Integer> page, Optional<Integer> size);
 
+    //Todo: Get all Users by role type
 
+    //Todo: Get User based on uaa_users_id
 
 }

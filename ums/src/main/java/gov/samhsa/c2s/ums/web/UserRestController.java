@@ -40,10 +40,10 @@ public class UserRestController {
      * Delete User
      * @param userId
      */
-    @DeleteMapping("/{userId}")
+    @PutMapping("/disable/{userId}")
     @ResponseStatus(HttpStatus.OK)
-    public void deleteUser(@PathVariable Long userId) {
-        userService.deleteUser(userId);
+    public void disableUser(@PathVariable Long userId) {
+        userService.disableUser(userId);
     }
 
     /**
