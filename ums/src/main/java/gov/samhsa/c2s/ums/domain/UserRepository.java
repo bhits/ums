@@ -11,9 +11,11 @@ import java.util.List;
 import java.util.Optional;
 
 public interface UserRepository extends JpaRepository<User, Long> {
+    List<User> findAll();
+
     Optional<User> findOneByIdAndIsDisabled(Long userId, boolean isDisabled);
 
-    Page<User> findAllAndIsDisabled(boolean isDisabled, Pageable pageable);
+    Page<User> findAllByIsDisabled(boolean isDisabled, Pageable pageable);
 
     @Query("select u from User u where (u.firstName like ?1 or u.lastName like ?1) and u.isDisabled = ?2")
     List<User> findAllByFirstNameLikesOrLastNameLikesAndIsDisabled(String token1, boolean isDisabled, Pageable pageRequest);

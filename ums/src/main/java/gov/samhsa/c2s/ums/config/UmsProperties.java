@@ -20,6 +20,7 @@ public class UmsProperties {
     private Ssn ssn;
     private Gender gender;
     private Mrn mrn;
+    private Pagination pagination;
 
     @Data
     public static class Identifier {
@@ -42,24 +43,14 @@ public class UmsProperties {
     @Data
     public static class Gender extends Identifier{ }
 
-    @NotNull
-    private User user;
-
     @Data
-    @Builder
-    @AllArgsConstructor
-    @NoArgsConstructor
-    public static class User {
-
-        @Valid
-        private Pagination pagination = new Pagination();
-
-        @Data
-        public static class Pagination{
+    public static class Pagination{
             @Min(1)
-            private int defaultSize = 10;
-            private int maxSize = 100;
-        }
+            @NotNull
+            private int defaultSize;
+
+            @NotNull
+            private int maxSize;
     }
 
 }

@@ -24,29 +24,27 @@ import java.util.List;
 import java.util.Optional;
 import java.util.StringTokenizer;
 
-import static java.util.stream.Collectors.toList;
 
 @Service
 @Slf4j
 public class UserServiceImpl implements UserService {
-    @Autowired
     private final UserRepository  userRepository;
 
-    @Autowired
-    private AdministrativeGenderCodeRepository administrativeGenderCodeRepository;
+    private final AdministrativeGenderCodeRepository administrativeGenderCodeRepository;
 
-    @Autowired
-    private UmsProperties umsProperties;
+    private final UmsProperties umsProperties;
 
     private final ModelMapper modelMapper;
 
     private final ObjectMapper objectMapper;
 
     @Autowired
-    public UserServiceImpl(ModelMapper modelMapper, UserRepository userRepository, ObjectMapper objectMapper) {
+    public UserServiceImpl(ModelMapper modelMapper, UserRepository userRepository, ObjectMapper objectMapper, AdministrativeGenderCodeRepository administrativeGenderCodeRepository, UmsProperties umsProperties) {
         this.modelMapper = modelMapper;
         this.userRepository = userRepository;
         this.objectMapper = objectMapper;
+        this.administrativeGenderCodeRepository = administrativeGenderCodeRepository;
+        this.umsProperties = umsProperties;
     }
 
     @Override
@@ -79,9 +77,9 @@ public class UserServiceImpl implements UserService {
     @Override
     public Page<UserDto> getAllUsers(Optional<Integer> page, Optional<Integer> size){
         final PageRequest pageRequest = new PageRequest(page.filter(p -> p >= 0).orElse(0),
-                size.filter(s -> s > 0 && s <= umsProperties.getUser().getPagination().getMaxSize())
-                                                            .orElse(umsProperties.getUser().getPagination().getDefaultSize()));
-        final Page<User> usersPage = userRepository.findAllAndIsDisabled(false, pageRequest);
+                size.filter(s -> s > 0 && s <= umsProperties.getPagination().getMaxSize())
+                                                            .orElse(umsProperties.getPagination().getDefaultSize()));
+        final Page<User> usersPage = userRepository.findAllByIsDisabled(false, pageRequest);
         final List<User> userList = usersPage.getContent();
         final List<UserDto> userDtoList = userListToUserDtoList(userList);
         Page<UserDto> newPage = new PageImpl<>(userDtoList, pageRequest, usersPage.getTotalElements());
@@ -93,7 +91,7 @@ public class UserServiceImpl implements UserService {
 
         List<User> userList;
         Integer pageNumber = 0;
-        Pageable pageRequest = new PageRequest(pageNumber, umsProperties.getUser().getPagination().getDefaultSize());
+        Pageable pageRequest = new PageRequest(pageNumber, umsProperties.getPagination().getDefaultSize());
 
         if (token.countTokens() == 1) {
             String firstName = token.nextToken(); // First Token could be first name or the last name
