@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -82,10 +83,23 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public List<UserDto> searchUsersByFirstNameAndORLastName(StringTokenizer token,
-                                                           Optional<Integer> page,
-                                                           Optional<Integer> size){
-        return null;
+    public List<UserDto> searchUsersByFirstNameAndORLastName(StringTokenizer token){
+
+        List<User> userList;
+        Integer pageNumber = 0;
+        Pageable pageRequest = new PageRequest(pageNumber, umsProperties.getUser().getPagination().getDefaultSize());
+
+        if (token.countTokens() == 1) {
+            String firstName = token.nextToken(); // First Token could be first name or the last name
+            userList = userRepository.findAllByFirstNameLikesOrLastNameLikesAndIsDisabled("%" + firstName + "%", false, pageRequest);
+        } else if (token.countTokens() >= 2) {
+            String firstName = token.nextToken(); // First Token is the first name
+            String lastName = token.nextToken();  // Last Token is the last name
+            userList = userRepository.findAllByFirstNameLikesAndLastNameLikesAndIsDisabled("%" + firstName + "%", "%" + lastName + "%", false, pageRequest);
+        } else {
+            userList = new ArrayList<>();
+        }
+        return userListToUserDtoList(userList);
     }
 
     @Override

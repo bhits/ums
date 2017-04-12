@@ -84,11 +84,9 @@ public class UserRestController {
      */
     @GetMapping(value = "/search/{token}")
     @ResponseStatus(HttpStatus.OK)
-    public List<UserDto> searchUsersByFirstNameAndORLastName(@PathVariable String token,
-                                                           @RequestParam Optional<Integer> page,
-                                                           @RequestParam Optional<Integer> size) {
+    public List<UserDto> searchUsersByFirstNameAndORLastName(@PathVariable String token) {
         StringTokenizer tokenizer = new StringTokenizer(token, " ");
-        return userService.searchUsersByFirstNameAndORLastName(tokenizer, page, size);
+        return userService.searchUsersByFirstNameAndORLastName(tokenizer);
     }
 
     /**

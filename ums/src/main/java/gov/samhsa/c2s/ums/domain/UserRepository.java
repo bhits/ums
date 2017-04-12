@@ -16,10 +16,10 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Page<User> findAllAndIsDisabled(boolean isDisabled, Pageable pageable);
 
     @Query("select u from User u where (u.firstName like ?1 or u.lastName like ?1) and u.isDisabled = ?2")
-    Page<User> findAllByFirstNameLikesOrLastNameLikesAndIsDisabled(String token1, boolean isDisabled, Pageable pageRequest);
+    List<User> findAllByFirstNameLikesOrLastNameLikesAndIsDisabled(String token1, boolean isDisabled, Pageable pageRequest);
 
     @Query("select u from User u where (u.firstName like ?1 or u.firstName like ?2) and (u.lastName like ?1 or u.lastName like ?2) and (u.isDisabled = ?3)")
-    Page<User> findAllByFirstNameLikesAndLastNameLikesAndIsDisabled(String token1, String token2, boolean isDisabled, Pageable pageRequest);
+    List<User> findAllByFirstNameLikesAndLastNameLikesAndIsDisabled(String token1, String token2, boolean isDisabled, Pageable pageRequest);
 
     Page<User> findAllByFirstNameAndLastNameAndBirthDayAndAdministrativeGenderCodeAndIsDisabled(String firstName, String lastName, Date birthDate,
                                                                                       AdministrativeGenderCode administrativeGenderCode, boolean isDisabled);
