@@ -60,7 +60,21 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void disableUser(Long userId){
+
+        //Set isDisabled to true in the User table
+        User user = userRepository.findOneByIdAndIsDisabled(userId, false)
+                .orElseThrow(UserNotFoundException::new);
+        String oAuth2UserId = user.getOAuth2UserId();
+        user.setDisabled(true);
+        userRepository.save(user);
+
+        /**
+         * Use OAuth API to set users.active to false.
+         * Doing so will not let a user to login.
+         * Also known as "Soft Delete".
+         */
         //TODO:
+
     }
 
     @Override
