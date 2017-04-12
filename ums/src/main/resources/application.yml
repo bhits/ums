@@ -3,9 +3,7 @@ server:
 logging:
   file: /java/C2S_LOGS/ums/ums.log
   level:
-    org.hibernate.sql: debug
-    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
-    javax.persistence: debug
+    gov.samhsa.c2s.ums: info
 info:
   component: User Management Service
 spring:
