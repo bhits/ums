@@ -3,6 +3,7 @@ package gov.samhsa.c2s.ums.web;
 import gov.samhsa.c2s.ums.service.UserService;
 import gov.samhsa.c2s.ums.service.dto.UserDto;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 import javax.validation.Valid;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import java.util.StringTokenizer;
 
 @RestController
@@ -28,7 +30,7 @@ public class UserRestController {
     UserService userService;
 
     @PostMapping("/")
-   // @ResponseStatus(HttpStatus.CREATED)
+    // @ResponseStatus(HttpStatus.CREATED)
     public void saveUser(@Valid @RequestBody UserDto userDto) {
         userService.saveUser(userDto);
     }
@@ -79,23 +81,26 @@ public class UserRestController {
      */
     @GetMapping("/search")
     @ResponseStatus(HttpStatus.OK)
-    public List<UserDto> getAllUsers() {
-        return userService.getAllUsers();
+    public Page<UserDto> getAllUsers(@RequestParam Optional<Integer> page,
+                                     @RequestParam Optional<Integer> size) {
+        return userService.getAllUsers(page, size);
     }
 
     /* CAUTION: This method is only for use by admin users, and the SecurityConfig
     currently enforces that requirement with appropriate OAuth scope(s). Non-admin
     users should never be allowed to search for a patient record(s). */
     /**
-     * Find All Users that match the First Name and the Last.
+     * Find All Users that match the First Name and/or the Last Name.
      * @param token
      * @return
      */
     @GetMapping(value = "/search/{token}")
     @ResponseStatus(HttpStatus.OK)
-    public List<UserDto> searchUsersByFirstNameAndLastName(@PathVariable String token) {
+    public List<UserDto> searchUsersByFirstNameAndORLastName(@PathVariable String token,
+                                                           @RequestParam Optional<Integer> page,
+                                                           @RequestParam Optional<Integer> size) {
         StringTokenizer tokenizer = new StringTokenizer(token, " ");
-        return userService.searchUsersByFirstNameAndLastName(tokenizer);
+        return userService.searchUsersByFirstNameAndORLastName(tokenizer, page, size);
     }
 
     /**
@@ -109,10 +114,12 @@ public class UserRestController {
     @GetMapping(value = "/search/patientDemographic")
     @ResponseStatus(HttpStatus.OK)
     public List<UserDto> searchUsersByDemographic(@RequestParam("firstName") String firstName,
-                                                   @RequestParam("lastName") String lastName,
-                                                   @RequestParam("birthDate") @DateTimeFormat(pattern = "MM/dd/yyyy") Date birthDate,
-                                                   @RequestParam("genderCode") String genderCode) {
-        return userService.searchUsersByDemographic(firstName, lastName, birthDate, genderCode);
+                                                  @RequestParam("lastName") String lastName,
+                                                  @RequestParam("birthDate") @DateTimeFormat(pattern = "MM/dd/yyyy") Date birthDate,
+                                                  @RequestParam("genderCode") String genderCode,
+                                                  @RequestParam Optional<Integer> page,
+                                                  @RequestParam Optional<Integer> size) {
+        return userService.searchUsersByDemographic(firstName, lastName, birthDate, genderCode, page, size);
     }
 
 }

@@ -1,11 +1,12 @@
 package gov.samhsa.c2s.ums.service;
 
 import gov.samhsa.c2s.ums.service.dto.UserDto;
+import org.springframework.data.domain.Page;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.PathVariable;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import java.util.StringTokenizer;
 
 public interface UserService {
@@ -22,13 +23,13 @@ public interface UserService {
     Object getUser(Long userId);
 
     @Transactional(readOnly = true)
-    List<UserDto> getAllUsers();
+    Page<UserDto> getAllUsers(Optional<Integer> page, Optional<Integer> size);
 
     @Transactional(readOnly = true)
-    List<UserDto> searchUsersByFirstNameAndLastName(StringTokenizer token);
+    List<UserDto> searchUsersByFirstNameAndORLastName(StringTokenizer token, Optional<Integer> page, Optional<Integer> size);
 
     @Transactional(readOnly = true)
-    List<UserDto> searchUsersByDemographic(String firstName, String lastName, Date birthDate, String genderCode);
+    List<UserDto> searchUsersByDemographic(String firstName, String lastName, Date birthDate, String genderCode, Optional<Integer> page, Optional<Integer> size);
 
 
 

@@ -1,10 +1,15 @@
 package gov.samhsa.c2s.ums.config;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
+import javax.validation.Valid;
+import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 
 @Configuration
@@ -36,5 +41,25 @@ public class UmsProperties {
 
     @Data
     public static class Gender extends Identifier{ }
+
+    @NotNull
+    private User user;
+
+    @Data
+    @Builder
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class User {
+
+        @Valid
+        private Pagination pagination = new Pagination();
+
+        @Data
+        public static class Pagination{
+            @Min(1)
+            private int defaultSize = 10;
+            private int maxSize = 100;
+        }
+    }
 
 }
