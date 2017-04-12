@@ -77,7 +77,7 @@ public class User {
     @Pattern(regexp = "(\\d{3}-?\\d{2}-?\\d{4})*")
     private String socialSecurityNumber;
 
-    private String uaa_users_id;
+    private String oAuth2UserId;
 
     /**
      * The telephone.
@@ -114,5 +114,5 @@ public class User {
             @AuditOverride(name = "postalCode", isAudited = true)})
     private Address address;
 
-    private boolean isDeleted = false;
+    private boolean isDisabled = false;
 }
