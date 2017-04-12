@@ -5,6 +5,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import gov.samhsa.c2s.ums.config.UmsProperties;
 import gov.samhsa.c2s.ums.domain.User;
 import gov.samhsa.c2s.ums.domain.UserRepository;
+import gov.samhsa.c2s.ums.domain.reference.AdministrativeGenderCode;
+import gov.samhsa.c2s.ums.domain.reference.AdministrativeGenderCodeRepository;
 import gov.samhsa.c2s.ums.service.dto.UserDto;
 import gov.samhsa.c2s.ums.service.exception.UserNotFoundException;
 import lombok.extern.slf4j.Slf4j;
@@ -27,14 +29,18 @@ import static java.util.stream.Collectors.toList;
 @Service
 @Slf4j
 public class UserServiceImpl implements UserService {
+    @Autowired
     private final UserRepository  userRepository;
+
+    @Autowired
+    private AdministrativeGenderCodeRepository administrativeGenderCodeRepository;
+
+    @Autowired
+    private UmsProperties umsProperties;
 
     private final ModelMapper modelMapper;
 
     private final ObjectMapper objectMapper;
-
-    @Autowired
-    private UmsProperties umsProperties;
 
     @Autowired
     public UserServiceImpl(ModelMapper modelMapper, UserRepository userRepository, ObjectMapper objectMapper) {
@@ -106,10 +112,12 @@ public class UserServiceImpl implements UserService {
     public List<UserDto> searchUsersByDemographic(String firstName,
                                                   String lastName,
                                                   Date birthDate,
-                                                  String genderCode,
-                                                  Optional<Integer> page,
-                                                  Optional<Integer> size){
-        return null;
+                                                  String genderCode){
+        List<User> userList;
+        final AdministrativeGenderCode administrativeGenderCode = administrativeGenderCodeRepository.findByCode(genderCode);
+        userList = userRepository.findAllByFirstNameAndLastNameAndBirthDayAndAdministrativeGenderCodeAndIsDisabled(firstName, lastName,
+                birthDate, administrativeGenderCode, false);
+        return userListToUserDtoList(userList);
     }
 
     private List<UserDto> userListToUserDtoList(List<User> userList){
