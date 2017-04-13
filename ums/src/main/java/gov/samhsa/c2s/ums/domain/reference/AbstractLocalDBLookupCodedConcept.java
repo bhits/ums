@@ -37,6 +37,13 @@ import javax.validation.constraints.Size;
 @MappedSuperclass
 @Data
 public abstract class AbstractLocalDBLookupCodedConcept {
+    /**
+     * The id.
+     */
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = "idgener")
+    @Column(name = "id")
+    private Long id;
 
     /**
      * The code.
@@ -44,6 +51,20 @@ public abstract class AbstractLocalDBLookupCodedConcept {
     @NotNull
     @Size(max = 250)
     private String code;
+
+
+    /**
+     * The display name.
+     */
+    @NotNull
+    @Size(max = 250)
+    private String displayName;
+
+    /**
+     * The original text.
+     */
+    @Size(max = 250)
+    private String description;
 
     /**
      * The code system.
@@ -59,35 +80,11 @@ public abstract class AbstractLocalDBLookupCodedConcept {
 
 
     /**
-     * The display name.
-     */
-    @NotNull
-    @Size(max = 250)
-    private String displayName;
-
-    /**
      * The code system name.
      */
     @NotNull
     @Size(max = 250)
     private String codeSystemName;
 
-    /**
-     * The original text.
-     */
-    @Size(max = 250)
-    private String originalText;
-    /**
-     * The id.
-     */
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO, generator = "idgener")
-    @Column(name = "id")
-    private Long id;
-    /**
-     * The version.
-     */
-    @Version
-    @Column(name = "version")
-    private Integer version;
+
 }
