@@ -3,7 +3,7 @@ server:
 logging:
   file: /java/C2S_LOGS/ums/ums.log
   level:
-    gov.samhsa.c2s.ums: info
+    gov.samhsa.c2s.ums: debug
 info:
   component: User Management Service
 spring:
@@ -33,6 +33,8 @@ c2s:
       codeSystem: https://bhits.github.io/consent2share/
       codeSystemOID: urn:oid:1.3.6.1.4.1.21367.13.20.200
       displayName: MRN
+      prefix: C2S-DEV
+      length: 6
     Pagination:
       defaultSize: 10
       maxSize: 100

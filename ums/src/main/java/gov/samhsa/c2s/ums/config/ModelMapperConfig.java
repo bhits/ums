@@ -2,10 +2,10 @@ package gov.samhsa.c2s.ums.config;
 
 
 import gov.samhsa.c2s.ums.domain.User;
+import gov.samhsa.c2s.ums.service.dto.TelecomDto;
 import gov.samhsa.c2s.ums.service.dto.UserDto;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.PropertyMap;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Component;
@@ -40,16 +40,33 @@ public class ModelMapperConfig {
             map().setId(source.getId());
             map().setFirstName(source.getFirstName());
             map().setLastName(source.getLastName());
-            map().setEmail(source.getEmail());
+         //   map().setEmail(source.getEmail());
             map().setBirthDate(source.getBirthDay());
             map().setGenderCode(source.getAdministrativeGenderCode().getDisplayName());
             map().setSocialSecurityNumber(source.getSocialSecurityNumber());
-            map().setTelephone(source.getTelecom().getTelephone());
-            map().setAddress(source.getAddress().getStreetAddressLine());
+           // map().setTelephone(source.getTelecom().getTelephone());
+/*            map().setAddress(source.getAddress().getStreetAddressLine());
             map().setCity(source.getAddress().getCity());
             map().setStateCode(source.getAddress().getStateCode().getDisplayName());
-            map().setZip(source.getAddress().getPostalCode());
+            map().setZip(source.getAddress().getPostalCode());*/
         }
     }
+
+/*
+    */
+/**
+     * Converts {@link TelecomDto to @link Telecom }
+     *//*
+
+    @Component
+    static class TelecomDtoToTelecom extends PropertyMap<TelecomDto,Telecom> {
+        @Override
+        protected void configure() {
+            skip().setUser(null);
+        }
+    }
+*/
+
+
 
 }
