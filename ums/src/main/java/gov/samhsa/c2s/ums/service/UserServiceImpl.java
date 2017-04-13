@@ -64,7 +64,7 @@ public class UserServiceImpl implements UserService {
         //Set isDisabled to true in the User table
         User user = userRepository.findOneByIdAndIsDisabled(userId, false)
                 .orElseThrow(UserNotFoundException::new);
-        String oAuth2UserId = user.getOAuth2UserId();
+        String oAuth2UserId = user.getOauth2UserId();
         user.setDisabled(true);
         userRepository.save(user);
 
@@ -90,7 +90,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Object getUserByOAuth2Id(Long oAuth2UserId) {
-        final User user = userRepository.findOneByOAuth2UserIdAndIsDisabled(oAuth2UserId, false)
+        final User user = userRepository.findOneByOauth2UserIdAndIsDisabled(oAuth2UserId, false)
                 .orElseThrow(UserNotFoundException::new);
         return modelMapper.map(user,UserDto.class);
     }
