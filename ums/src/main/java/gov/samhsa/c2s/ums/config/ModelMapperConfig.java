@@ -33,7 +33,7 @@ public class ModelMapperConfig {
      * Map User to UserDto
      */
     @Component
-    static class UserToUserDtoDtoMap extends PropertyMap<User, UserDto> {
+    static class UserToUserDtoMap extends PropertyMap<User, UserDto> {
 
         @Override
         protected void configure() {
