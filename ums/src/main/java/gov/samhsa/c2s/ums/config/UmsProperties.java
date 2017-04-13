@@ -1,14 +1,10 @@
 package gov.samhsa.c2s.ums.config;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
-import org.hibernate.validator.constraints.NotEmpty;
+import org.hibernate.validator.constraints.NotBlank;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
-import javax.validation.Valid;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 
@@ -24,18 +20,24 @@ public class UmsProperties {
 
     @Data
     public static class Identifier {
-        @NotNull
+        @NotBlank
         private String codeSystem;
 
-        @NotEmpty
+        @NotBlank
         private String codeSystemOID;
 
-        @NotEmpty
+        @NotBlank
         private String displayName;
     }
 
     @Data
-    public static class Mrn extends Identifier{ }
+    public static class Mrn extends Identifier{
+        @NotBlank
+        private String prefix;
+
+        @NotBlank
+        private int length;
+    }
 
     @Data
     public static class Ssn extends Identifier{ }
