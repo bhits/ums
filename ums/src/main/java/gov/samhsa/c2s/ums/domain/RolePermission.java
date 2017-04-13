@@ -1,5 +1,6 @@
 package gov.samhsa.c2s.ums.domain;
 
+import gov.samhsa.c2s.ums.domain.valueobject.RolePermissionId;
 import lombok.Data;
 
 import javax.persistence.EmbeddedId;

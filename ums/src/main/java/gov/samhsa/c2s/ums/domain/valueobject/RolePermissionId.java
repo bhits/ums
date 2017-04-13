@@ -1,5 +1,7 @@
-package gov.samhsa.c2s.ums.domain;
+package gov.samhsa.c2s.ums.domain.valueobject;
 
+import gov.samhsa.c2s.ums.domain.Permission;
+import gov.samhsa.c2s.ums.domain.Role;
 import lombok.Data;
 
 import javax.persistence.Embeddable;
