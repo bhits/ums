@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.Valid;
-import java.util.Date;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.StringTokenizer;
@@ -111,7 +111,7 @@ public class UserRestController {
     @ResponseStatus(HttpStatus.OK)
     public List<UserDto> searchUsersByDemographic(@RequestParam("firstName") String firstName,
                                                   @RequestParam("lastName") String lastName,
-                                                  @RequestParam("birthDate") @DateTimeFormat(pattern = "MM/dd/yyyy") Date birthDate,
+                                                  @RequestParam("birthDate") @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate birthDate,
                                                   @RequestParam("genderCode") String genderCode) {
         return userService.searchUsersByDemographic(firstName, lastName, birthDate, genderCode);
     }

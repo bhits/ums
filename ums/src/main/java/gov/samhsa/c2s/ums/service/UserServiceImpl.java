@@ -1,9 +1,15 @@
 package gov.samhsa.c2s.ums.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import gov.samhsa.c2s.ums.config.UmsProperties;
-import gov.samhsa.c2s.ums.domain.*;
+import gov.samhsa.c2s.ums.domain.Address;
+import gov.samhsa.c2s.ums.domain.AddressRepository;
+import gov.samhsa.c2s.ums.domain.Patient;
+import gov.samhsa.c2s.ums.domain.PatientRepository;
+import gov.samhsa.c2s.ums.domain.Telecom;
+import gov.samhsa.c2s.ums.domain.TelecomRepository;
+import gov.samhsa.c2s.ums.domain.User;
+import gov.samhsa.c2s.ums.domain.UserRepository;
 import gov.samhsa.c2s.ums.domain.reference.AdministrativeGenderCode;
 import gov.samhsa.c2s.ums.domain.reference.AdministrativeGenderCodeRepository;
 import gov.samhsa.c2s.ums.service.dto.UserDto;
@@ -19,8 +25,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
+import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.StringTokenizer;
@@ -164,10 +170,10 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public List<UserDto> searchUsersByDemographic(String firstName,
-                                                  String lastName,
-                                                  Date birthDate,
-                                                  String genderCode){
+    public List<UserDto> searchUsersByDemographic   (String firstName,
+                                                     String lastName,
+                                                     LocalDate birthDate,
+                                                     String genderCode){
         List<User> userList;
         final AdministrativeGenderCode administrativeGenderCode = administrativeGenderCodeRepository.findByCode(genderCode);
         userList = userRepository.findAllByFirstNameAndLastNameAndBirthDayAndAdministrativeGenderCodeAndIsDisabled(firstName, lastName,
