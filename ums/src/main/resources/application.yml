@@ -19,6 +19,19 @@ spring:
         dialect: org.hibernate.dialect.MySQL5InnoDBDialect
         hbm2ddl:
           auto: create
+  mail:
+  # UMS will use the e-mail server configured in this section to send e-mails
+    # Please configure valid e-mail server below to connect to SMTP server
+    # Configure host, port, username and password per environment
+    host: mail_host
+    port: 25
+    protocol: smtp
+    username: mail_username
+    password: mail_password
+    properties:
+      mail.smtp.auth: true
+      mail.smtp.starttls.enable: true
+      mail.smtp.ssl.trust: mail_host
 c2s:
   ums:
     ssn:
@@ -38,3 +51,20 @@ c2s:
     Pagination:
       defaultSize: 10
       maxSize: 100
+    scim:
+      url: http://localhost:8080/uaa
+    email-sender:
+      # c2s-ui endpoint
+      pp-ui-route: /c2s-ui
+      pp-ui-verification-relative-path: "/fe/account/verification"
+      pp-ui-verification-email-token-arg-name: "emailToken"
+      brand: Consent2Share
+      email-token-expiration-in-days: 7
+security:
+  oauth2:
+    client:
+      client-id: ums
+      client-secret: changeit
+      access-token-uri: http://localhost:8080/uaa/oauth/token
+  basic:
+    enabled: false
