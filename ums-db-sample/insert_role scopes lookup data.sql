@@ -9,19 +9,26 @@ USE `ums`;
 
 INSERT INTO role 
             (id, 
-             role_name) 
+             code,
+			 name) 
 VALUES      ('1', 
-             'Patient'), 
+             'patient',
+			 'Patient'), 
             ('2', 
-             'Parents'), 
+             'parents',
+			 'Parents'), 
             ('3', 
-             'Guardian'), 
+             'guardian',
+			 'Guardian'), 
             ('4', 
-             'Provider'), 
+             'provider',
+			 'Provider'), 
             ('5', 
-             'SystemSupport'), 
+             'systemSupport',
+			 'SystemSupport'), 
             ('6', 
-             'StaffUser'); 
+             'staffUser',
+			 'StaffUser'); 
 
 --
 -- Insert data for table `scope`

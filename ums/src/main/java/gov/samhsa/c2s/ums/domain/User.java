@@ -26,7 +26,6 @@ import java.util.Set;
 
 @Entity
 @Data
-@ToString(exclude="telecoms")
 public class User {
     /**
      * The id.

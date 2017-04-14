@@ -7,8 +7,8 @@ import org.springframework.stereotype.Repository;
 /**
  * The Interface AdministrativeGenderCodeRepository.
  */
-@Repository
-public interface AdministrativeGenderCodeRepository extends JpaSpecificationExecutor<AdministrativeGenderCode>, JpaRepository<AdministrativeGenderCode, Long> {
+
+public interface AdministrativeGenderCodeRepository extends  JpaRepository<AdministrativeGenderCode, Long> {
 
     /**
      * Find by code.

@@ -1,6 +1,8 @@
 package gov.samhsa.c2s.ums.domain;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
 import org.hibernate.envers.Audited;
 
 import javax.persistence.CascadeType;
@@ -15,6 +17,8 @@ import java.util.Set;
 @Entity
 @Data
 @Audited
+@ToString(exclude = {"scopes","users"})
+@EqualsAndHashCode(exclude= {"scopes","users"})
 public class Role {
     /**
      * The id.
@@ -24,7 +28,11 @@ public class Role {
     private Long id;
 
     @NotNull
-    private String roleName;
+    private String code;
+
+
+    @NotNull
+    private String name;
 
 
     @ManyToMany(cascade = CascadeType.ALL)
