@@ -36,7 +36,7 @@ public class Scope {
     private String scopeDescription;
 
 
-    @ManyToMany(cascade = CascadeType.ALL )
+    @ManyToMany(cascade = CascadeType.ALL, mappedBy ="scopes" )
     private Set<Role> roles;
 
 }

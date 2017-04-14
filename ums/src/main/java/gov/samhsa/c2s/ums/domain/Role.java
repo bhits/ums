@@ -27,7 +27,10 @@ public class Role {
     private String roleName;
 
 
-    @ManyToMany(cascade = CascadeType.ALL, mappedBy ="roles" )
+    @ManyToMany(cascade = CascadeType.ALL)
     private Set<Scope> scopes;
+
+    @ManyToMany(cascade = CascadeType.ALL, mappedBy ="roles" )
+    private Set<User> users;
 
 }
