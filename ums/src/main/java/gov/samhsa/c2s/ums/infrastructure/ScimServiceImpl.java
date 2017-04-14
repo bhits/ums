@@ -73,7 +73,7 @@ public class ScimServiceImpl implements ScimService {
         try {
             userScopeAssignment.setUserActivation(userActivation);
             userScopeAssignment.setScope(scope);
-            ScimGroupMember scimGroupMember = new ScimGroupMember(userActivation.getUser().getOAuth2UserId());
+            ScimGroupMember scimGroupMember = new ScimGroupMember(userActivation.getUser().getOauth2UserId());
             userScopeAssignment.setAssigned(true);
             userScopeAssignmentRepository.save(userScopeAssignment);
             scimGroupMemberResponse = restTemplate.postForObject(groupsEndpoint + "/{groupId}/members", scimGroupMember, ScimGroupMember.class, groupId);
@@ -101,7 +101,7 @@ public class ScimServiceImpl implements ScimService {
 
     @Override
     public void updateUserWithNewGroup(UserActivation userActivation, Scope scope) {
-        ScimGroupMember scimGroupMember = new ScimGroupMember(userActivation.getUser().getOAuth2UserId());
+        ScimGroupMember scimGroupMember = new ScimGroupMember(userActivation.getUser().getOauth2UserId());
         String groupId = findGroupIdByDisplayName(scope.getScopeName());
         final ScimGroupMember scimGroupMemberResponse = restTemplate.postForObject(groupsEndpoint + "/{groupId}/members", scimGroupMember, ScimGroupMember.class, groupId);
     }

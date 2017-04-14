@@ -35,10 +35,7 @@ import org.springframework.util.StringUtils;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.Period;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
 import java.util.Collections;
-import java.util.Date;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -97,14 +94,14 @@ public class UserActivationServiceImpl implements UserActivationService {
         final UserActivation saved = userActivationRepository.save(userActivation);
         // Prepare response for the patient user creation
         final UserActivationResponseDto response = modelMapper.map(user, UserActivationResponseDto.class);
-        response.setBirthDate(user.getBirthDay().toInstant().atZone(ZoneId.systemDefault()).toLocalDate());
+        response.setBirthDate(user.getBirthDay());
         response.setVerificationCode(saved.getVerificationCode());
         response.setEmailTokenExpiration(saved.getEmailTokenExpirationAsInstant());
         response.setVerified(saved.isVerified());
         // Send email with verification link
         emailSender.sendEmailWithVerificationLink(
                 xForwardedProto, xForwardedHost, xForwardedPort,
-                user.getEmail(),
+                user.getTelecoms().get(0).getValue(),
                 saved.getEmailToken(),
                 getRecipientFullName(user));
         return response;
@@ -143,16 +140,10 @@ public class UserActivationServiceImpl implements UserActivationService {
                         .orElseThrow(VerificationFailedException::new);
                 final boolean verified = Optional.of(user)
                         .map(User::getBirthDay)
-                        .map(Date::toInstant)
-                        .map(i -> i.atZone(ZoneId.systemDefault()))
-                        .map(ZonedDateTime::toLocalDate)
                         .map(birthDateNullSafe::equals)
                         .filter(Boolean.TRUE::equals)
                         .orElseThrow(VerificationFailedException::new);
-                final String username = Optional.of(user)
-                        .map(User::getEmail)
-                        .orElseThrow(VerificationFailedException::new);
-                return new VerificationResponseDto(verified, username);
+                return new VerificationResponseDto(verified, userId.toString());
             }
 
     }
@@ -163,7 +154,7 @@ public class UserActivationServiceImpl implements UserActivationService {
         final User user = userRepository.findOne(userId);
         final UserActivation userActivation = userActivationRepository.findOneByUserId(userId).orElseThrow(() -> new UserActivationNotFoundException("No user activation record found for user id: " + userId));
         final UserActivationResponseDto response = modelMapper.map(user, UserActivationResponseDto.class);
-        response.setBirthDate(user.getBirthDay().toInstant().atZone(ZoneId.systemDefault()).toLocalDate());
+        response.setBirthDate(user.getBirthDay());
         response.setVerificationCode(userActivation.getVerificationCode());
         response.setEmailTokenExpiration(userActivation.getEmailTokenExpirationAsInstant());
         response.setVerified(userActivation.isVerified());
@@ -190,13 +181,13 @@ public class UserActivationServiceImpl implements UserActivationService {
         userActivationRepository.save(userActivation);
         // Prepare response
         final UserActivationResponseDto response = modelMapper.map(user, UserActivationResponseDto.class);
-        response.setBirthDate(user.getBirthDay().toInstant().atZone(ZoneId.systemDefault()).toLocalDate());
+        response.setBirthDate(user.getBirthDay());
         response.setVerified(userActivation.isVerified());
         // Create user using SCIM
-        ScimUser scimUser = new ScimUser(null, user.getEmail(), user.getFirstName(), user.getLastName());
+        ScimUser scimUser = new ScimUser(null, user.getTelecoms().get(0).getValue(), user.getFirstName(), user.getLastName());
         scimUser.setPassword(userActivationRequest.getPassword());
         ScimUser.Email email = new ScimUser.Email();
-        email.setValue(user.getEmail());
+        email.setValue(user.getTelecoms().get(0).getValue());
         scimUser.setEmails(Collections.singletonList(email));
         scimUser.setVerified(true);
         // Save SCIM user
@@ -204,13 +195,13 @@ public class UserActivationServiceImpl implements UserActivationService {
         final String userId = savedScimUser.getId();
         Assert.hasText(userId, "SCIM userId must have text");
         // Save userId in userActivation
-        user.setOAuth2UserId(userId);
+        user.setOauth2UserId(userId);
         userActivationRepository.save(userActivation);
         // Add user to groups
         scimService.addUserToGroups(userActivation);
         emailSender.sendEmailToConfirmVerification(
                 xForwardedProto, xForwardedHost, xForwardedPort,
-                user.getEmail(),
+                user.getTelecoms().get(0).getValue(),
                 getRecipientFullName(user));
         return response;
         //return new UserActivationResponseDto();
@@ -236,7 +227,7 @@ public class UserActivationServiceImpl implements UserActivationService {
 
     private void assertBirthDateVerification(UserActivationRequestDto userActivationRequest, User user) {
         final LocalDate birthDayInRequest = userActivationRequest.getBirthDate();
-        final LocalDate birthDayInUser = LocalDate.from(user.getBirthDay().toInstant().atZone(ZoneId.systemDefault()));
+        final LocalDate birthDayInUser = LocalDate.from(user.getBirthDay());
         if (!birthDayInUser.equals(birthDayInRequest)) {
             throw new UserActivationCannotBeVerifiedException();
         }

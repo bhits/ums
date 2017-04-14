@@ -5,6 +5,7 @@ import gov.samhsa.c2s.ums.domain.reference.AdministrativeGenderCode;
 import lombok.Data;
 import lombok.ToString;
 import org.hibernate.envers.Audited;
+import org.hibernate.envers.NotAudited;
 import org.hibernate.envers.RelationTargetAuditMode;
 
 import javax.persistence.CascadeType;
@@ -19,9 +20,7 @@ import javax.validation.constraints.Past;
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Date;
 import java.util.Set;
 
 @Entity
