@@ -4,6 +4,7 @@ import gov.samhsa.c2s.ums.config.EmailSenderProperties;
 import gov.samhsa.c2s.ums.domain.RoleRepository;
 import gov.samhsa.c2s.ums.domain.Scope;
 import gov.samhsa.c2s.ums.domain.ScopeRepository;
+import gov.samhsa.c2s.ums.domain.Telecom;
 import gov.samhsa.c2s.ums.domain.User;
 import gov.samhsa.c2s.ums.domain.UserActivation;
 import gov.samhsa.c2s.ums.domain.UserActivationRepository;
@@ -98,10 +99,12 @@ public class UserActivationServiceImpl implements UserActivationService {
         response.setVerificationCode(saved.getVerificationCode());
         response.setEmailTokenExpiration(saved.getEmailTokenExpirationAsInstant());
         response.setVerified(saved.isVerified());
+        response.setEmail(user.getTelecoms().stream().filter(telecom -> telecom.getSystem().equals("email")).map(Telecom::getValue).findFirst().get());
+        response.setGenderCode(user.getAdministrativeGenderCode().getCode());
         // Send email with verification link
         emailSender.sendEmailWithVerificationLink(
                 xForwardedProto, xForwardedHost, xForwardedPort,
-                user.getTelecoms().get(0).getValue(),
+                user.getTelecoms().stream().filter(telecom -> telecom.getSystem().equals("email")).map(Telecom::getValue).findFirst().get(),
                 saved.getEmailToken(),
                 getRecipientFullName(user));
         return response;
@@ -184,10 +187,10 @@ public class UserActivationServiceImpl implements UserActivationService {
         response.setBirthDate(user.getBirthDay());
         response.setVerified(userActivation.isVerified());
         // Create user using SCIM
-        ScimUser scimUser = new ScimUser(null, user.getTelecoms().get(0).getValue(), user.getFirstName(), user.getLastName());
+        ScimUser scimUser = new ScimUser(null, user.getTelecoms().stream().filter(telecom -> telecom.getSystem().equals("email")).map(Telecom::getValue).findFirst().get(), user.getFirstName(), user.getLastName());
         scimUser.setPassword(userActivationRequest.getPassword());
         ScimUser.Email email = new ScimUser.Email();
-        email.setValue(user.getTelecoms().get(0).getValue());
+        email.setValue(user.getTelecoms().stream().filter(telecom -> telecom.getSystem().equals("email")).map(Telecom::getValue).findFirst().get());
         scimUser.setEmails(Collections.singletonList(email));
         scimUser.setVerified(true);
         // Save SCIM user
@@ -201,7 +204,7 @@ public class UserActivationServiceImpl implements UserActivationService {
         scimService.addUserToGroups(userActivation);
         emailSender.sendEmailToConfirmVerification(
                 xForwardedProto, xForwardedHost, xForwardedPort,
-                user.getTelecoms().get(0).getValue(),
+                user.getTelecoms().stream().filter(telecom -> telecom.getSystem().equals("email")).map(Telecom::getValue).findFirst().get(),
                 getRecipientFullName(user));
         return response;
         //return new UserActivationResponseDto();
