@@ -29,10 +29,9 @@ public class UserDtoToUserMap extends PropertyMap<UserDto, User> {
         map().setLastName(source.getLastName());
         map().setBirthDay(source.getBirthDate());
         using(genderConverter).map(source).setAdministrativeGenderCode(null);
+        skip().setAddress(null);
 
-        // mapping patient
-
-      }
+    }
 
 
     /**
