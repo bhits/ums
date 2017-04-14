@@ -3,12 +3,7 @@ package gov.samhsa.c2s.ums.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import gov.samhsa.c2s.ums.config.UmsProperties;
-import gov.samhsa.c2s.ums.domain.Patient;
-import gov.samhsa.c2s.ums.domain.PatientRepository;
-import gov.samhsa.c2s.ums.domain.Telecom;
-import gov.samhsa.c2s.ums.domain.TelecomRepository;
-import gov.samhsa.c2s.ums.domain.User;
-import gov.samhsa.c2s.ums.domain.UserRepository;
+import gov.samhsa.c2s.ums.domain.*;
 import gov.samhsa.c2s.ums.domain.reference.AdministrativeGenderCode;
 import gov.samhsa.c2s.ums.domain.reference.AdministrativeGenderCodeRepository;
 import gov.samhsa.c2s.ums.service.dto.UserDto;
@@ -43,10 +38,10 @@ public class UserServiceImpl implements UserService {
     private final MrnService mrnService;
     private final PatientRepository patientRepository;
     private final TelecomRepository telecomRepository;
-
+    private final AddressRepository addressRepository;
 
     @Autowired
-    public UserServiceImpl(ModelMapper modelMapper, UserRepository userRepository, ObjectMapper objectMapper, AdministrativeGenderCodeRepository administrativeGenderCodeRepository, UmsProperties umsProperties, MrnService mrnService, PatientRepository patientRepository, TelecomRepository telecomRepository) {
+    public UserServiceImpl(ModelMapper modelMapper, UserRepository userRepository, ObjectMapper objectMapper, AdministrativeGenderCodeRepository administrativeGenderCodeRepository, UmsProperties umsProperties, MrnService mrnService, PatientRepository patientRepository, TelecomRepository telecomRepository, AddressRepository addressRepository) {
         this.modelMapper = modelMapper;
         this.userRepository = userRepository;
         this.objectMapper = objectMapper;
@@ -55,35 +50,34 @@ public class UserServiceImpl implements UserService {
         this.mrnService = mrnService;
         this.patientRepository = patientRepository;
         this.telecomRepository = telecomRepository;
+        this.addressRepository = addressRepository;
     }
 
     @Override
     @Transactional
     public void saveUser(UserDto userDto) {
 
-        // Crate an User
+        // Add User Address
+        Address address = addressRepository.save( modelMapper.map(userDto.getAddress(), Address.class));
+
+        // Add an User
         User user = modelMapper.map(userDto,User.class);
+        user.setAddress(address);
+
         user = userRepository.save(user);
 
-        // Create contact details
+        // Add user contact details
         user.setTelecoms(modelMapper.map(userDto.getTelecom(), new TypeToken<List<Telecom>>() {}.getType()));
         for(Telecom telecom : user.getTelecoms())
             telecom.setUser(user);
         telecomRepository.save(user.getTelecoms());
 
-        // Creae userrole type
 
+        // Add User userrole type
 
-        // Crate Patient Record
+        // Add User Patient Record
         Patient patient = patientRepository.save(createPatient(user));
 
-
-
-        try {
-            log.debug(objectMapper.writeValueAsString(user));
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
-        }
 
     }
 

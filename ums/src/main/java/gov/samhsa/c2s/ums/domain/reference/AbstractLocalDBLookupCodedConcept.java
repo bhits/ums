@@ -49,7 +49,7 @@ public abstract class AbstractLocalDBLookupCodedConcept {
      * The code.
      */
     @NotNull
-    @Size(max = 250)
+    @Size(max = 255)
     private String code;
 
 
@@ -57,25 +57,25 @@ public abstract class AbstractLocalDBLookupCodedConcept {
      * The display name.
      */
     @NotNull
-    @Size(max = 250)
+    @Size(max = 255)
     private String displayName;
 
     /**
      * The original text.
      */
-    @Size(max = 250)
+    @Size(max = 255)
     private String description;
 
     /**
      * The code system.
      */
-    @Size(max = 250)
+    @Size(max = 255)
     private String codeSystem;
 
     /**
      * The code system.
      */
-    @Size(max = 250)
+    @Size(max = 255)
     private String codeSystemOID;
 
 
@@ -83,7 +83,7 @@ public abstract class AbstractLocalDBLookupCodedConcept {
      * The code system name.
      */
     @NotNull
-    @Size(max = 250)
+    @Size(max = 255)
     private String codeSystemName;
 
 
