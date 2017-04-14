@@ -3,6 +3,10 @@ package gov.samhsa.c2s.ums.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import gov.samhsa.c2s.ums.config.UmsProperties;
+import gov.samhsa.c2s.ums.domain.Patient;
+import gov.samhsa.c2s.ums.domain.PatientRepository;
+import gov.samhsa.c2s.ums.domain.Telecom;
+import gov.samhsa.c2s.ums.domain.TelecomRepository;
 import gov.samhsa.c2s.ums.domain.User;
 import gov.samhsa.c2s.ums.domain.UserRepository;
 import gov.samhsa.c2s.ums.domain.reference.AdministrativeGenderCode;
@@ -11,6 +15,7 @@ import gov.samhsa.c2s.ums.service.dto.UserDto;
 import gov.samhsa.c2s.ums.service.exception.UserNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
+import org.modelmapper.TypeToken;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -18,6 +23,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import javax.transaction.Transactional;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -28,28 +34,51 @@ import java.util.StringTokenizer;
 @Service
 @Slf4j
 public class UserServiceImpl implements UserService {
+
     private final UserRepository  userRepository;
-
     private final AdministrativeGenderCodeRepository administrativeGenderCodeRepository;
-
     private final UmsProperties umsProperties;
-
     private final ModelMapper modelMapper;
-
     private final ObjectMapper objectMapper;
+    private final MrnService mrnService;
+    private final PatientRepository patientRepository;
+    private final TelecomRepository telecomRepository;
+
 
     @Autowired
-    public UserServiceImpl(ModelMapper modelMapper, UserRepository userRepository, ObjectMapper objectMapper, AdministrativeGenderCodeRepository administrativeGenderCodeRepository, UmsProperties umsProperties) {
+    public UserServiceImpl(ModelMapper modelMapper, UserRepository userRepository, ObjectMapper objectMapper, AdministrativeGenderCodeRepository administrativeGenderCodeRepository, UmsProperties umsProperties, MrnService mrnService, PatientRepository patientRepository, TelecomRepository telecomRepository) {
         this.modelMapper = modelMapper;
         this.userRepository = userRepository;
         this.objectMapper = objectMapper;
         this.administrativeGenderCodeRepository = administrativeGenderCodeRepository;
         this.umsProperties = umsProperties;
+        this.mrnService = mrnService;
+        this.patientRepository = patientRepository;
+        this.telecomRepository = telecomRepository;
     }
 
     @Override
+    @Transactional
     public void saveUser(UserDto userDto) {
+
+        // Crate an User
         User user = modelMapper.map(userDto,User.class);
+        user = userRepository.save(user);
+
+        // Create contact details
+        user.setTelecoms(modelMapper.map(userDto.getTelecom(), new TypeToken<List<Telecom>>() {}.getType()));
+        for(Telecom telecom : user.getTelecoms())
+            telecom.setUser(user);
+        telecomRepository.save(user.getTelecoms());
+
+        // Creae userrole type
+
+
+        // Crate Patient Record
+        Patient patient = patientRepository.save(createPatient(user));
+
+
+
         try {
             log.debug(objectMapper.writeValueAsString(user));
         } catch (JsonProcessingException e) {
@@ -58,13 +87,22 @@ public class UserServiceImpl implements UserService {
 
     }
 
+
+    private Patient createPatient(User user){
+        //set the patient object
+        Patient patient = new Patient();
+        patient.setMrn(mrnService.generateMrn());
+        patient.setUser(user);
+        return patient;
+    }
+
     @Override
     public void disableUser(Long userId){
 
         //Set isDisabled to true in the User table
         User user = userRepository.findOneByIdAndIsDisabled(userId, false)
                 .orElseThrow(UserNotFoundException::new);
-        String oAuth2UserId = user.getOAuth2UserId();
+        String oAuth2UserId = user.getOauth2UserId();
         user.setDisabled(true);
         userRepository.save(user);
 
@@ -90,7 +128,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Object getUserByOAuth2Id(Long oAuth2UserId) {
-        final User user = userRepository.findOneByOAuth2UserIdAndIsDisabled(oAuth2UserId, false)
+        final User user = userRepository.findOneByOauth2UserIdAndIsDisabled(oAuth2UserId, false)
                 .orElseThrow(UserNotFoundException::new);
         return modelMapper.map(user,UserDto.class);
     }

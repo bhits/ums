@@ -9,8 +9,6 @@ import org.modelmapper.PropertyMap;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.util.Set;
-
 @Component
 public class UserDtoToUserMap extends PropertyMap<UserDto, User> {
 
@@ -31,12 +29,14 @@ public class UserDtoToUserMap extends PropertyMap<UserDto, User> {
         map().setLastName(source.getLastName());
         map().setBirthDay(source.getBirthDate());
         using(genderConverter).map(source).setAdministrativeGenderCode(null);
-        map().setEmail(source.getEmail());
 
-    }
+        // mapping patient
+
+      }
+
 
     /**
-     * Converts {@link AdministrativeGenderCode to {@link Set } of {@link UserDto}}
+     * Converts {@link  UserDto } to {@link AdministrativeGenderCode}}
      */
     @Component
     public static class AdministrativeGenderConverter extends AbstractConverter<UserDto, AdministrativeGenderCode> {
@@ -53,4 +53,7 @@ public class UserDtoToUserMap extends PropertyMap<UserDto, User> {
             return genderCodeRepository.findByCode(source.getGenderCode());
         }
     }
+
 }
+
+

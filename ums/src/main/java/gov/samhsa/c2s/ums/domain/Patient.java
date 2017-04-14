@@ -6,6 +6,7 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.OneToOne;
 
 @Entity
 @Data
@@ -21,6 +22,9 @@ public class Patient {
      * The Medical Record Number.
      */
     private String mrn;
+
+    @OneToOne
+    private User user;
 
 
 }
