@@ -121,7 +121,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public Object getUserByOAuth2Id(Long oAuth2UserId) {
+    public Object getUserByOAuth2Id(String oAuth2UserId) {
         final User user = userRepository.findOneByOauth2UserIdAndIsDisabled(oAuth2UserId, false)
                 .orElseThrow(UserNotFoundException::new);
         return modelMapper.map(user,UserDto.class);
