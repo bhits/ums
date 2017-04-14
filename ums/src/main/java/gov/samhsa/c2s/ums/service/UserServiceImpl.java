@@ -95,7 +95,7 @@ public class UserServiceImpl implements UserService {
 
         //Set isDisabled to true in the User table
         User user = userRepository.findOneByIdAndIsDisabled(userId, false)
-                .orElseThrow(UserNotFoundException::new);
+                .orElseThrow(()-> new UserNotFoundException("User Not Found!"));
         String oAuth2UserId = user.getOauth2UserId();
         user.setDisabled(true);
         userRepository.save(user);
@@ -116,14 +116,14 @@ public class UserServiceImpl implements UserService {
     @Override
     public Object getUser(Long userId) {
         final User user = userRepository.findOneByIdAndIsDisabled(userId, false)
-                .orElseThrow(UserNotFoundException::new);
+                .orElseThrow(()-> new UserNotFoundException("User Not Found!"));
         return modelMapper.map(user,UserDto.class);
     }
 
     @Override
     public Object getUserByOAuth2Id(String oAuth2UserId) {
         final User user = userRepository.findOneByOauth2UserIdAndIsDisabled(oAuth2UserId, false)
-                .orElseThrow(UserNotFoundException::new);
+                .orElseThrow(()-> new UserNotFoundException("User Not Found!"));
         return modelMapper.map(user,UserDto.class);
     }
 
@@ -156,7 +156,11 @@ public class UserServiceImpl implements UserService {
         } else {
             userList = new ArrayList<>();
         }
-        return userListToUserDtoList(userList);
+        if(userList.size() < 1){
+            throw new UserNotFoundException("User Not Found!");
+        } else {
+            return userListToUserDtoList(userList);
+        }
     }
 
     @Override
@@ -168,7 +172,11 @@ public class UserServiceImpl implements UserService {
         final AdministrativeGenderCode administrativeGenderCode = administrativeGenderCodeRepository.findByCode(genderCode);
         userList = userRepository.findAllByFirstNameAndLastNameAndBirthDayAndAdministrativeGenderCodeAndIsDisabled(firstName, lastName,
                 birthDate, administrativeGenderCode, false);
-        return userListToUserDtoList(userList);
+        if(userList.size() < 1){
+            throw new UserNotFoundException("User Not Found!");
+        } else {
+            return userListToUserDtoList(userList);
+        }
     }
 
     private List<UserDto> userListToUserDtoList(List<User> userList){
