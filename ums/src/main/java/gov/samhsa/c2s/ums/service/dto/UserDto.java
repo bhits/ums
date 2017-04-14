@@ -16,7 +16,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class UserDto {
-    @NotNull
+
     private Long id;
 
     @NotEmpty
@@ -37,4 +37,8 @@ public class UserDto {
     private AddressDto address;
 
     private List<TelecomDto> telecom;
+
+    private String role;
+
+
 }

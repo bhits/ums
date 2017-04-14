@@ -32,6 +32,8 @@ spring:
       mail.smtp.auth: true
       mail.smtp.starttls.enable: true
       mail.smtp.ssl.trust: mail_host
+  messages:
+    basename: i18n/messages
 c2s:
   ums:
     ssn:
