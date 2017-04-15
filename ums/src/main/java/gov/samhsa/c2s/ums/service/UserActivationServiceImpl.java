@@ -17,6 +17,7 @@ import gov.samhsa.c2s.ums.service.dto.ScopeAssignmentRequestDto;
 import gov.samhsa.c2s.ums.service.dto.ScopeAssignmentResponseDto;
 import gov.samhsa.c2s.ums.service.dto.UserActivationRequestDto;
 import gov.samhsa.c2s.ums.service.dto.UserActivationResponseDto;
+import gov.samhsa.c2s.ums.service.dto.UserVerificationRequestDto;
 import gov.samhsa.c2s.ums.service.dto.VerificationResponseDto;
 import gov.samhsa.c2s.ums.service.exception.EmailTokenExpiredException;
 import gov.samhsa.c2s.ums.service.exception.PasswordConfirmationFailedException;
@@ -112,7 +113,10 @@ public class UserActivationServiceImpl implements UserActivationService {
 
     @Override
     @Transactional(readOnly = true)
-    public VerificationResponseDto verify(String emailToken, Optional<String> verificationCode, Optional<LocalDate> birthDate) {
+    public VerificationResponseDto verify(UserVerificationRequestDto userVerificationRequest) {
+            String emailToken=userVerificationRequest.getEmailToken();
+            Optional<String> verificationCode = Optional.ofNullable(userVerificationRequest.getVerificationCode());
+            Optional<LocalDate> birthDate =Optional.ofNullable(userVerificationRequest.getBirthDate());
 
             Assert.hasText(emailToken, "emailToken must have text");
             final Instant now = Instant.now();
@@ -160,11 +164,13 @@ public class UserActivationServiceImpl implements UserActivationService {
         response.setBirthDate(user.getBirthDay());
         response.setVerificationCode(userActivation.getVerificationCode());
         response.setEmailTokenExpiration(userActivation.getEmailTokenExpirationAsInstant());
+        response.setEmail(user.getTelecoms().stream().filter(telecom -> telecom.getSystem().equals("email")).map(Telecom::getValue).findFirst().get());
         response.setVerified(userActivation.isVerified());
         return response;
     }
 
     @Override
+    @Transactional
     public UserActivationResponseDto activateUser(UserActivationRequestDto userActivationRequest, String xForwardedProto, String xForwardedHost, int xForwardedPort) {
         // Verify password
         assertPasswordAndConfirmPassword(userActivationRequest);
@@ -207,7 +213,6 @@ public class UserActivationServiceImpl implements UserActivationService {
                 user.getTelecoms().stream().filter(telecom -> telecom.getSystem().equals("email")).map(Telecom::getValue).findFirst().get(),
                 getRecipientFullName(user));
         return response;
-        //return new UserActivationResponseDto();
     }
 
     private void assertPasswordAndConfirmPassword(UserActivationRequestDto userActivationRequest) {

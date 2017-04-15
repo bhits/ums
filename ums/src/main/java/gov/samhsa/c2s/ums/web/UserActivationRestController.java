@@ -5,21 +5,18 @@ import gov.samhsa.c2s.ums.service.dto.ScopeAssignmentRequestDto;
 import gov.samhsa.c2s.ums.service.dto.ScopeAssignmentResponseDto;
 import gov.samhsa.c2s.ums.service.dto.UserActivationRequestDto;
 import gov.samhsa.c2s.ums.service.dto.UserActivationResponseDto;
+import gov.samhsa.c2s.ums.service.dto.UserVerificationRequestDto;
 import gov.samhsa.c2s.ums.service.dto.VerificationResponseDto;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.Valid;
-import java.time.LocalDate;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/users")
@@ -50,8 +47,7 @@ public class UserActivationRestController {
 
 
     @PostMapping(value = "/activation")
-    public UserActivationResponseDto activateUser(@PathVariable Long userId,
-                                                  @Valid @RequestBody UserActivationRequestDto userActivationRequest,
+    public UserActivationResponseDto activateUser(@Valid @RequestBody UserActivationRequestDto userActivationRequest,
                                                   @RequestHeader(X_FORWARDED_PROTO) String xForwardedProto,
                                                   @RequestHeader(X_FORWARDED_HOST) String xForwardedHost,
                                                   @RequestHeader(X_FORWARDED_PORT) int xForwardedPort) {
@@ -60,11 +56,9 @@ public class UserActivationRestController {
 
 
 
-    @GetMapping(value = "/verification")
-    public VerificationResponseDto verify(@RequestParam("emailToken") String emailToken,
-                                          @RequestParam("verificationCode") Optional<String> verificationCode,
-                                          @RequestParam("birthDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Optional<LocalDate> birthDate) {
-        return userActivationService.verify(emailToken, verificationCode, birthDate);
+    @PostMapping(value = "/verification")
+    public VerificationResponseDto verify(@Valid @RequestBody UserVerificationRequestDto userVerificationRequest) {
+        return userActivationService.verify(userVerificationRequest);
     }
 
     @PostMapping(value = "/scopeAssignments")
