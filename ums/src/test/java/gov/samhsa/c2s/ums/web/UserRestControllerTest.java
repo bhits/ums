@@ -307,12 +307,12 @@ public class UserRestControllerTest {
         UserDto userDto = createSampleUserDtoOne();
         userDtoList.add(userDto);
 
-        when(userServiceMock.searchUsersByDemographic(any(), any(), any(), any())).thenReturn(userDtoList);
+        when(userServiceMock.searchUsersByDemographic(anyString(), anyString(), any(LocalDate.class), anyString())).thenReturn(userDtoList);
 
         // Act and Assert
         mvc.perform(get("/users/search/patientDemographic?firstName=" + "Alice"
-                                                                    +"&lastName=" + ""
-                                                                    +"&birthDate=" + ""
+                                                                    +"&lastName=" + "Recruit"
+                                                                    +"&birthDate=" + "1980-01-01"
                                                                     +"&genderCode=" + "female"
 
                         ))

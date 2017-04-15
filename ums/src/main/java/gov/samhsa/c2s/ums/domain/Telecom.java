@@ -19,7 +19,6 @@ import javax.validation.constraints.Size;
 @Entity
 @Audited
 @Data
-@ToString(exclude="user")
 public class Telecom {
     /**
      * The id.
