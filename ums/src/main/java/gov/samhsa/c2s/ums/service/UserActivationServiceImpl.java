@@ -198,6 +198,7 @@ public class UserActivationServiceImpl implements UserActivationService {
         ScimUser.Email email = new ScimUser.Email();
         email.setValue(user.getTelecoms().stream().filter(telecom -> telecom.getSystem().equals("email")).map(Telecom::getValue).findFirst().get());
         scimUser.setEmails(Collections.singletonList(email));
+        scimUser.setUserName(userActivationRequest.getUsername());
         scimUser.setVerified(true);
         // Save SCIM user
         final ScimUser savedScimUser = scimService.save(scimUser);
