@@ -23,6 +23,12 @@ public class Relationship {
      * The first name.
      */
     @NotNull
+    private String code;
+
+    /**
+     * The first name.
+     */
+    @NotNull
     private String name;
 
 
