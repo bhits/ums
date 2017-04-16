@@ -4,6 +4,7 @@ logging:
   file: /java/C2S_LOGS/ums/ums.log
   level:
     gov.samhsa.c2s.ums: debug
+    org.modelmapper.internal: debug
 info:
   component: User Management Service
 spring:
@@ -18,7 +19,7 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.MySQL5InnoDBDialect
         hbm2ddl:
-          auto: create
+          auto: validate
   mail:
   # UMS will use the e-mail server configured in this section to send e-mails
     # Please configure valid e-mail server below to connect to SMTP server
