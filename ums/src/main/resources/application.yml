@@ -1,10 +1,7 @@
 server:
-  port: 8900
+  port: 8457
 logging:
   file: /java/C2S_LOGS/ums/ums.log
-  level:
-    gov.samhsa.c2s.ums: debug
-    org.modelmapper.internal: debug
 info:
   component: User Management Service
 spring:
@@ -63,6 +60,11 @@ c2s:
       pp-ui-verification-email-token-arg-name: "emailToken"
       brand: Consent2Share
       email-token-expiration-in-days: 7
+    fhir:
+      publish:
+        enable: false
+        # configure fhir server base url
+        serverUrl: http://fhirtest.uhn.ca/baseDstu3
 security:
   oauth2:
     client:
@@ -71,3 +73,15 @@ security:
       access-token-uri: http://localhost:8080/uaa/oauth/token
   basic:
     enabled: false
+---
+spring.profiles: standalone-ssl
+spring:
+  profiles:
+    include: ssl-default
+server:
+  context-path: /ums
+---
+spring:
+  profiles: docker
+  datasource:
+    url: jdbc:mysql://${C2S_DB_HOST:ums-db.c2s.com}:${C2S_DB_PORT:3306}/ums?autoReconnect=true
