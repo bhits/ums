@@ -65,6 +65,10 @@
             <artifactId>hibernate-envers</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-core</artifactId>
+        </dependency>
+        <dependency>
             <groupId>mysql</groupId>
             <artifactId>mysql-connector-java</artifactId>
             <scope>runtime</scope>
@@ -95,7 +99,6 @@
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
         </dependency>
-
 		<dependency>
 			<groupId>org.cloudfoundry.identity</groupId>
 			<artifactId>cloudfoundry-identity-model</artifactId>
