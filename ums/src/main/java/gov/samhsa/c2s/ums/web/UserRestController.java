@@ -25,19 +25,27 @@ import java.util.StringTokenizer;
 @RestController
 @RequestMapping("/users")
 public class UserRestController {
-    @Autowired
-    UserService userService;
+    private final UserService userService;
 
-    @PostMapping("/")
-    // @ResponseStatus(HttpStatus.CREATED)
-    public void saveUser(@Valid @RequestBody UserDto userDto) {
-        userService.saveUser(userDto);
+    @Autowired
+    public UserRestController(UserService userService) {
+        this.userService = userService;
+    }
+
+    /**
+     * @param userDto User Dto Object
+     */
+    @PostMapping()
+    @ResponseStatus(HttpStatus.CREATED)
+    public void registerUser(@Valid @RequestBody UserDto userDto) {
+        userService.registerUser(userDto);
     }
 
 
     /**
      * Disable User
-     * @param userId
+     *
+     * @param userId PK of User
      */
     @PutMapping("/disable/{userId}")
     @ResponseStatus(HttpStatus.OK)
@@ -47,8 +55,9 @@ public class UserRestController {
 
     /**
      * Update User
-     * @param userId
-     * @param userDto
+     *
+     * @param userId  PK of User
+     * @param userDto User Dto Object
      */
     @PutMapping("/{userId}")
     @ResponseStatus(HttpStatus.OK)
@@ -58,27 +67,30 @@ public class UserRestController {
 
     /**
      * Get User
-     * @param userId
-     * @return
+     *
+     * @param userId Pk of User
+     * @return User
      */
     @GetMapping("/{userId}")
-    public Object getUser(@PathVariable Long userId){
+    public Object getUser(@PathVariable Long userId) {
         return userService.getUser(userId);
     }
 
     /**
      * Get User based on OAuth2 User Id
-     * @param oAuth2UserId
-     * @return
+     *
+     * @param oAuth2UserId OAUTH2 User Id
+     * @return User
      */
     @GetMapping("/OAuth2/{oAuth2UserId}")
-    public Object getUserByOAuth2Id(@PathVariable String oAuth2UserId){
+    public Object getUserByOAuth2Id(@PathVariable String oAuth2UserId) {
         return userService.getUserByOAuth2Id(oAuth2UserId);
     }
 
     /**
      * Find All Users
-     * @return
+     *
+     * @return User
      */
     @GetMapping("/search")
     @ResponseStatus(HttpStatus.OK)
@@ -89,23 +101,24 @@ public class UserRestController {
 
     /**
      * Find All Users that match the First Name and/or the Last Name.
-     * @param token
-     * @return
+     *
+     * @param token token
+     * @return List of Users
      */
     @GetMapping(value = "/search/{token}")
     @ResponseStatus(HttpStatus.OK)
     public List<UserDto> searchUsersByFirstNameAndORLastName(@PathVariable String token) {
-        StringTokenizer tokenizer = new StringTokenizer(token, " ");
+        StringTokenizer tokenizer;
+        tokenizer = new StringTokenizer(token, " ");
         return userService.searchUsersByFirstNameAndORLastName(tokenizer);
     }
 
     /**
-     *
-     * @param firstName
-     * @param lastName
-     * @param birthDate
-     * @param genderCode
-     * @return
+     * @param firstName  First Name
+     * @param lastName   Last Name
+     * @param birthDate  Date Of Birth
+     * @param genderCode Gender Code
+     * @return List of Users
      */
     @GetMapping(value = "/search/patientDemographic")
     @ResponseStatus(HttpStatus.OK)
