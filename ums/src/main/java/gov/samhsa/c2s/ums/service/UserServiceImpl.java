@@ -14,6 +14,7 @@ import gov.samhsa.c2s.ums.domain.UserRepository;
 import gov.samhsa.c2s.ums.domain.reference.AdministrativeGenderCode;
 import gov.samhsa.c2s.ums.domain.reference.AdministrativeGenderCodeRepository;
 import gov.samhsa.c2s.ums.domain.valueobject.UserPatientRelationshipId;
+import gov.samhsa.c2s.ums.service.dto.GetUserResponseDto;
 import gov.samhsa.c2s.ums.service.dto.RelationDto;
 import gov.samhsa.c2s.ums.service.dto.UserDto;
 import gov.samhsa.c2s.ums.service.exception.UserNotFoundException;
@@ -148,29 +149,29 @@ public class UserServiceImpl implements UserService {
     public Object getUser(Long userId) {
         final User user = userRepository.findOneByIdAndIsDisabled(userId, false)
                 .orElseThrow(() -> new UserNotFoundException("User Not Found!"));
-        return modelMapper.map(user, UserDto.class);
+        return modelMapper.map(user, GetUserResponseDto.class);
     }
 
     @Override
     public Object getUserByOAuth2Id(String oAuth2UserId) {
         final User user = userRepository.findOneByOauth2UserIdAndIsDisabled(oAuth2UserId, false)
                 .orElseThrow(() -> new UserNotFoundException("User Not Found!"));
-        return modelMapper.map(user, UserDto.class);
+        return modelMapper.map(user, GetUserResponseDto.class);
     }
 
     @Override
-    public Page<UserDto> getAllUsers(Optional<Integer> page, Optional<Integer> size) {
+    public Page<GetUserResponseDto> getAllUsers(Optional<Integer> page, Optional<Integer> size) {
         final PageRequest pageRequest = new PageRequest(page.filter(p -> p >= 0).orElse(0),
                 size.filter(s -> s > 0 && s <= umsProperties.getPagination().getMaxSize())
                         .orElse(umsProperties.getPagination().getDefaultSize()));
         final Page<User> usersPage = userRepository.findAllByIsDisabled(false, pageRequest);
         final List<User> userList = usersPage.getContent();
-        final List<UserDto> userDtoList = userListToUserDtoList(userList);
-        return new PageImpl<>(userDtoList, pageRequest, usersPage.getTotalElements());
+        final List<GetUserResponseDto> getUserDtoList = userListToGetUserDtoList(userList);
+        return new PageImpl<>(getUserDtoList, pageRequest, usersPage.getTotalElements());
     }
 
     @Override
-    public List<UserDto> searchUsersByFirstNameAndORLastName(StringTokenizer token) {
+    public List<GetUserResponseDto> searchUsersByFirstNameAndORLastName(StringTokenizer token) {
 
         List<User> userList;
         Integer pageNumber = 0;
@@ -189,12 +190,12 @@ public class UserServiceImpl implements UserService {
         if (userList.size() < 1) {
             throw new UserNotFoundException("User Not Found!");
         } else {
-            return userListToUserDtoList(userList);
+            return userListToGetUserDtoList(userList);
         }
     }
 
     @Override
-    public List<UserDto> searchUsersByDemographic(String firstName,
+    public List<GetUserResponseDto> searchUsersByDemographic(String firstName,
                                                   String lastName,
                                                   LocalDate birthDate,
                                                   String genderCode) {
@@ -205,19 +206,19 @@ public class UserServiceImpl implements UserService {
         if (userList.size() < 1) {
             throw new UserNotFoundException("User Not Found!");
         } else {
-            return userListToUserDtoList(userList);
+            return userListToGetUserDtoList(userList);
         }
     }
 
-    private List<UserDto> userListToUserDtoList(List<User> userList) {
-        List<UserDto> userDtoList = new ArrayList<>();
+    private List<GetUserResponseDto> userListToGetUserDtoList(List<User> userList) {
+        List<GetUserResponseDto> getUserDtoList = new ArrayList<>();
 
         if (userList != null && userList.size() > 0) {
             for (User tempUser : userList) {
-                userDtoList.add(modelMapper.map(tempUser, UserDto.class));
+                getUserDtoList.add(modelMapper.map(tempUser, GetUserResponseDto.class));
             }
         }
-        return userDtoList;
+        return getUserDtoList;
     }
 
 }

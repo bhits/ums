@@ -6,5 +6,5 @@ import lombok.Data;
 @Data
 @AllArgsConstructor
 public class ScopeAssignmentResponseDto {
-    private final boolean assiged;
+    private final boolean assigned;
 }
