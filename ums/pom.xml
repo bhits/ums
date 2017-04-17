@@ -135,7 +135,7 @@
 		<dependency>
 			<groupId>gov.samhsa.c2s</groupId>
 			<artifactId>common-util</artifactId>
-			<version>${c2s-common-libraries.version}</version>
+			<version>${c2s.common-libraries.version}</version>
 			<exclusions>
 				<exclusion>
 					<groupId>org.springframework.boot</groupId>
