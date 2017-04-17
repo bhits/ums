@@ -17,6 +17,7 @@ public class UmsProperties {
     private Gender gender;
     private Mrn mrn;
     private Pagination pagination;
+    private Fhir fhir;
 
     @Data
     public static class Identifier {
@@ -55,4 +56,20 @@ public class UmsProperties {
             private int maxSize;
     }
 
+    @Data
+    public static class Fhir{
+
+        private Publish publish;
+
+        @Data
+        public static class Publish {
+            @NotBlank
+            private boolean enabled;
+            @NotBlank
+            private String serverUrl;
+            @NotBlank
+            private String clientSocketTimeoutInMs;
+
+        }
+    }
 }

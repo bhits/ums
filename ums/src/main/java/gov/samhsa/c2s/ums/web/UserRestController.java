@@ -80,7 +80,7 @@ public class UserRestController {
      * Get User based on OAuth2 User Id
      *
      * @param oAuth2UserId OAUTH2 User Id
-     * @return User
+     * @return UserDto Object
      */
     @GetMapping("/OAuth2/{oAuth2UserId}")
     public Object getUserByOAuth2Id(@PathVariable String oAuth2UserId) {
