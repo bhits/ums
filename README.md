@@ -14,7 +14,7 @@ The User Management Service (UMS) is a component of Consent2Share(C2S). It manag
 
 This is a Maven project and requires [Apache Maven](https://maven.apache.org/) 3.3.3 or greater to build it. It is recommended to use the *Maven Wrapper* scripts provided with this project. *Maven Wrapper* requires an internet connection to download Maven and project dependencies for the very first build.
 
-To build the project, navigate to the folder that contains the [**parent** `pom.xml` file](ums/pom.xml) using the terminal/command line.
+To build the project, navigate to the folder that contains the `pom.xml` using the terminal/command line.
 
 + To build a JAR:
     + For Windows, run `mvnw.cmd clean install`
