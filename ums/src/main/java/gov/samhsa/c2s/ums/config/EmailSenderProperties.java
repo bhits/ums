@@ -14,13 +14,13 @@ import javax.validation.constraints.NotNull;
 public class EmailSenderProperties {
 
     @NotEmpty
-    private String ppUiRoute;
+    private String c2sUiRoute;
 
     @NotEmpty
-    private String ppUiVerificationRelativePath;
+    private String c2sUiVerificationRelativePath;
 
     @NotEmpty
-    private String ppUiVerificationEmailTokenArgName;
+    private String c2sUiVerificationEmailTokenArgName;
 
     @NotEmpty
     private String brand;

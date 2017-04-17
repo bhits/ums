@@ -56,9 +56,9 @@ public class EmailSenderImpl implements EmailSender {
         Assert.hasText(emailToken, "emailToken must have text");
         Assert.hasText(email, "email must have text");
         Assert.hasText(recipientFullName, "recipientFullName must have text");
-        final String fragment = emailSenderProperties.getPpUiVerificationEmailTokenArgName() + "=" + emailToken;
+        final String fragment = emailSenderProperties.getC2sUiVerificationEmailTokenArgName() + "=" + emailToken;
 
-        final String verificationUrl = toPPUIVerificationUri(xForwardedProto, xForwardedHost, xForwardedPort, fragment);
+        final String verificationUrl = toC2SUIVerificationUri(xForwardedProto, xForwardedHost, xForwardedPort, fragment);
         final Context ctx = new Context();
         ctx.setVariable(PARAM_RECIPIENT_NAME, recipientFullName);
         ctx.setVariable(PARAM_LINK_URL, verificationUrl);
@@ -78,7 +78,7 @@ public class EmailSenderImpl implements EmailSender {
 
         final Context ctx = new Context();
         ctx.setVariable(PARAM_RECIPIENT_NAME, recipientFullName);
-        ctx.setVariable(PARAM_LINK_URL, toPPUIBaseUri(xForwardedProto, xForwardedHost, xForwardedPort));
+        ctx.setVariable(PARAM_LINK_URL, toC2SUIBaseUri(xForwardedProto, xForwardedHost, xForwardedPort));
         ctx.setVariable(PARAM_BRAND, emailSenderProperties.getBrand());
         sendEmail(ctx, email,
                 PROP_EMAIL_CONFIRM_VERIFICATION_SUBJECT,
@@ -103,20 +103,20 @@ public class EmailSenderImpl implements EmailSender {
         }
     }
 
-    private String toPPUIBaseUri(String xForwardedProto, String xForwardedHost, int xForwardedPort) {
+    private String toC2SUIBaseUri(String xForwardedProto, String xForwardedHost, int xForwardedPort) {
         try {
             return createURIBuilder(xForwardedProto, xForwardedHost, xForwardedPort)
-                    .setPath(emailSenderProperties.getPpUiRoute())
+                    .setPath(emailSenderProperties.getC2sUiRoute())
                     .build().toString();
         } catch (URISyntaxException e) {
             throw new EmailSenderException(e);
         }
     }
 
-    private String toPPUIVerificationUri(String xForwardedProto, String xForwardedHost, int xForwardedPort, String fragment) {
+    private String toC2SUIVerificationUri(String xForwardedProto, String xForwardedHost, int xForwardedPort, String fragment) {
         try {
             return createURIBuilder(xForwardedProto, xForwardedHost, xForwardedPort)
-                    .setPath(emailSenderProperties.getPpUiRoute() + emailSenderProperties.getPpUiVerificationRelativePath())
+                    .setPath(emailSenderProperties.getC2sUiRoute() + emailSenderProperties.getC2sUiVerificationRelativePath())
                     .setFragment(fragment)
                     .build()
                     .toString();

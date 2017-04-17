@@ -57,9 +57,9 @@ c2s:
       url: http://localhost:8080/uaa
     email-sender:
       # c2s-ui endpoint
-      pp-ui-route: /c2s-ui
-      pp-ui-verification-relative-path: "/fe/account/verification"
-      pp-ui-verification-email-token-arg-name: "emailToken"
+      c2s-ui-route: /c2s-ui
+      c2s-ui-verification-relative-path: "/fe/account/verification"
+      c2s-ui-verification-email-token-arg-name: "emailToken"
       brand: Consent2Share
       email-token-expiration-in-days: 7
 security:
