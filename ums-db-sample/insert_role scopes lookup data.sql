@@ -1,7 +1,7 @@
 -- UMS Sample Data
 -- ------------------------------------------------------
 
-USE `ums`;
+USE ums;
 
 --
 -- Insert data for table role
@@ -30,8 +30,26 @@ VALUES      ('1',
              'staffUser',
 			 'StaffUser'); 
 
+ --
+-- Insert data for table relationship
 --
--- Insert data for table `scope`
+			 
+INSERT INTO relationship 
+            (id, 
+             CODE,
+             NAME) 
+VALUES      ('1', 
+			 'PATIENT',
+             'PATIENT'), 
+            ('2', 
+             'PARENT',
+             'PARENT'), 
+            ('3', 
+             'GUARDIAN',
+             'GUARDIAN'); 			 
+
+--
+-- Insert data for table scope
 --
 
 INSERT INTO scope 

@@ -1,5 +1,7 @@
-package gov.samhsa.c2s.ums.config;
+package gov.samhsa.c2s.ums.service.util;
 
+import gov.samhsa.c2s.ums.domain.Locale;
+import gov.samhsa.c2s.ums.domain.LocaleRepository;
 import gov.samhsa.c2s.ums.domain.Role;
 import gov.samhsa.c2s.ums.domain.RoleRepository;
 import gov.samhsa.c2s.ums.domain.User;
@@ -11,7 +13,6 @@ import org.modelmapper.PropertyMap;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
 import java.util.Set;
 
 @Component
@@ -19,33 +20,33 @@ public class UserDtoToUserMap extends PropertyMap<UserDto, User> {
 
     private final AdministrativeGenderConverter genderConverter;
     private final RoleConverter roleConverter;
+    private final LocaleConverter localeConverter;
 
-    @Autowired
-    public UserDtoToUserMap(AdministrativeGenderConverter genderConverter, RoleConverter roleConverter) {
+    public UserDtoToUserMap(AdministrativeGenderConverter genderConverter, RoleConverter roleConverter, LocaleConverter localeConverter) {
         this.genderConverter = genderConverter;
         this.roleConverter = roleConverter;
+        this.localeConverter = localeConverter;
     }
 
 
     @Override
     protected void configure() {
-
         //Required Fields
         map().setFirstName(source.getFirstName());
         map().setLastName(source.getLastName());
         map().setBirthDay(source.getBirthDate());
+        map().setSocialSecurityNumber(source.getSocialSecurityNumber());
         using(genderConverter).map(source).setAdministrativeGenderCode(null);
         skip().setAddress(null);
         using(roleConverter).map(source).setRoles(null);
-
+        using(localeConverter).map(source).setLocale(null);
     }
-
 
     /**
      * Converts {@link  UserDto } to {@link AdministrativeGenderCode}}
      */
     @Component
-    public static class AdministrativeGenderConverter extends AbstractConverter<UserDto, AdministrativeGenderCode> {
+    private static class AdministrativeGenderConverter extends AbstractConverter<UserDto, AdministrativeGenderCode> {
 
         private final AdministrativeGenderCodeRepository genderCodeRepository;
 
@@ -62,11 +63,10 @@ public class UserDtoToUserMap extends PropertyMap<UserDto, User> {
 
 
     /**
-     * Converts {@link  UserDto } to {@link AdministrativeGenderCode}}
+     * Converts {@link  UserDto } to {@link Role}}
      */
     @Component
-    public static class RoleConverter extends AbstractConverter<UserDto, Set<Role>> {
-
+    private static class RoleConverter extends AbstractConverter<UserDto, Set<Role>> {
         private final RoleRepository roleRepository;
 
         @Autowired
@@ -76,7 +76,26 @@ public class UserDtoToUserMap extends PropertyMap<UserDto, User> {
 
         @Override
         protected Set<Role> convert(UserDto source) {
-             return roleRepository.findAllByCode(source.getRole());
+            return roleRepository.findAllByCode(source.getRole());
+        }
+    }
+
+
+    /**
+     * Converts {@link  UserDto } to {@link Locale}}
+     */
+    @Component
+    private static class LocaleConverter extends AbstractConverter<UserDto, Locale> {
+        private final LocaleRepository localeRepository;
+
+        @Autowired
+        public LocaleConverter(LocaleRepository localeRepository) {
+            this.localeRepository = localeRepository;
+        }
+
+        @Override
+        protected Locale convert(UserDto source) {
+            return localeRepository.findByCode(source.getLocale());
         }
     }
 }

@@ -11,7 +11,7 @@ import java.util.StringTokenizer;
 
 public interface UserService {
     @Transactional
-    void saveUser(UserDto consentDto);
+    void registerUser(UserDto consentDto);
 
     @Transactional
     void disableUser(Long userId);
