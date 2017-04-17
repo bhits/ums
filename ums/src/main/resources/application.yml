@@ -10,13 +10,6 @@ spring:
     url: jdbc:mysql://localhost:3306/ums?autoReconnect=true
     username: root
     password: admin
-# Override default configurations or Add more configurations for pls API
-  jpa:
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.MySQL5InnoDBDialect
-        hbm2ddl:
-          auto: validate
   mail:
   # UMS will use the e-mail server configured in this section to send e-mails
     # Please configure valid e-mail server below to connect to SMTP server
@@ -56,7 +49,7 @@ c2s:
     email-sender:
       # c2s-ui endpoint
       pp-ui-route: /c2s-ui
-      pp-ui-verification-relative-path: "/fe/account/verification"
+      pp-ui-verification-relative-path: "/account/verification"
       pp-ui-verification-email-token-arg-name: "emailToken"
       brand: Consent2Share
       email-token-expiration-in-days: 7
@@ -71,8 +64,6 @@ security:
       client-id: ums
       client-secret: changeit
       access-token-uri: http://localhost:8080/uaa/oauth/token
-  basic:
-    enabled: false
 ---
 spring.profiles: standalone-ssl
 spring:

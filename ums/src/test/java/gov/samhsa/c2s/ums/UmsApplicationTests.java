@@ -1,4 +1,4 @@
-package gov.samhsa.c2s;
+package gov.samhsa.c2s.ums;
 
 //@RunWith(SpringRunner.class)
 //@SpringBootTest
