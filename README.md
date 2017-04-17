@@ -1,6 +1,6 @@
 # User Management Service
 
-The User Management Service (UMS) is responsible for C2S User Registration and Activation.
+The User Management Service (UMS) is a component of Consent2Share(C2S). It manages the user account creation process, user account activation, user disable, user update, and persisting of the user demographics. The UMS has been designed to support various roles for a given user such as Admin, Parent, Guardian, Patient, and so on. If it is configured to do so, it also registers user demographics (if the user is also a patient) to a Fast Healthcare Interoperability Resources (FHIR) server. 
 
 
 ## Build
@@ -14,7 +14,7 @@ The User Management Service (UMS) is responsible for C2S User Registration and A
 
 This is a Maven project and requires [Apache Maven](https://maven.apache.org/) 3.3.3 or greater to build it. It is recommended to use the *Maven Wrapper* scripts provided with this project. *Maven Wrapper* requires an internet connection to download Maven and project dependencies for the very first build.
 
-To build the project, navigate to the folder that contains the [**parent** `pom.xml` file](ums/pom.xml) using the terminal/command line.
+To build the project, navigate to the folder that contains the `pom.xml` using the terminal/command line.
 
 + To build a JAR:
     + For Windows, run `mvnw.cmd clean install`
