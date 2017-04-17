@@ -2,6 +2,10 @@ server:
   port: 8457
 logging:
   file: /java/C2S_LOGS/ums/ums.log
+  level:
+    gov.samhsa.c2s.ums: debug
+    org.modelmapper: debug
+
 info:
   component: User Management Service
 spring:
@@ -55,9 +59,11 @@ c2s:
       email-token-expiration-in-days: 7
     fhir:
       publish:
-        enable: false
+        enabled: false
         # configure fhir server base url
         serverUrl: http://fhirtest.uhn.ca/baseDstu3
+        clientSocketTimeoutInMs: 768000
+
 security:
   oauth2:
     client:
