@@ -14,6 +14,7 @@ import gov.samhsa.c2s.ums.domain.UserRepository;
 import gov.samhsa.c2s.ums.domain.reference.AdministrativeGenderCode;
 import gov.samhsa.c2s.ums.domain.reference.AdministrativeGenderCodeRepository;
 import gov.samhsa.c2s.ums.domain.valueobject.UserPatientRelationshipId;
+import gov.samhsa.c2s.ums.infrastructure.ScimService;
 import gov.samhsa.c2s.ums.service.dto.GetUserResponseDto;
 import gov.samhsa.c2s.ums.service.dto.RelationDto;
 import gov.samhsa.c2s.ums.service.dto.UserDto;
@@ -49,9 +50,11 @@ public class UserServiceImpl implements UserService {
     private final TelecomRepository telecomRepository;
     private final AddressRepository addressRepository;
     private final UserPatientRelationshipRepository userPatientRelationshipRepository;
+    private final ScimService scimService;
+
 
     @Autowired
-    public UserServiceImpl(ModelMapper modelMapper, UserRepository userRepository, AdministrativeGenderCodeRepository administrativeGenderCodeRepository, UmsProperties umsProperties, MrnService mrnService, PatientRepository patientRepository, TelecomRepository telecomRepository, AddressRepository addressRepository, UserPatientRelationshipRepository userPatientRelationshipRepository) {
+    public UserServiceImpl(ModelMapper modelMapper, UserRepository userRepository, AdministrativeGenderCodeRepository administrativeGenderCodeRepository, UmsProperties umsProperties, MrnService mrnService, PatientRepository patientRepository, TelecomRepository telecomRepository, AddressRepository addressRepository, UserPatientRelationshipRepository userPatientRelationshipRepository,ScimService scimService) {
         this.modelMapper = modelMapper;
         this.userRepository = userRepository;
         this.administrativeGenderCodeRepository = administrativeGenderCodeRepository;
@@ -61,6 +64,7 @@ public class UserServiceImpl implements UserService {
         this.telecomRepository = telecomRepository;
         this.addressRepository = addressRepository;
         this.userPatientRelationshipRepository = userPatientRelationshipRepository;
+        this.scimService = scimService;
     }
 
     @Override
@@ -121,23 +125,38 @@ public class UserServiceImpl implements UserService {
 
 
     @Override
+    @Transactional
     public void disableUser(Long userId) {
 
         //Set isDisabled to true in the User table
         User user = userRepository.findOneByIdAndIsDisabled(userId, false)
                 .orElseThrow(() -> new UserNotFoundException("User Not Found!"));
         user.setDisabled(true);
-        User save = userRepository.save(user);
-
-        // TODO: Soft Delete in UAA 
+        //
         /**
          * Use OAuth API to set users.active to false.
          * Doing so will not let a user to login.
          * Also known as "Soft Delete".
          */
-        // String oAuth2UserId = user.getOauth2UserId(); 
+        scimService.inactiveUser(user.getOauth2UserId());
+        User save = userRepository.save(user);
+    }
 
+    @Override
+    public void enableUser(Long userId) {
 
+        //Set isDisabled to true in the User table
+        User user = userRepository.findOneByIdAndIsDisabled(userId, true)
+                .orElseThrow(() -> new UserNotFoundException("User Not Found!"));
+        user.setDisabled(false);
+        //
+        /**
+         * Use OAuth API to set users.active to false.
+         * Doing so will not let a user to login.
+         * Also known as "Soft Delete".
+         */
+        scimService.activeUser(user.getOauth2UserId());
+        User save = userRepository.save(user);
     }
 
     @Override

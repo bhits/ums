@@ -16,5 +16,9 @@ public interface ScimService {
 
     void addUserToGroups(UserActivation userActivation);
 
+    void inactiveUser(String userId);
+
+    void activeUser(String userId);
+
     void updateUserWithNewGroup(UserActivation userActivation, Scope scope);
 }

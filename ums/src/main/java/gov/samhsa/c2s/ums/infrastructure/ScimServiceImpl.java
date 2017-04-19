@@ -15,6 +15,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
@@ -97,6 +99,26 @@ public class ScimServiceImpl implements ScimService {
                 .map(IdentifierDto::getId)
                 .filter(StringUtils::hasText)
                 .findAny().orElseThrow(IdCannotBeFoundException::new);
+    }
+
+    @Override
+    public void inactiveUser(String userId) {
+        //get scim user by userId
+        ScimUser scimUser = restTemplate.getForObject(usersEndpoint+"/{userId}",ScimUser.class,userId);
+
+        //set scimUser to inactive
+        scimUser.setActive(false);
+        restTemplate.put(usersEndpoint+"/{userId}",scimUser,userId);
+    }
+
+    @Override
+    public void activeUser(String userId) {
+        //get scim user by userId
+        final ScimUser scimUser = restTemplate.getForObject(usersEndpoint+"/{userId}", ScimUser.class,userId);
+
+        //set scimUser to inactive
+        scimUser.setActive(true);
+        restTemplate.put(usersEndpoint+"/{userId}",scimUser,userId);
     }
 
     @Override
