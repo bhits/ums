@@ -36,10 +36,22 @@ public class UserRestController {
     /**
      * @param userDto User Dto Object
      */
-    @PostMapping()
+    @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public void registerUser(@Valid @RequestBody UserDto userDto) {
         userService.registerUser(userDto);
+    }
+
+
+    /**
+     * Enable User
+     *
+     * @param userId PK of User
+     */
+    @PutMapping("/{userId}/enable")
+    @ResponseStatus(HttpStatus.OK)
+    public void enableUser(@PathVariable Long userId) {
+        userService.enableUser(userId);
     }
 
 
@@ -48,7 +60,7 @@ public class UserRestController {
      *
      * @param userId PK of User
      */
-    @PutMapping("/disable/{userId}")
+    @PutMapping("/{userId}/disable")
     @ResponseStatus(HttpStatus.OK)
     public void disableUser(@PathVariable Long userId) {
         userService.disableUser(userId);
@@ -93,7 +105,7 @@ public class UserRestController {
      *
      * @return User
      */
-    @GetMapping("/search")
+    @GetMapping
     @ResponseStatus(HttpStatus.OK)
     public Page<GetUserResponseDto> getAllUsers(@RequestParam Optional<Integer> page,
                                                 @RequestParam Optional<Integer> size) {
