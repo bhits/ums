@@ -1,5 +1,5 @@
 server:
-  port: 8457
+  port: 8461
 logging:
   file: /java/C2S_LOGS/ums/ums.log
   level:
