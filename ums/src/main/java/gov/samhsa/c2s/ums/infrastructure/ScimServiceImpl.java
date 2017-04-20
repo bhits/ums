@@ -108,7 +108,13 @@ public class ScimServiceImpl implements ScimService {
 
         //set scimUser to inactive
         scimUser.setActive(false);
-        restTemplate.put(usersEndpoint+"/{userId}",scimUser,userId);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("If-Match", String.valueOf(scimUser.getVersion()));
+        HttpEntity<ScimUser> entity = new HttpEntity<ScimUser>(scimUser, headers);
+
+        restTemplate.put(usersEndpoint+"/"+ userId,entity);
+
     }
 
     @Override
@@ -118,7 +124,11 @@ public class ScimServiceImpl implements ScimService {
 
         //set scimUser to inactive
         scimUser.setActive(true);
-        restTemplate.put(usersEndpoint+"/{userId}",scimUser,userId);
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("If-Match", String.valueOf(scimUser.getVersion()));
+        HttpEntity<ScimUser> entity = new HttpEntity<ScimUser>(scimUser, headers);
+
+        restTemplate.put(usersEndpoint+"/"+ userId,entity);
     }
 
     @Override
