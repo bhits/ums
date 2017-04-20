@@ -5,6 +5,7 @@ import gov.samhsa.c2s.ums.domain.Role;
 import gov.samhsa.c2s.ums.domain.Telecom;
 import gov.samhsa.c2s.ums.domain.User;
 import gov.samhsa.c2s.ums.service.dto.GetUserResponseDto;
+import gov.samhsa.c2s.ums.service.dto.RoleDto;
 import gov.samhsa.c2s.ums.service.dto.TelecomDto;
 import gov.samhsa.c2s.ums.service.dto.UserDto;
 import org.modelmapper.ModelMapper;
@@ -17,6 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Configuration
 public class ModelMapperConfig {
@@ -68,7 +70,7 @@ public class ModelMapperConfig {
             //.map().setAddress(source.getAddress());
             map().setTelecom(telecomListToTelecomDtoList(source.getTelecoms()));
             map().setLocale(source.getLocale().getCode());
-            map().setRole(setRolesForUser(source.getRoles()));
+            map().setRole(mapRoleListToRoleDtoList(source.getRoles()));
         }
     }
 
@@ -101,15 +103,16 @@ public class ModelMapperConfig {
         return telecomDtoList;
     }
 
-    public static List<String> setRolesForUser(Set<Role> roleList){
-        List<String> roleStringList = new ArrayList<>();
 
-        if(roleList != null && roleList.size() >0){
-            for (Role tempRole : roleList){
-                roleStringList.add(tempRole.getName());
-            }
+    public static List<RoleDto> mapRoleListToRoleDtoList(Set<Role> roles){
+
+        List<RoleDto> roleDtoList = new ArrayList<>();
+        if (roles != null && roles.size() > 0) {
+            roles.stream().forEach(role ->
+                    roleDtoList.add(RoleDto.builder().code(role.getCode()).name(role.getName()).build())
+            );
         }
-        return roleStringList;
+        return roleDtoList;
     }
 
 }

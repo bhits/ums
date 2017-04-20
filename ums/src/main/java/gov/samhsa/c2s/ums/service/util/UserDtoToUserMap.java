@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Component
 public class UserDtoToUserMap extends PropertyMap<UserDto, User> {
@@ -76,7 +77,7 @@ public class UserDtoToUserMap extends PropertyMap<UserDto, User> {
 
         @Override
         protected Set<Role> convert(UserDto source) {
-            return roleRepository.findAllByCode(source.getRole());
+            return source.getRole().stream().flatMap(roleDto -> roleRepository.findAllByCode(roleDto.getCode()).stream()).distinct().collect(Collectors.toSet());
         }
     }
 

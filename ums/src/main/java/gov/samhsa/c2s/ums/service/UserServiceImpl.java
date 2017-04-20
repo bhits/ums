@@ -96,11 +96,12 @@ public class UserServiceImpl implements UserService {
         Add User Patient Record if the role is patient
         TODO remove the hardcoding with FHIR enum value
         */
-        if (userDto.getRole().equalsIgnoreCase("patient")) {
+        if (userDto.getRole().stream().anyMatch(roleDto -> roleDto.getCode().equalsIgnoreCase("patient")))
+        {
             Patient patient = createPatient(user);
             // Step 2.1: Create User Patient Relationship Mapping in UMS
             // Add User patient relationship if User is a Patient
-            createUserPatientRelationship(user.getId(), patient.getId(), userDto.getRole());
+            createUserPatientRelationship(user.getId(), patient.getId(), "patient");
             // Publish FHIR Patient to FHir Service
 
         }

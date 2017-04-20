@@ -38,7 +38,7 @@ public class UserDto {
 
     private List<TelecomDto> telecom;
 
-    private String role;
+    private List<RoleDto> role;
 
     private String locale;
 

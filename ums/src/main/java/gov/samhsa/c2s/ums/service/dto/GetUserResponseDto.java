@@ -39,7 +39,7 @@ public class GetUserResponseDto {
 
     private List<TelecomDto> telecom;
 
-    private List<String> role;
+    private List<RoleDto> role;
 
     private String locale;
 }
