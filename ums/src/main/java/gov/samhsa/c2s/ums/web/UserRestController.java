@@ -115,14 +115,13 @@ public class UserRestController {
     /**
      * Find All Users that match the First Name and/or the Last Name.
      *
-     * @param token token
+     * @param term term
      * @return List of Users
      */
-    @GetMapping(value = "/search/{token}")
+    @GetMapping(value = "/search")
     @ResponseStatus(HttpStatus.OK)
-    public List<GetUserResponseDto> searchUsersByFirstNameAndORLastName(@PathVariable String token) {
-        StringTokenizer tokenizer;
-        tokenizer = new StringTokenizer(token, " ");
+    public List<GetUserResponseDto> searchUsersByFirstNameAndORLastName(@RequestParam("term") String term) {
+        StringTokenizer tokenizer = new StringTokenizer(term, " ");
         return userService.searchUsersByFirstNameAndORLastName(tokenizer);
     }
 
@@ -136,9 +135,9 @@ public class UserRestController {
     @GetMapping(value = "/search/patientDemographic")
     @ResponseStatus(HttpStatus.OK)
     public List<GetUserResponseDto> searchUsersByDemographic(@RequestParam("firstName") String firstName,
-                                                  @RequestParam("lastName") String lastName,
-                                                  @RequestParam("birthDate") @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate birthDate,
-                                                  @RequestParam("genderCode") String genderCode) {
+                                                             @RequestParam("lastName") String lastName,
+                                                             @RequestParam("birthDate") @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate birthDate,
+                                                             @RequestParam("genderCode") String genderCode) {
         return userService.searchUsersByDemographic(firstName, lastName, birthDate, genderCode);
     }
 
