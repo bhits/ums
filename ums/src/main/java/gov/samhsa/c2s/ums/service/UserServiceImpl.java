@@ -138,7 +138,7 @@ public class UserServiceImpl implements UserService {
          * Doing so will not let a user to login.
          * Also known as "Soft Delete".
          */
-        scimService.inactiveUser(user.getOauth2UserId());
+        scimService.setUserAsInactive(user.getOauth2UserId());
         User save = userRepository.save(user);
     }
 
@@ -154,7 +154,7 @@ public class UserServiceImpl implements UserService {
          * Use OAuth API to set users.active to true.
 
          */
-        scimService.activeUser(user.getOauth2UserId());
+        scimService.setUserAsActive(user.getOauth2UserId());
         User save = userRepository.save(user);
     }
 
