@@ -138,24 +138,23 @@ public class UserServiceImpl implements UserService {
          * Doing so will not let a user to login.
          * Also known as "Soft Delete".
          */
-        scimService.inactiveUser(user.getOauth2UserId());
+        scimService.setUserAsInactive(user.getOauth2UserId());
         User save = userRepository.save(user);
     }
 
     @Override
     public void enableUser(Long userId) {
 
-        //Set isDisabled to true in the User table
+        //Set isDisabled to false in the User table
         User user = userRepository.findOneByIdAndIsDisabled(userId, true)
                 .orElseThrow(() -> new UserNotFoundException("User Not Found!"));
         user.setDisabled(false);
-        //
+
         /**
-         * Use OAuth API to set users.active to false.
-         * Doing so will not let a user to login.
-         * Also known as "Soft Delete".
+         * Use OAuth API to set users.active to true.
+
          */
-        scimService.activeUser(user.getOauth2UserId());
+        scimService.setUserAsActive(user.getOauth2UserId());
         User save = userRepository.save(user);
     }
 
