@@ -102,11 +102,11 @@ public class ScimServiceImpl implements ScimService {
     }
 
     @Override
-    public void inactiveUser(String userId) {
+    public void setUserAsInactive(String userId) {
         //get scim user by userId
         ScimUser scimUser = restTemplate.getForObject(usersEndpoint+"/{userId}",ScimUser.class,userId);
 
-        //set scimUser to inactive
+        //set scimUser as inactive
         scimUser.setActive(false);
 
         HttpHeaders headers = new HttpHeaders();
@@ -118,11 +118,11 @@ public class ScimServiceImpl implements ScimService {
     }
 
     @Override
-    public void activeUser(String userId) {
+    public void setUserAsActive(String userId) {
         //get scim user by userId
         final ScimUser scimUser = restTemplate.getForObject(usersEndpoint+"/{userId}", ScimUser.class,userId);
 
-        //set scimUser to inactive
+        //set scimUser as active
         scimUser.setActive(true);
         HttpHeaders headers = new HttpHeaders();
         headers.set("If-Match", String.valueOf(scimUser.getVersion()));
