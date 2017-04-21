@@ -35,12 +35,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.StringTokenizer;
+import java.util.stream.Collectors;
 
 
 @Service
 @Slf4j
 public class UserServiceImpl implements UserService {
 
+    private static final Integer PAGE_NUMBER = 0;
     private final UserRepository userRepository;
     private final AdministrativeGenderCodeRepository administrativeGenderCodeRepository;
     private final UmsProperties umsProperties;
@@ -54,7 +56,7 @@ public class UserServiceImpl implements UserService {
 
 
     @Autowired
-    public UserServiceImpl(ModelMapper modelMapper, UserRepository userRepository, AdministrativeGenderCodeRepository administrativeGenderCodeRepository, UmsProperties umsProperties, MrnService mrnService, PatientRepository patientRepository, TelecomRepository telecomRepository, AddressRepository addressRepository, UserPatientRelationshipRepository userPatientRelationshipRepository,ScimService scimService) {
+    public UserServiceImpl(ModelMapper modelMapper, UserRepository userRepository, AdministrativeGenderCodeRepository administrativeGenderCodeRepository, UmsProperties umsProperties, MrnService mrnService, PatientRepository patientRepository, TelecomRepository telecomRepository, AddressRepository addressRepository, UserPatientRelationshipRepository userPatientRelationshipRepository, ScimService scimService) {
         this.modelMapper = modelMapper;
         this.userRepository = userRepository;
         this.administrativeGenderCodeRepository = administrativeGenderCodeRepository;
@@ -96,8 +98,7 @@ public class UserServiceImpl implements UserService {
         Add User Patient Record if the role is patient
         TODO remove the hardcoding with FHIR enum value
         */
-        if (userDto.getRole().stream().anyMatch(roleDto -> roleDto.getCode().equalsIgnoreCase("patient")))
-        {
+        if (userDto.getRole().stream().anyMatch(roleDto -> roleDto.getCode().equalsIgnoreCase("patient"))) {
             Patient patient = createPatient(user);
             // Step 2.1: Create User Patient Relationship Mapping in UMS
             // Add User patient relationship if User is a Patient
@@ -191,33 +192,30 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public List<GetUserResponseDto> searchUsersByFirstNameAndORLastName(StringTokenizer token) {
-
-        List<User> userList;
-        Integer pageNumber = 0;
-        Pageable pageRequest = new PageRequest(pageNumber, umsProperties.getPagination().getDefaultSize());
-
+        Pageable pageRequest = new PageRequest(PAGE_NUMBER, umsProperties.getPagination().getDefaultSize());
         if (token.countTokens() == 1) {
             String firstName = token.nextToken(); // First Token could be first name or the last name
-            userList = userRepository.findAllByFirstNameLikesOrLastNameLikesAndIsDisabled("%" + firstName + "%", false, pageRequest);
+            return userRepository.findAllByFirstNameLikesOrLastNameLikesAndIsDisabled("%" + firstName + "%", false, pageRequest)
+                    .stream()
+                    .map(user -> modelMapper.map(user, GetUserResponseDto.class))
+                    .collect(Collectors.toList());
         } else if (token.countTokens() >= 2) {
             String firstName = token.nextToken(); // First Token is the first name
             String lastName = token.nextToken();  // Last Token is the last name
-            userList = userRepository.findAllByFirstNameLikesAndLastNameLikesAndIsDisabled("%" + firstName + "%", "%" + lastName + "%", false, pageRequest);
+            return userRepository.findAllByFirstNameLikesAndLastNameLikesAndIsDisabled("%" + firstName + "%", "%" + lastName + "%", false, pageRequest)
+                    .stream()
+                    .map(user -> modelMapper.map(user, GetUserResponseDto.class))
+                    .collect(Collectors.toList());
         } else {
-            userList = new ArrayList<>();
-        }
-        if (userList.size() < 1) {
-            throw new UserNotFoundException("User Not Found!");
-        } else {
-            return userListToGetUserDtoList(userList);
+            return new ArrayList<>();
         }
     }
 
     @Override
     public List<GetUserResponseDto> searchUsersByDemographic(String firstName,
-                                                  String lastName,
-                                                  LocalDate birthDate,
-                                                  String genderCode) {
+                                                             String lastName,
+                                                             LocalDate birthDate,
+                                                             String genderCode) {
         List<User> userList;
         final AdministrativeGenderCode administrativeGenderCode = administrativeGenderCodeRepository.findByCode(genderCode);
         userList = userRepository.findAllByFirstNameAndLastNameAndBirthDayAndAdministrativeGenderCodeAndIsDisabled(firstName, lastName,
