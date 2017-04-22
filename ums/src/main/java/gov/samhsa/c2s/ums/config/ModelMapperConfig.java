@@ -4,7 +4,6 @@ package gov.samhsa.c2s.ums.config;
 import gov.samhsa.c2s.ums.domain.Role;
 import gov.samhsa.c2s.ums.domain.Telecom;
 import gov.samhsa.c2s.ums.domain.User;
-import gov.samhsa.c2s.ums.service.dto.GetUserResponseDto;
 import gov.samhsa.c2s.ums.service.dto.RoleDto;
 import gov.samhsa.c2s.ums.service.dto.TelecomDto;
 import gov.samhsa.c2s.ums.service.dto.UserDto;
@@ -18,7 +17,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @Configuration
 public class ModelMapperConfig {
@@ -50,45 +48,13 @@ public class ModelMapperConfig {
             map().setBirthDate(source.getBirthDay());
             map().setGenderCode(source.getAdministrativeGenderCode().getDisplayName());
             map().setSocialSecurityNumber(source.getSocialSecurityNumber());
-        }
-    }
-
-    /**
-     * Map User to GetUserResponseDto
-     */
-    @Component
-    static class UserToGetUserResponseDtoMap extends PropertyMap<User, GetUserResponseDto> {
-
-        @Override
-        protected void configure() {
-            map().setId(source.getId());
-            map().setFirstName(source.getFirstName());
-            map().setLastName(source.getLastName());
-            map().setBirthDate(source.getBirthDay());
-            map().setGenderCode(source.getAdministrativeGenderCode().getDisplayName());
-            map().setSocialSecurityNumber(source.getSocialSecurityNumber());
-            //.map().setAddress(source.getAddress());
             map().setTelecom(telecomListToTelecomDtoList(source.getTelecoms()));
             map().setLocale(source.getLocale().getCode());
             map().setRole(mapRoleListToRoleDtoList(source.getRoles()));
         }
     }
 
-    /**
-     * Map Telecom to TelecomDto
-     */
-    @Component
-    static class TelecomToTelecomDtoMap extends PropertyMap<Telecom, TelecomDto> {
-
-        @Override
-        protected void configure() {
-            map().setSystem(source.getSystem());
-            map().setValue(source.getValue());
-        }
-    }
-
-
-    public static List<TelecomDto> telecomListToTelecomDtoList(List<Telecom> telecomList) {
+     public static List<TelecomDto> telecomListToTelecomDtoList(List<Telecom> telecomList) {
         List<TelecomDto> telecomDtoList = new ArrayList<>();
 
         if (telecomList != null && telecomList.size() > 0) {

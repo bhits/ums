@@ -1,6 +1,5 @@
 package gov.samhsa.c2s.ums.service;
 
-import gov.samhsa.c2s.ums.service.dto.GetUserResponseDto;
 import gov.samhsa.c2s.ums.service.dto.UserDto;
 import org.springframework.data.domain.Page;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,13 +29,13 @@ public interface UserService {
     Object getUserByOAuth2Id(String oAuth2UserId);
 
     @Transactional(readOnly = true)
-    Page<GetUserResponseDto> getAllUsers(Optional<Integer> page, Optional<Integer> size);
+    Page<UserDto> getAllUsers(Optional<Integer> page, Optional<Integer> size);
 
     @Transactional(readOnly = true)
-    List<GetUserResponseDto> searchUsersByFirstNameAndORLastName(StringTokenizer token);
+    List<UserDto> searchUsersByFirstNameAndORLastName(StringTokenizer token);
 
     @Transactional(readOnly = true)
-    List<GetUserResponseDto> searchUsersByDemographic(String firstName, String lastName, LocalDate birthDate, String genderCode);
+    List<UserDto> searchUsersByDemographic(String firstName, String lastName, LocalDate birthDate, String genderCode);
 
     //Todo: Get all Users by role type
 

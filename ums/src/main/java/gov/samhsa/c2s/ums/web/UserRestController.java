@@ -1,7 +1,6 @@
 package gov.samhsa.c2s.ums.web;
 
 import gov.samhsa.c2s.ums.service.UserService;
-import gov.samhsa.c2s.ums.service.dto.GetUserResponseDto;
 import gov.samhsa.c2s.ums.service.dto.UserDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -107,7 +106,7 @@ public class UserRestController {
      */
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
-    public Page<GetUserResponseDto> getAllUsers(@RequestParam Optional<Integer> page,
+    public Page<UserDto> getAllUsers(@RequestParam Optional<Integer> page,
                                                 @RequestParam Optional<Integer> size) {
         return userService.getAllUsers(page, size);
     }
@@ -120,7 +119,7 @@ public class UserRestController {
      */
     @GetMapping(value = "/search")
     @ResponseStatus(HttpStatus.OK)
-    public List<GetUserResponseDto> searchUsersByFirstNameAndORLastName(@RequestParam("term") String term) {
+    public List<UserDto> searchUsersByFirstNameAndORLastName(@RequestParam("term") String term) {
         StringTokenizer tokenizer = new StringTokenizer(term, " ");
         return userService.searchUsersByFirstNameAndORLastName(tokenizer);
     }
@@ -134,7 +133,7 @@ public class UserRestController {
      */
     @GetMapping(value = "/search/patientDemographic")
     @ResponseStatus(HttpStatus.OK)
-    public List<GetUserResponseDto> searchUsersByDemographic(@RequestParam("firstName") String firstName,
+    public List<UserDto> searchUsersByDemographic(@RequestParam("firstName") String firstName,
                                                              @RequestParam("lastName") String lastName,
                                                              @RequestParam("birthDate") @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate birthDate,
                                                              @RequestParam("genderCode") String genderCode) {

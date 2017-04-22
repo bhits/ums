@@ -15,7 +15,6 @@ import gov.samhsa.c2s.ums.domain.reference.AdministrativeGenderCode;
 import gov.samhsa.c2s.ums.domain.reference.AdministrativeGenderCodeRepository;
 import gov.samhsa.c2s.ums.domain.valueobject.UserPatientRelationshipId;
 import gov.samhsa.c2s.ums.infrastructure.ScimService;
-import gov.samhsa.c2s.ums.service.dto.GetUserResponseDto;
 import gov.samhsa.c2s.ums.service.dto.RelationDto;
 import gov.samhsa.c2s.ums.service.dto.UserDto;
 import gov.samhsa.c2s.ums.service.exception.UserNotFoundException;
@@ -169,42 +168,41 @@ public class UserServiceImpl implements UserService {
     public Object getUser(Long userId) {
         final User user = userRepository.findOneByIdAndIsDisabled(userId, false)
                 .orElseThrow(() -> new UserNotFoundException("User Not Found!"));
-        return modelMapper.map(user, GetUserResponseDto.class);
+        return modelMapper.map(user, UserDto.class);
     }
 
     @Override
     public Object getUserByOAuth2Id(String oAuth2UserId) {
         final User user = userRepository.findOneByOauth2UserIdAndIsDisabled(oAuth2UserId, false)
                 .orElseThrow(() -> new UserNotFoundException("User Not Found!"));
-        return modelMapper.map(user, GetUserResponseDto.class);
+        return modelMapper.map(user, UserDto.class);
     }
 
     @Override
-    public Page<GetUserResponseDto> getAllUsers(Optional<Integer> page, Optional<Integer> size) {
+    public Page<UserDto> getAllUsers(Optional<Integer> page, Optional<Integer> size) {
         final PageRequest pageRequest = new PageRequest(page.filter(p -> p >= 0).orElse(0),
                 size.filter(s -> s > 0 && s <= umsProperties.getPagination().getMaxSize())
                         .orElse(umsProperties.getPagination().getDefaultSize()));
         final Page<User> usersPage = userRepository.findAllByIsDisabled(false, pageRequest);
         final List<User> userList = usersPage.getContent();
-        final List<GetUserResponseDto> getUserDtoList = userListToGetUserDtoList(userList);
+        final List<UserDto> getUserDtoList = userListToGetUserDtoList(userList);
         return new PageImpl<>(getUserDtoList, pageRequest, usersPage.getTotalElements());
     }
 
-    @Override
-    public List<GetUserResponseDto> searchUsersByFirstNameAndORLastName(StringTokenizer token) {
+    public List<UserDto> searchUsersByFirstNameAndORLastName(StringTokenizer token) {
         Pageable pageRequest = new PageRequest(PAGE_NUMBER, umsProperties.getPagination().getDefaultSize());
         if (token.countTokens() == 1) {
             String firstName = token.nextToken(); // First Token could be first name or the last name
             return userRepository.findAllByFirstNameLikesOrLastNameLikesAndIsDisabled("%" + firstName + "%", false, pageRequest)
                     .stream()
-                    .map(user -> modelMapper.map(user, GetUserResponseDto.class))
+                    .map(user -> modelMapper.map(user, UserDto.class))
                     .collect(Collectors.toList());
         } else if (token.countTokens() >= 2) {
             String firstName = token.nextToken(); // First Token is the first name
             String lastName = token.nextToken();  // Last Token is the last name
             return userRepository.findAllByFirstNameLikesAndLastNameLikesAndIsDisabled("%" + firstName + "%", "%" + lastName + "%", false, pageRequest)
                     .stream()
-                    .map(user -> modelMapper.map(user, GetUserResponseDto.class))
+                    .map(user -> modelMapper.map(user, UserDto.class))
                     .collect(Collectors.toList());
         } else {
             return new ArrayList<>();
@@ -212,10 +210,10 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public List<GetUserResponseDto> searchUsersByDemographic(String firstName,
-                                                             String lastName,
-                                                             LocalDate birthDate,
-                                                             String genderCode) {
+    public List<UserDto> searchUsersByDemographic(String firstName,
+                                                  String lastName,
+                                                  LocalDate birthDate,
+                                                  String genderCode) {
         List<User> userList;
         final AdministrativeGenderCode administrativeGenderCode = administrativeGenderCodeRepository.findByCode(genderCode);
         userList = userRepository.findAllByFirstNameAndLastNameAndBirthDayAndAdministrativeGenderCodeAndIsDisabled(firstName, lastName,
@@ -227,12 +225,12 @@ public class UserServiceImpl implements UserService {
         }
     }
 
-    private List<GetUserResponseDto> userListToGetUserDtoList(List<User> userList) {
-        List<GetUserResponseDto> getUserDtoList = new ArrayList<>();
+    private List<UserDto> userListToGetUserDtoList(List<User> userList) {
+        List<UserDto> getUserDtoList = new ArrayList<>();
 
         if (userList != null && userList.size() > 0) {
             for (User tempUser : userList) {
-                getUserDtoList.add(modelMapper.map(tempUser, GetUserResponseDto.class));
+                getUserDtoList.add(modelMapper.map(tempUser, UserDto.class));
             }
         }
         return getUserDtoList;

@@ -4,19 +4,16 @@ package gov.samhsa.c2s.ums.service.util;
 import gov.samhsa.c2s.ums.domain.Telecom;
 import gov.samhsa.c2s.ums.domain.User;
 import gov.samhsa.c2s.ums.domain.reference.AdministrativeGenderCode;
-import gov.samhsa.c2s.ums.domain.reference.AdministrativeGenderCodeRepository;
 import gov.samhsa.c2s.ums.service.dto.UserDto;
 import org.hl7.fhir.dstu3.model.ContactPoint;
 import org.hl7.fhir.dstu3.model.Enumerations;
 import org.hl7.fhir.dstu3.model.Patient;
 import org.modelmapper.AbstractConverter;
 import org.modelmapper.PropertyMap;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.time.ZoneId;
 import java.util.Date;
-import java.util.function.Function;
 
 public class UserToFhirPatientMap extends PropertyMap<User, Patient> {
 

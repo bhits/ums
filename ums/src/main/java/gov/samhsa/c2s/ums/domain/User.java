@@ -3,7 +3,6 @@ package gov.samhsa.c2s.ums.domain;
 
 import gov.samhsa.c2s.ums.domain.reference.AdministrativeGenderCode;
 import lombok.Data;
-import lombok.ToString;
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.NotAudited;
 import org.hibernate.envers.RelationTargetAuditMode;
@@ -67,7 +66,7 @@ public class User {
     /**
      * The telephone.
      */
-    @OneToMany(mappedBy = "user", orphanRemoval = true)
+    @OneToMany(mappedBy = "user", orphanRemoval = true, cascade = CascadeType.ALL)
     @NotAudited
     private List<Telecom> telecoms;
     /**
@@ -88,7 +87,7 @@ public class User {
     @Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
     private Locale locale;
 
-    @ManyToOne
+    @ManyToOne(cascade = CascadeType.ALL)
     @Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
     private Address address;
 
