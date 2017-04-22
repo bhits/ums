@@ -23,10 +23,10 @@ public interface UserService {
     void updateUser(Long userId, UserDto userDto);
 
     @Transactional(readOnly = true)
-    Object getUser(Long userId);
+    UserDto getUser(Long userId);
 
     @Transactional(readOnly = true)
-    Object getUserByOAuth2Id(String oAuth2UserId);
+    UserDto getUserByOAuth2Id(String oAuth2UserId);
 
     @Transactional(readOnly = true)
     Page<UserDto> getAllUsers(Optional<Integer> page, Optional<Integer> size);

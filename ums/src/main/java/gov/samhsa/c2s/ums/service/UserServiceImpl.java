@@ -165,14 +165,14 @@ public class UserServiceImpl implements UserService {
 
 
     @Override
-    public Object getUser(Long userId) {
+    public UserDto getUser(Long userId) {
         final User user = userRepository.findOneByIdAndIsDisabled(userId, false)
                 .orElseThrow(() -> new UserNotFoundException("User Not Found!"));
         return modelMapper.map(user, UserDto.class);
     }
 
     @Override
-    public Object getUserByOAuth2Id(String oAuth2UserId) {
+    public UserDto getUserByOAuth2Id(String oAuth2UserId) {
         final User user = userRepository.findOneByOauth2UserIdAndIsDisabled(oAuth2UserId, false)
                 .orElseThrow(() -> new UserNotFoundException("User Not Found!"));
         return modelMapper.map(user, UserDto.class);
