@@ -1,24 +1,19 @@
 package gov.samhsa.c2s.ums.service.dto;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
+@Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class LocaleDto  {
-    String code;
+public class RelationshipDto {
 
-    String displayName;
-
-    String description;
-
-    String codeSystem;
-
-    String codeSystemOID;
+    private String code;
 
 
-    String codeSystemName;
+    private String name;
 
 }
