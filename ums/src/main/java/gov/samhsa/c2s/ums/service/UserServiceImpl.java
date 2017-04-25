@@ -186,7 +186,7 @@ public class UserServiceImpl implements UserService {
                         .orElse(umsProperties.getPagination().getDefaultSize()));
         final Page<User> usersPage = userRepository.findAllByIsDisabled(false, pageRequest);
         final List<User> userList = usersPage.getContent();
-        final List<GetUserResponseDto> getUserDtoList = userListToGetUserDtoList(userList);
+        final List<GetUserResponseDto> getUserDtoList = userList.stream().map(user -> modelMapper.map(user, GetUserResponseDto.class)).collect(Collectors.toList());
         return new PageImpl<>(getUserDtoList, pageRequest, usersPage.getTotalElements());
     }
 
@@ -223,19 +223,7 @@ public class UserServiceImpl implements UserService {
         if (userList.size() < 1) {
             throw new UserNotFoundException("User Not Found!");
         } else {
-            return userListToGetUserDtoList(userList);
+            return userList.stream().map(user -> modelMapper.map(user, GetUserResponseDto.class)).collect(Collectors.toList());
         }
     }
-
-    private List<GetUserResponseDto> userListToGetUserDtoList(List<User> userList) {
-        List<GetUserResponseDto> getUserDtoList = new ArrayList<>();
-
-        if (userList != null && userList.size() > 0) {
-            for (User tempUser : userList) {
-                getUserDtoList.add(modelMapper.map(tempUser, GetUserResponseDto.class));
-            }
-        }
-        return getUserDtoList;
-    }
-
 }
