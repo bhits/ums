@@ -22,6 +22,8 @@ public class UserDto {
     @NotEmpty
     private String lastName;
 
+    private String middleName;
+
     @NotEmpty
     private String firstName;
 
