@@ -15,7 +15,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     Optional<User> findOneByIdAndIsDisabled(Long userId, boolean isDisabled);
 
-    Optional<User> findOneByOauth2UserIdAndIsDisabled(String oauth2UserId, boolean isDisabled);
+    Optional<User> findOneByUserAuthIdAndIsDisabled(String userAuthId, boolean isDisabled);
 
     Page<User> findAllByIsDisabled(boolean isDisabled, Pageable pageable);
 

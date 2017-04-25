@@ -92,12 +92,12 @@ public class UserRestController {
     /**
      * Get User based on OAuth2 User Id
      *
-     * @param oAuth2UserId OAUTH2 User Id
+     * @param userAuthId User Auth Id
      * @return UserDto Object
      */
-    @GetMapping("/OAuth2/{oAuth2UserId}")
-    public Object getUserByOAuth2Id(@PathVariable String oAuth2UserId) {
-        return userService.getUserByOAuth2Id(oAuth2UserId);
+    @GetMapping("/userAuthId/{userAuthId}")
+    public Object getUserByAuthId(@PathVariable String userAuthId) {
+        return userService.getUserByAuthId(userAuthId);
     }
 
     /**

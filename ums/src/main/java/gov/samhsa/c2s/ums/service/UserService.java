@@ -27,7 +27,7 @@ public interface UserService {
     Object getUser(Long userId);
 
     @Transactional(readOnly = true)
-    Object getUserByOAuth2Id(String oAuth2UserId);
+    Object getUserByAuthId(String userAuthId);
 
     @Transactional(readOnly = true)
     Page<GetUserResponseDto> getAllUsers(Optional<Integer> page, Optional<Integer> size);
