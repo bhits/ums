@@ -204,7 +204,7 @@ public class UserActivationServiceImpl implements UserActivationService {
         final String userId = savedScimUser.getId();
         Assert.hasText(userId, "SCIM userId must have text");
         // Save userId in userActivation
-        user.setUserAuthId(userId);
+        user.setOauth2UserId(userId);
         userActivationRepository.save(userActivation);
         // Add user to groups
         scimService.addUserToGroups(userActivation);

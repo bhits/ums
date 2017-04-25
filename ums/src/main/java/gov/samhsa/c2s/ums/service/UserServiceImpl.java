@@ -140,7 +140,7 @@ public class UserServiceImpl implements UserService {
          * Doing so will not let a user to login.
          * Also known as "Soft Delete".
          */
-        scimService.setUserAsInactive(user.getUserAuthId());
+        scimService.setUserAsInactive(user.getOauth2UserId());
         User save = userRepository.save(user);
     }
 
@@ -156,7 +156,7 @@ public class UserServiceImpl implements UserService {
          * Use OAuth API to set users.active to true.
 
          */
-        scimService.setUserAsActive(user.getUserAuthId());
+        scimService.setUserAsActive(user.getOauth2UserId());
         User save = userRepository.save(user);
     }
 
@@ -173,8 +173,8 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public Object getUserByAuthId(String userAuthId) {
-        final User user = userRepository.findOneByUserAuthIdAndIsDisabled(userAuthId, false)
+    public Object getUserByOAuth2Id(String oAuth2UserId) {
+        final User user = userRepository.findOneByOauth2UserIdAndIsDisabled(oAuth2UserId, false)
                 .orElseThrow(() -> new UserNotFoundException("User Not Found!"));
         return modelMapper.map(user, GetUserResponseDto.class);
     }

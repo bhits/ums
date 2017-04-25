@@ -36,7 +36,7 @@ public class PatientServiceImpl implements PatientService{
 
         if(userAuthId.isPresent()){
             //Validate if the given userAuthId has access to the given MRN/PatientID
-            final User user = userRepository.findOneByUserAuthIdAndIsDisabled(userAuthId.get(), false)
+            final User user = userRepository.findOneByOauth2UserIdAndIsDisabled(userAuthId.get(), false)
                     .orElseThrow(() -> new UserNotFoundException("User Not Found!"));
             UserPatientRelationship userPatientRelationship = userPatientRelationshipRepository.findOneByUserIdAndPatientId(user.getId(), patientId).orElseThrow(() -> new PatientNotFoundException("Patient Not Found!"));
         }
