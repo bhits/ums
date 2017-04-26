@@ -9,11 +9,18 @@ import gov.samhsa.c2s.ums.domain.UserRepository;
 import gov.samhsa.c2s.ums.service.dto.PatientDto;
 import gov.samhsa.c2s.ums.service.exception.PatientNotFoundException;
 import gov.samhsa.c2s.ums.service.exception.UserNotFoundException;
+import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
+import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
+import java.util.List;
 import java.util.Optional;
 
+import static java.util.Arrays.asList;
+
+@Service
+@Slf4j
 public class PatientServiceImpl implements PatientService{
 
     private final PatientRepository patientRepository;
@@ -38,7 +45,11 @@ public class PatientServiceImpl implements PatientService{
             //Validate if the given userAuthId has access to the given MRN/PatientID
             final User user = userRepository.findOneByOauth2UserIdAndIsDisabled(userAuthId.get(), false)
                     .orElseThrow(() -> new UserNotFoundException("User Not Found!"));
-            UserPatientRelationship userPatientRelationship = userPatientRelationshipRepository.findOneByUserIdAndPatientId(user.getId(), patientId).orElseThrow(() -> new PatientNotFoundException("Patient Not Found!"));
+            List<UserPatientRelationship> userPatientRelationshipList = userPatientRelationshipRepository.findAllByIdUserIdAndIdPatientId(user.getId(), patientId);
+
+            if(userPatientRelationshipList == null || userPatientRelationshipList.size() < 1){
+                throw new PatientNotFoundException("Patient Not Found!");
+            }
         }
         return  modelMapper.map(patient, PatientDto.class);
 
