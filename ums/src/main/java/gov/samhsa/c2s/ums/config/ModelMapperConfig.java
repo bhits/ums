@@ -46,7 +46,7 @@ public class ModelMapperConfig {
             map().setFirstName(source.getFirstName());
             map().setLastName(source.getLastName());
             map().setBirthDate(source.getBirthDay());
-            map().setGenderCode(source.getAdministrativeGenderCode().getDisplayName());
+            map().setGenderCode(source.getAdministrativeGenderCode().getCode());
             map().setSocialSecurityNumber(source.getSocialSecurityNumber());
             map().setTelecom(telecomListToTelecomDtoList(source.getTelecoms()));
             map().setLocale(source.getLocale().getCode());
