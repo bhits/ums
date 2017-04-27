@@ -47,7 +47,7 @@ public class UserRestController {
      *
      * @param userId PK of User
      */
-    @PutMapping("/{userId}/enable")
+    @PutMapping("/{userId}/enabled")
     @ResponseStatus(HttpStatus.OK)
     public void enableUser(@PathVariable Long userId) {
         userService.enableUser(userId);
@@ -59,7 +59,7 @@ public class UserRestController {
      *
      * @param userId PK of User
      */
-    @PutMapping("/{userId}/disable")
+    @PutMapping("/{userId}/disabled")
     @ResponseStatus(HttpStatus.OK)
     public void disableUser(@PathVariable Long userId) {
         userService.disableUser(userId);
@@ -107,7 +107,7 @@ public class UserRestController {
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
     public Page<UserDto> getAllUsers(@RequestParam Optional<Integer> page,
-                                                @RequestParam Optional<Integer> size) {
+                                     @RequestParam Optional<Integer> size) {
         return userService.getAllUsers(page, size);
     }
 
@@ -134,9 +134,9 @@ public class UserRestController {
     @GetMapping(value = "/search/patientDemographic")
     @ResponseStatus(HttpStatus.OK)
     public List<UserDto> searchUsersByDemographic(@RequestParam("firstName") String firstName,
-                                                             @RequestParam("lastName") String lastName,
-                                                             @RequestParam("birthDate") @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate birthDate,
-                                                             @RequestParam("genderCode") String genderCode) {
+                                                  @RequestParam("lastName") String lastName,
+                                                  @RequestParam("birthDate") @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate birthDate,
+                                                  @RequestParam("genderCode") String genderCode) {
         return userService.searchUsersByDemographic(firstName, lastName, birthDate, genderCode);
     }
 
