@@ -1,8 +1,8 @@
 package gov.samhsa.c2s.ums.service.util;
 
 
+import gov.samhsa.c2s.ums.domain.Demographics;
 import gov.samhsa.c2s.ums.domain.Telecom;
-import gov.samhsa.c2s.ums.domain.User;
 import gov.samhsa.c2s.ums.domain.reference.AdministrativeGenderCode;
 import gov.samhsa.c2s.ums.service.dto.UserDto;
 import org.hl7.fhir.dstu3.model.ContactPoint;
@@ -15,7 +15,7 @@ import org.springframework.stereotype.Component;
 import java.time.ZoneId;
 import java.util.Date;
 
-public class UserToFhirPatientMap extends PropertyMap<User, Patient> {
+public class UserToFhirPatientMap extends PropertyMap<Demographics, Patient> {
 
     AdministrativeGenderConverter genderConverter;
 
@@ -23,9 +23,9 @@ public class UserToFhirPatientMap extends PropertyMap<User, Patient> {
     protected void configure() {
         map().addName().setFamily(source.getLastName()).addGiven(source.getFirstName());
         for (Telecom telecom : source.getTelecoms()) {
-            if (telecom.getSystem().equalsIgnoreCase(ContactPoint.ContactPointSystem.EMAIL.toCode())) {
+            if (telecom.getSystem().toString().equalsIgnoreCase(ContactPoint.ContactPointSystem.EMAIL.toCode())) {
                 map().addTelecom().setValue(telecom.getValue()).setSystem(ContactPoint.ContactPointSystem.EMAIL);
-            } else if (telecom.getSystem().equalsIgnoreCase(ContactPoint.ContactPointSystem.PHONE.toCode())) {
+            } else if (telecom.getSystem().toString().equalsIgnoreCase(ContactPoint.ContactPointSystem.PHONE.toCode())) {
                 map().addTelecom().setValue(telecom.getValue()).setSystem(ContactPoint.ContactPointSystem.PHONE);
             }
         }

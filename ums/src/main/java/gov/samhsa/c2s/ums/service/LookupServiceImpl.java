@@ -2,7 +2,6 @@ package gov.samhsa.c2s.ums.service;
 
 import gov.samhsa.c2s.ums.domain.Locale;
 import gov.samhsa.c2s.ums.domain.LocaleRepository;
-import gov.samhsa.c2s.ums.domain.Relationship;
 import gov.samhsa.c2s.ums.domain.RelationshipRepository;
 import gov.samhsa.c2s.ums.domain.Role;
 import gov.samhsa.c2s.ums.domain.RoleRepository;
@@ -13,7 +12,6 @@ import gov.samhsa.c2s.ums.domain.reference.CountryCodeRepository;
 import gov.samhsa.c2s.ums.domain.reference.StateCode;
 import gov.samhsa.c2s.ums.domain.reference.StateCodeRepository;
 import gov.samhsa.c2s.ums.service.dto.LookupDto;
-import gov.samhsa.c2s.ums.service.dto.RelationshipDto;
 import gov.samhsa.c2s.ums.service.dto.RoleDto;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -88,11 +86,5 @@ public class LookupServiceImpl implements LookupService {
                 .collect(toList());
     }
 
-    @Override
-    public List<RelationshipDto> getRelationships() {
-        final List<Relationship> relationships = relationshipRepository.findAll();
-        return relationships.stream()
-                .map(relationship -> modelMapper.map(relationship, RelationshipDto.class))
-                .collect(toList());
-    }
+
 }

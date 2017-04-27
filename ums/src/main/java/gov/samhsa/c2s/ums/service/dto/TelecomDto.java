@@ -17,4 +17,6 @@ public class TelecomDto {
 
     @NotBlank
     private String value;
+
+    private String use;
 }

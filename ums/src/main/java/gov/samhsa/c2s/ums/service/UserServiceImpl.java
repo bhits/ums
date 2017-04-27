@@ -3,6 +3,8 @@ package gov.samhsa.c2s.ums.service;
 import gov.samhsa.c2s.ums.config.UmsProperties;
 import gov.samhsa.c2s.ums.domain.Address;
 import gov.samhsa.c2s.ums.domain.AddressRepository;
+import gov.samhsa.c2s.ums.domain.Demographics;
+import gov.samhsa.c2s.ums.domain.DemographicsRepository;
 import gov.samhsa.c2s.ums.domain.Patient;
 import gov.samhsa.c2s.ums.domain.PatientRepository;
 import gov.samhsa.c2s.ums.domain.Telecom;
@@ -42,31 +44,30 @@ import java.util.stream.Collectors;
 public class UserServiceImpl implements UserService {
 
     private static final Integer PAGE_NUMBER = 0;
-    private final UserRepository userRepository;
-    private final AdministrativeGenderCodeRepository administrativeGenderCodeRepository;
-    private final UmsProperties umsProperties;
-    private final ModelMapper modelMapper;
-    private final MrnService mrnService;
-    private final PatientRepository patientRepository;
-    private final TelecomRepository telecomRepository;
-    private final AddressRepository addressRepository;
-    private final UserPatientRelationshipRepository userPatientRelationshipRepository;
-    private final ScimService scimService;
-
 
     @Autowired
-    public UserServiceImpl(ModelMapper modelMapper, UserRepository userRepository, AdministrativeGenderCodeRepository administrativeGenderCodeRepository, UmsProperties umsProperties, MrnService mrnService, PatientRepository patientRepository, TelecomRepository telecomRepository, AddressRepository addressRepository, UserPatientRelationshipRepository userPatientRelationshipRepository, ScimService scimService) {
-        this.modelMapper = modelMapper;
-        this.userRepository = userRepository;
-        this.administrativeGenderCodeRepository = administrativeGenderCodeRepository;
-        this.umsProperties = umsProperties;
-        this.mrnService = mrnService;
-        this.patientRepository = patientRepository;
-        this.telecomRepository = telecomRepository;
-        this.addressRepository = addressRepository;
-        this.userPatientRelationshipRepository = userPatientRelationshipRepository;
-        this.scimService = scimService;
-    }
+    private UserRepository userRepository;
+    @Autowired
+    private AdministrativeGenderCodeRepository administrativeGenderCodeRepository;
+    @Autowired
+    private UmsProperties umsProperties;
+    @Autowired
+    private ModelMapper modelMapper;
+    @Autowired
+    private MrnService mrnService;
+    @Autowired
+    private PatientRepository patientRepository;
+    @Autowired
+    private TelecomRepository telecomRepository;
+    @Autowired
+    private AddressRepository addressRepository;
+    @Autowired
+    private UserPatientRelationshipRepository userPatientRelationshipRepository;
+    @Autowired
+    private ScimService scimService;
+    @Autowired
+    private DemographicsRepository demographicsRepository;
+
 
     @Override
     @Transactional
@@ -75,29 +76,42 @@ public class UserServiceImpl implements UserService {
         // Step 1: Create User Record and User Role Mapping in UMS
 
         // Add UserAddress to Address Table
-        Address address = addressRepository.save(modelMapper.map(userDto.getAddress(), Address.class));
+       //userDto.getAddresses().stream().map(addressDto -> modelMapper.map(addressDto, Address.class)).forEach(address -> addressRepository.save(address));
+
+        // Add user contact details to Telecom Table
+
+
 
         /* Get User Entity from UserDto */
         User user = modelMapper.map(userDto, User.class);
         // set Address Id to User Entity
-        user.setAddress(address);
+       // user.getDemographics().getAddresses().add(address);
 
         /* Add record to User and User_Roles table */
-        user = userRepository.save(user);
+
 
         // Add user contact details to Telecom Table
-        user.setTelecoms(modelMapper.map(userDto.getTelecom(), new TypeToken<List<Telecom>>() {
+        user.getDemographics().setTelecoms(modelMapper.map(userDto.getTelecoms(), new TypeToken<List<Telecom>>() {
         }.getType()));
-        for (Telecom telecom : user.getTelecoms())
-            telecom.setUser(user);
-        telecomRepository.save(user.getTelecoms());
+        for (Telecom telecom : user.getDemographics().getTelecoms())
+            telecom.setDemographics(user.getDemographics());
+        //telecomRepository.save(user.getDemographics().getTelecoms());
+
+        user.getDemographics().setAddresses(modelMapper.map(userDto.getAddresses(), new TypeToken<List<Address>>() {
+        }.getType()));
+        for (Address address : user.getDemographics().getAddresses())
+            address.setDemographics(user.getDemographics());
+
+        user = userRepository.save(user);
+
+       // telecomRepository.save(user.getDemographics().getTelecoms());
 
         /*
         Step 2: Create User Patient Record in UMS  if User is a Patient
         Add User Patient Record if the role is patient
         TODO remove the hardcoding with FHIR enum value
         */
-        if (userDto.getRole().stream().anyMatch(roleDto -> roleDto.getCode().equalsIgnoreCase("patient"))) {
+        if (userDto.getRoles().stream().anyMatch(roleDto -> roleDto.getCode().equalsIgnoreCase("patient"))) {
             Patient patient = createPatient(user);
             // Step 2.1: Create User Patient Relationship Mapping in UMS
             // Add User patient relationship if User is a Patient
@@ -113,7 +127,7 @@ public class UserServiceImpl implements UserService {
         //set the patient object
         Patient patient = new Patient();
         patient.setMrn(mrnService.generateMrn());
-        patient.setUser(user);
+        patient.setDemographics(user.getDemographics());
         return patientRepository.save(patient);
     }
 
@@ -130,7 +144,7 @@ public class UserServiceImpl implements UserService {
     public void disableUser(Long userId) {
 
         //Set isDisabled to true in the User table
-        User user = userRepository.findOneByIdAndIsDisabled(userId, false)
+        User user = userRepository.findOneByIdAndDisabled(userId, false)
                 .orElseThrow(() -> new UserNotFoundException("User Not Found!"));
         user.setDisabled(true);
         //
@@ -139,7 +153,7 @@ public class UserServiceImpl implements UserService {
          * Doing so will not let a user to login.
          * Also known as "Soft Delete".
          */
-        scimService.setUserAsInactive(user.getOauth2UserId());
+        scimService.setUserAsInactive(user.getUserAuthId());
         User save = userRepository.save(user);
     }
 
@@ -147,7 +161,7 @@ public class UserServiceImpl implements UserService {
     public void enableUser(Long userId) {
 
         //Set isDisabled to false in the User table
-        User user = userRepository.findOneByIdAndIsDisabled(userId, true)
+        User user = userRepository.findOneByIdAndDisabled(userId, true)
                 .orElseThrow(() -> new UserNotFoundException("User Not Found!"));
         user.setDisabled(false);
 
@@ -155,7 +169,7 @@ public class UserServiceImpl implements UserService {
          * Use OAuth API to set users.active to true.
 
          */
-        scimService.setUserAsActive(user.getOauth2UserId());
+        scimService.setUserAsActive(user.getUserAuthId());
         User save = userRepository.save(user);
     }
 
@@ -166,14 +180,13 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserDto getUser(Long userId) {
-        final User user = userRepository.findOneByIdAndIsDisabled(userId, false)
-                .orElseThrow(() -> new UserNotFoundException("User Not Found!"));
+        final User user = userRepository.findOne(userId);
         return modelMapper.map(user, UserDto.class);
     }
 
     @Override
-    public UserDto getUserByOAuth2Id(String oAuth2UserId) {
-        final User user = userRepository.findOneByOauth2UserIdAndIsDisabled(oAuth2UserId, false)
+    public UserDto getUserByUserAuthId(String userAuthId) {
+        final User user = userRepository.findOneByUserAuthIdAndDisabled(userAuthId, false)
                 .orElseThrow(() -> new UserNotFoundException("User Not Found!"));
         return modelMapper.map(user, UserDto.class);
     }
@@ -183,9 +196,9 @@ public class UserServiceImpl implements UserService {
         final PageRequest pageRequest = new PageRequest(page.filter(p -> p >= 0).orElse(0),
                 size.filter(s -> s > 0 && s <= umsProperties.getPagination().getMaxSize())
                         .orElse(umsProperties.getPagination().getDefaultSize()));
-        final Page<User> usersPage = userRepository.findAllByIsDisabled(false, pageRequest);
+        final Page<User> usersPage = userRepository.findAll(pageRequest);
         final List<User> userList = usersPage.getContent();
-        final List<UserDto> getUserDtoList = userListToGetUserDtoList(userList);
+        final List<UserDto> getUserDtoList = userListToUserDtoList(userList);
         return new PageImpl<>(getUserDtoList, pageRequest, usersPage.getTotalElements());
     }
 
@@ -193,16 +206,16 @@ public class UserServiceImpl implements UserService {
         Pageable pageRequest = new PageRequest(PAGE_NUMBER, umsProperties.getPagination().getDefaultSize());
         if (token.countTokens() == 1) {
             String firstName = token.nextToken(); // First Token could be first name or the last name
-            return userRepository.findAllByFirstNameLikesOrLastNameLikesAndIsDisabled("%" + firstName + "%", false, pageRequest)
+            return demographicsRepository.findAllByFirstNameLikesOrLastNameLikes("%" + firstName + "%",  pageRequest)
                     .stream()
-                    .map(user -> modelMapper.map(user, UserDto.class))
+                    .map(demographics -> modelMapper.map(demographics.getUser(), UserDto.class))
                     .collect(Collectors.toList());
         } else if (token.countTokens() >= 2) {
             String firstName = token.nextToken(); // First Token is the first name
             String lastName = token.nextToken();  // Last Token is the last name
-            return userRepository.findAllByFirstNameLikesAndLastNameLikesAndIsDisabled("%" + firstName + "%", "%" + lastName + "%", false, pageRequest)
+            return demographicsRepository.findAllByFirstNameLikesAndLastNameLikes("%" + firstName + "%", "%" + lastName + "%",  pageRequest)
                     .stream()
-                    .map(user -> modelMapper.map(user, UserDto.class))
+                    .map(demographics -> modelMapper.map(demographics.getUser(), UserDto.class))
                     .collect(Collectors.toList());
         } else {
             return new ArrayList<>();
@@ -214,26 +227,39 @@ public class UserServiceImpl implements UserService {
                                                   String lastName,
                                                   LocalDate birthDate,
                                                   String genderCode) {
-        List<User> userList;
+        List<Demographics> demographicsesList;
         final AdministrativeGenderCode administrativeGenderCode = administrativeGenderCodeRepository.findByCode(genderCode);
-        userList = userRepository.findAllByFirstNameAndLastNameAndBirthDayAndAdministrativeGenderCodeAndIsDisabled(firstName, lastName,
-                birthDate, administrativeGenderCode, false);
-        if (userList.size() < 1) {
+        demographicsesList = demographicsRepository.findAllByFirstNameAndLastNameAndBirthDayAndAdministrativeGenderCode(firstName, lastName,
+                birthDate, administrativeGenderCode);
+        if (demographicsesList.size() < 1) {
             throw new UserNotFoundException("User Not Found!");
         } else {
-            return userListToGetUserDtoList(userList);
+            return demographicsesListToUserDtoList(demographicsesList);
         }
     }
 
-    private List<UserDto> userListToGetUserDtoList(List<User> userList) {
+    private List<UserDto> demographicsesListToUserDtoList(List<Demographics> demographicsesList) {
         List<UserDto> getUserDtoList = new ArrayList<>();
 
-        if (userList != null && userList.size() > 0) {
-            for (User tempUser : userList) {
-                getUserDtoList.add(modelMapper.map(tempUser, UserDto.class));
+        if (demographicsesList != null && demographicsesList.size() > 0) {
+            for (Demographics temp : demographicsesList) {
+                getUserDtoList.add(modelMapper.map(temp.getUser(), UserDto.class));
             }
         }
         return getUserDtoList;
     }
+
+    private List<UserDto> userListToUserDtoList(List<User> userList) {
+        List<UserDto> getUserDtoList = new ArrayList<>();
+
+        if (userList != null && userList.size() > 0) {
+            for (User temp : userList) {
+                getUserDtoList.add(modelMapper.map(temp, UserDto.class));
+            }
+        }
+        return getUserDtoList;
+    }
+
+
 
 }

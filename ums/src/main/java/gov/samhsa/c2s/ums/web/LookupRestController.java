@@ -2,7 +2,6 @@ package gov.samhsa.c2s.ums.web;
 
 import gov.samhsa.c2s.ums.service.LookupService;
 import gov.samhsa.c2s.ums.service.dto.LookupDto;
-import gov.samhsa.c2s.ums.service.dto.RelationshipDto;
 import gov.samhsa.c2s.ums.service.dto.RoleDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -41,13 +40,6 @@ public class LookupRestController {
     public List<RoleDto> getRoles() {
         return lookupService.getRoles();
     }
-
-    @GetMapping("/relationships")
-    public List<RelationshipDto> getRelationships() {
-        return lookupService.getRelationships();
-    }
-
-
 
 
 }

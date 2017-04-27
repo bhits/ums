@@ -13,7 +13,6 @@ public class RelationshipDto {
 
     private String code;
 
-
     private String name;
 
 }
