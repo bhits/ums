@@ -35,18 +35,10 @@ VALUES      ('1',
 --
 			 
 INSERT INTO relationship 
-            (id, 
-             CODE,
-             NAME) 
-VALUES      ('1', 
-			 'PATIENT',
-             'PATIENT'), 
-            ('2', 
-             'PARENT',
-             'PARENT'), 
-            ('3', 
-             'GUARDIAN',
-             'GUARDIAN'); 			 
+            (role_id) 
+VALUES      ('1'), 
+            ('2'), 
+            ('3'); 			 
 
 --
 -- Insert data for table scope
