@@ -53,7 +53,7 @@ public class ModelMapperConfig {
             map().setMiddleName(source.getDemographics().getMiddleName());
             map().setLastName(source.getDemographics().getLastName());
             map().setBirthDate(source.getDemographics().getBirthDay());
-            map().setGenderCode(source.getDemographics().getAdministrativeGenderCode().getDisplayName());
+            map().setGenderCode(source.getDemographics().getAdministrativeGenderCode().getCode());
             map().setSocialSecurityNumber(source.getDemographics().getSocialSecurityNumber());
             map().setTelecoms(mapTelecomListToTelecomDtoList(source.getDemographics().getTelecoms()));
             map().setAddresses(mapAddressListToAddressDtoList(source.getDemographics().getAddresses()));
