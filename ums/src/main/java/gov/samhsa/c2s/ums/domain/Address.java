@@ -43,7 +43,7 @@ public class Address {
     @Size(min = 1, max = 50)
     private String line1;
 
-    @Size(min = 1, max = 50)
+    @Size(max = 50)
     private String line2;
 
     /**
