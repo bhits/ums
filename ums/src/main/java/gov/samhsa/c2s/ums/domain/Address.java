@@ -40,7 +40,7 @@ public class Address {
     /**
      * The street address line.
      */
-    @Size(min = 1, max = 50)
+    @Size(max = 50)
     private String line1;
 
     @Size(max = 50)
