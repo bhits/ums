@@ -34,6 +34,7 @@ public class UserDtoToUserMap extends PropertyMap<UserDto, User> {
     protected void configure() {
         //Required Fields
         map().getDemographics().setFirstName(source.getFirstName());
+        map().getDemographics().setMiddleName(source.getMiddleName());
         map().getDemographics().setLastName(source.getLastName());
         map().getDemographics().setBirthDay(source.getBirthDate());
         map().getDemographics().setSocialSecurityNumber(source.getSocialSecurityNumber());
