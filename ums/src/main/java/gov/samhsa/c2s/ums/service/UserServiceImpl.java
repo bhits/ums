@@ -19,6 +19,7 @@ import gov.samhsa.c2s.ums.domain.valueobject.UserPatientRelationshipId;
 import gov.samhsa.c2s.ums.infrastructure.ScimService;
 import gov.samhsa.c2s.ums.service.dto.RelationDto;
 import gov.samhsa.c2s.ums.service.dto.UserDto;
+import gov.samhsa.c2s.ums.service.exception.UserActivationNotFoundException;
 import gov.samhsa.c2s.ums.service.exception.UserNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
@@ -29,6 +30,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import javax.transaction.Transactional;
 import java.time.LocalDate;
@@ -127,7 +129,8 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public void disableUser(Long userId) {
-
+        //Check if user account has been activated
+        assertUserAccountHasBeenActivated(userId);
         //Set isDisabled to true in the User table
         User user = userRepository.findOneByIdAndDisabled(userId, false)
                 .orElseThrow(() -> new UserNotFoundException("User Not Found!"));
@@ -144,7 +147,8 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void enableUser(Long userId) {
-
+        //Check if user account has been activated
+        assertUserAccountHasBeenActivated(userId);
         //Set isDisabled to false in the User table
         User user = userRepository.findOneByIdAndDisabled(userId, true)
                 .orElseThrow(() -> new UserNotFoundException("User Not Found!"));
@@ -191,14 +195,14 @@ public class UserServiceImpl implements UserService {
         Pageable pageRequest = new PageRequest(PAGE_NUMBER, umsProperties.getPagination().getDefaultSize());
         if (token.countTokens() == 1) {
             String firstName = token.nextToken(); // First Token could be first name or the last name
-            return demographicsRepository.findAllByFirstNameLikesOrLastNameLikes("%" + firstName + "%",  pageRequest)
+            return demographicsRepository.findAllByFirstNameLikesOrLastNameLikes("%" + firstName + "%", pageRequest)
                     .stream()
                     .map(demographics -> modelMapper.map(demographics.getUser(), UserDto.class))
                     .collect(Collectors.toList());
         } else if (token.countTokens() >= 2) {
             String firstName = token.nextToken(); // First Token is the first name
             String lastName = token.nextToken();  // Last Token is the last name
-            return demographicsRepository.findAllByFirstNameLikesAndLastNameLikes("%" + firstName + "%", "%" + lastName + "%",  pageRequest)
+            return demographicsRepository.findAllByFirstNameLikesAndLastNameLikes("%" + firstName + "%", "%" + lastName + "%", pageRequest)
                     .stream()
                     .map(demographics -> modelMapper.map(demographics.getUser(), UserDto.class))
                     .collect(Collectors.toList());
@@ -245,6 +249,10 @@ public class UserServiceImpl implements UserService {
         return getUserDtoList;
     }
 
-
-
+    private void assertUserAccountHasBeenActivated(Long userId) {
+        Optional.of(userRepository.findOne(userId))
+                .map(User::getUserAuthId)
+                .filter(StringUtils::hasText)
+                .orElseThrow(UserActivationNotFoundException::new);
+    }
 }
