@@ -1,6 +1,7 @@
 package gov.samhsa.c2s.ums.web;
 
 import gov.samhsa.c2s.ums.service.UserService;
+import gov.samhsa.c2s.ums.service.dto.AccessDecisionDto;
 import gov.samhsa.c2s.ums.service.dto.UserDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -76,6 +77,13 @@ public class UserRestController {
     public void updateUserLocaleByUserAuthId(@RequestParam String userAuthId,@RequestParam String localeCode)
     {
         userService.updateUserLocaleByUserAuthId(userAuthId,localeCode);
+    }
+
+    @GetMapping("/accessDecision")
+    @ResponseStatus(HttpStatus.OK)
+    public AccessDecisionDto accessDecision(@RequestParam String userAuthId, @RequestParam String patientMRN)
+    {
+        return userService.accessDecision(userAuthId,patientMRN);
     }
 
     /**

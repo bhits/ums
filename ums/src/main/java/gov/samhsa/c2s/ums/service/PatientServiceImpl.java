@@ -17,8 +17,6 @@ import javax.transaction.Transactional;
 import java.util.List;
 import java.util.Optional;
 
-import static java.util.Arrays.asList;
-
 @Service
 @Slf4j
 public class PatientServiceImpl implements PatientService{
@@ -43,9 +41,9 @@ public class PatientServiceImpl implements PatientService{
 
         if(userAuthId.isPresent()){
             //Validate if the given userAuthId has access to the given MRN/PatientID
-            final User user = userRepository.findOneByOauth2UserIdAndIsDisabled(userAuthId.get(), false)
+            final User user = userRepository.findOneByUserAuthIdAndDisabled(userAuthId.get(), false)
                     .orElseThrow(() -> new UserNotFoundException("User Not Found!"));
-            List<UserPatientRelationship> userPatientRelationshipList = userPatientRelationshipRepository.findAllByIdUserIdAndIdPatientId(user.getId(), patientId);
+            List<UserPatientRelationship> userPatientRelationshipList = userPatientRelationshipRepository.findAllByIdUserIdAndIdPatientId(user.getId(), patient.getId());
 
             if(userPatientRelationshipList == null || userPatientRelationshipList.size() < 1){
                 throw new PatientNotFoundException("Patient Not Found!");

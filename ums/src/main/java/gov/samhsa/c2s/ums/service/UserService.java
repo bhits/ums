@@ -1,5 +1,6 @@
 package gov.samhsa.c2s.ums.service;
 
+import gov.samhsa.c2s.ums.service.dto.AccessDecisionDto;
 import gov.samhsa.c2s.ums.service.dto.UserDto;
 import org.springframework.data.domain.Page;
 import org.springframework.transaction.annotation.Transactional;
@@ -42,6 +43,9 @@ public interface UserService {
 
     @Transactional
     void updateUserLocaleByUserAuthId(String userAuthId,String localeCode);
+
+    @Transactional(readOnly = true)
+    AccessDecisionDto accessDecision(String userAuthId, String patientMRN);
 
     //Todo: Get all Users by role type
 

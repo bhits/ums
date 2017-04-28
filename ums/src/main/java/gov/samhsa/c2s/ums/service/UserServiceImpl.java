@@ -21,10 +21,12 @@ import gov.samhsa.c2s.ums.domain.reference.CountryCodeRepository;
 import gov.samhsa.c2s.ums.domain.reference.StateCodeRepository;
 import gov.samhsa.c2s.ums.domain.valueobject.UserPatientRelationshipId;
 import gov.samhsa.c2s.ums.infrastructure.ScimService;
+import gov.samhsa.c2s.ums.service.dto.AccessDecisionDto;
 import gov.samhsa.c2s.ums.service.dto.AddressDto;
 import gov.samhsa.c2s.ums.service.dto.RelationDto;
 import gov.samhsa.c2s.ums.service.dto.TelecomDto;
 import gov.samhsa.c2s.ums.service.dto.UserDto;
+import gov.samhsa.c2s.ums.service.exception.PatientNotFoundException;
 import gov.samhsa.c2s.ums.service.exception.UserActivationNotFoundException;
 import gov.samhsa.c2s.ums.service.exception.UserNotFoundException;
 import lombok.extern.slf4j.Slf4j;
@@ -269,6 +271,18 @@ public class UserServiceImpl implements UserService {
         user = userRepository.save(user);
     }
 
+    @Override
+    public AccessDecisionDto accessDecision(String userAuthId, String patientMrn) {
+        User user = userRepository.findOneByUserAuthIdAndDisabled(userAuthId,false).orElseThrow(() -> new UserNotFoundException("User Not Found!"));
+        Patient patient=patientRepository.findOneByMrn(patientMrn).orElseThrow(() -> new PatientNotFoundException("Patient Not Found!"));
+        List<UserPatientRelationship> userPatientRelationshipList = userPatientRelationshipRepository.findAllByIdUserIdAndIdPatientId(user.getId(), patient.getId());
+
+        if(userPatientRelationshipList == null || userPatientRelationshipList.size() < 1){
+            return new AccessDecisionDto(false);
+        }
+        else
+            return new AccessDecisionDto(true);
+    }
 
 
 
