@@ -66,6 +66,19 @@ public class UserRestController {
     }
 
     /**
+     * Update User locale by userAuthId
+     *
+     * @param userAuthId
+     */
+
+    @PutMapping("/locale")
+    @ResponseStatus(HttpStatus.OK)
+    public void updateUserLocaleByUserAuthId(@RequestParam String userAuthId,@RequestParam String localeCode)
+    {
+        userService.updateUserLocaleByUserAuthId(userAuthId,localeCode);
+    }
+
+    /**
      * Update User
      *
      * @param userId  PK of User

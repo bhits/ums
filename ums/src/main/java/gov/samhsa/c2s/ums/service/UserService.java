@@ -37,6 +37,12 @@ public interface UserService {
     @Transactional(readOnly = true)
     List<UserDto> searchUsersByDemographic(String firstName, String lastName, LocalDate birthDate, String genderCode);
 
+    @Transactional
+    void updateUserLocale(Long userId, String localeCode);
+
+    @Transactional
+    void updateUserLocaleByUserAuthId(String userAuthId,String localeCode);
+
     //Todo: Get all Users by role type
 
 }
