@@ -53,7 +53,10 @@ VALUES      ('1',
              'Read access to C2S Backend API'), 
             ('2', 
              'c2sUiApi.write', 
-             'Write access to C2S Backend API'); 
+             'Write access to C2S Backend API'), 
+			('3', 
+             'c2sUi.access', 
+             'Access C2S UI'); 
 
 --
 -- Insert data for table scope_roles
@@ -65,4 +68,6 @@ INSERT INTO role_scopes
 VALUES      ('1', 
              '1'), 
             ('2', 
-             '1'); 
+             '1'),
+			 ('3', 
+             '1');; 
