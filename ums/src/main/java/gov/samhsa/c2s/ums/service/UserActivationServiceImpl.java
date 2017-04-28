@@ -19,6 +19,7 @@ import gov.samhsa.c2s.ums.service.dto.ScopeAssignmentResponseDto;
 import gov.samhsa.c2s.ums.service.dto.UserActivationRequestDto;
 import gov.samhsa.c2s.ums.service.dto.UserActivationResponseDto;
 import gov.samhsa.c2s.ums.service.dto.UserVerificationRequestDto;
+import gov.samhsa.c2s.ums.service.dto.UsernameUsedDto;
 import gov.samhsa.c2s.ums.service.dto.VerificationResponseDto;
 import gov.samhsa.c2s.ums.service.exception.EmailTokenExpiredException;
 import gov.samhsa.c2s.ums.service.exception.PasswordConfirmationFailedException;
@@ -272,5 +273,12 @@ public class UserActivationServiceImpl implements UserActivationService {
                     }
                 });
     }
+
+    @Override
+    public UsernameUsedDto checkUsername(String username) {
+        return scimService.checkUsername(username);
+    }
+
+
 
 }

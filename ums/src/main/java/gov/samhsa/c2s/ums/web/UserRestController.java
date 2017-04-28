@@ -3,6 +3,7 @@ package gov.samhsa.c2s.ums.web;
 import gov.samhsa.c2s.ums.service.UserService;
 import gov.samhsa.c2s.ums.service.dto.UserDto;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -95,13 +96,19 @@ public class UserRestController {
      */
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
-    public Object getAllUsers(@RequestParam Optional<Integer> page,
-                                     @RequestParam Optional<Integer> size,
-                                     @RequestParam Optional<String> userAuthId ) {
+    public Page<UserDto> getAllUsers(@RequestParam("page") Optional<Integer> page,
+                            @RequestParam("size") Optional<Integer> size) {
         //Get User based on User AUTH Id
-        if(userAuthId.get()!=null)
-            return userService.getUserByUserAuthId(userAuthId.get());
         return userService.getAllUsers(page, size);
+    }
+
+    @GetMapping(value = "/authId/{userAuthId}")
+    @ResponseStatus(HttpStatus.OK)
+    public UserDto getUserById(@RequestParam("userAuthId") String userAuthId) {
+        //Get User based on User AUTH Id
+        if (userAuthId != null)
+            return userService.getUserByUserAuthId(userAuthId);
+        else return null;
     }
 
     /**

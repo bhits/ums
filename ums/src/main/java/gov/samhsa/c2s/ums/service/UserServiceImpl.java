@@ -75,27 +75,14 @@ public class UserServiceImpl implements UserService {
 
         // Step 1: Create User Record and User Role Mapping in UMS
 
-        // Add UserAddress to Address Table
-       //userDto.getAddresses().stream().map(addressDto -> modelMapper.map(addressDto, Address.class)).forEach(address -> addressRepository.save(address));
-
-        // Add user contact details to Telecom Table
-
-
-
         /* Get User Entity from UserDto */
         User user = modelMapper.map(userDto, User.class);
-        // set Address Id to User Entity
-       // user.getDemographics().getAddresses().add(address);
-
-        /* Add record to User and User_Roles table */
-
 
         // Add user contact details to Telecom Table
         user.getDemographics().setTelecoms(modelMapper.map(userDto.getTelecoms(), new TypeToken<List<Telecom>>() {
         }.getType()));
         for (Telecom telecom : user.getDemographics().getTelecoms())
             telecom.setDemographics(user.getDemographics());
-        //telecomRepository.save(user.getDemographics().getTelecoms());
 
         user.getDemographics().setAddresses(modelMapper.map(userDto.getAddresses(), new TypeToken<List<Address>>() {
         }.getType()));
@@ -103,8 +90,6 @@ public class UserServiceImpl implements UserService {
             address.setDemographics(user.getDemographics());
 
         user = userRepository.save(user);
-
-       // telecomRepository.save(user.getDemographics().getTelecoms());
 
         /*
         Step 2: Create User Patient Record in UMS  if User is a Patient

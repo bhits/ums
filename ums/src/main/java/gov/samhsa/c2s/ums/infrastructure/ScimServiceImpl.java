@@ -8,6 +8,8 @@ import gov.samhsa.c2s.ums.domain.UserScopeAssignmentRepository;
 import gov.samhsa.c2s.ums.infrastructure.dto.IdentifierDto;
 import gov.samhsa.c2s.ums.infrastructure.dto.SearchResultsWrapperWithId;
 import gov.samhsa.c2s.ums.infrastructure.exception.IdCannotBeFoundException;
+import gov.samhsa.c2s.ums.service.dto.UsernameUsedDto;
+import org.cloudfoundry.identity.uaa.resources.SearchResults;
 import org.cloudfoundry.identity.uaa.scim.ScimGroupMember;
 import org.cloudfoundry.identity.uaa.scim.ScimUser;
 import org.slf4j.Logger;
@@ -136,5 +138,15 @@ public class ScimServiceImpl implements ScimService {
         ScimGroupMember scimGroupMember = new ScimGroupMember(userActivation.getUser().getUserAuthId());
         String groupId = findGroupIdByDisplayName(scope.getScopeName());
         final ScimGroupMember scimGroupMemberResponse = restTemplate.postForObject(groupsEndpoint + "/{groupId}/members", scimGroupMember, ScimGroupMember.class, groupId);
+    }
+
+    @Override
+    public UsernameUsedDto checkUsername(String username){
+        String filter="?filter=userName eq \""+username+"\"";
+        SearchResults<ScimUser> searchResults=restTemplate.getForObject(usersEndpoint+filter,SearchResults.class);
+        if(searchResults.getTotalResults()==0)
+            return new UsernameUsedDto(false);
+        else
+            return new UsernameUsedDto(true);
     }
 }
