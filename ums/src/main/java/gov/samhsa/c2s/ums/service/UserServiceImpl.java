@@ -1,24 +1,14 @@
 package gov.samhsa.c2s.ums.service;
 
 import gov.samhsa.c2s.ums.config.UmsProperties;
-import gov.samhsa.c2s.ums.domain.Address;
-import gov.samhsa.c2s.ums.domain.AddressRepository;
-import gov.samhsa.c2s.ums.domain.Demographics;
-import gov.samhsa.c2s.ums.domain.DemographicsRepository;
-import gov.samhsa.c2s.ums.domain.Patient;
-import gov.samhsa.c2s.ums.domain.PatientRepository;
-import gov.samhsa.c2s.ums.domain.Telecom;
-import gov.samhsa.c2s.ums.domain.TelecomRepository;
-import gov.samhsa.c2s.ums.domain.User;
-import gov.samhsa.c2s.ums.domain.UserPatientRelationship;
-import gov.samhsa.c2s.ums.domain.UserPatientRelationshipRepository;
-import gov.samhsa.c2s.ums.domain.UserRepository;
+import gov.samhsa.c2s.ums.domain.*;
 import gov.samhsa.c2s.ums.domain.reference.AdministrativeGenderCode;
 import gov.samhsa.c2s.ums.domain.reference.AdministrativeGenderCodeRepository;
 import gov.samhsa.c2s.ums.domain.valueobject.UserPatientRelationshipId;
 import gov.samhsa.c2s.ums.infrastructure.ScimService;
 import gov.samhsa.c2s.ums.service.dto.RelationDto;
 import gov.samhsa.c2s.ums.service.dto.UserDto;
+import gov.samhsa.c2s.ums.service.exception.UserActivationNotFoundException;
 import gov.samhsa.c2s.ums.service.exception.UserNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
@@ -29,6 +19,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import javax.transaction.Transactional;
 import java.time.LocalDate;
@@ -76,7 +67,7 @@ public class UserServiceImpl implements UserService {
         // Step 1: Create User Record and User Role Mapping in UMS
 
         // Add UserAddress to Address Table
-       //userDto.getAddresses().stream().map(addressDto -> modelMapper.map(addressDto, Address.class)).forEach(address -> addressRepository.save(address));
+        //userDto.getAddresses().stream().map(addressDto -> modelMapper.map(addressDto, Address.class)).forEach(address -> addressRepository.save(address));
 
         // Add user contact details to Telecom Table
 
@@ -85,7 +76,7 @@ public class UserServiceImpl implements UserService {
         /* Get User Entity from UserDto */
         User user = modelMapper.map(userDto, User.class);
         // set Address Id to User Entity
-       // user.getDemographics().getAddresses().add(address);
+        // user.getDemographics().getAddresses().add(address);
 
         /* Add record to User and User_Roles table */
 
@@ -104,7 +95,7 @@ public class UserServiceImpl implements UserService {
 
         user = userRepository.save(user);
 
-       // telecomRepository.save(user.getDemographics().getTelecoms());
+        // telecomRepository.save(user.getDemographics().getTelecoms());
 
         /*
         Step 2: Create User Patient Record in UMS  if User is a Patient
@@ -142,7 +133,8 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public void disableUser(Long userId) {
-
+        //Check if user account has been activated
+        assertUserAccountHasBeenActivated(userId);
         //Set isDisabled to true in the User table
         User user = userRepository.findOneByIdAndDisabled(userId, false)
                 .orElseThrow(() -> new UserNotFoundException("User Not Found!"));
@@ -159,7 +151,8 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void enableUser(Long userId) {
-
+        //Check if user account has been activated
+        assertUserAccountHasBeenActivated(userId);
         //Set isDisabled to false in the User table
         User user = userRepository.findOneByIdAndDisabled(userId, true)
                 .orElseThrow(() -> new UserNotFoundException("User Not Found!"));
@@ -206,14 +199,14 @@ public class UserServiceImpl implements UserService {
         Pageable pageRequest = new PageRequest(PAGE_NUMBER, umsProperties.getPagination().getDefaultSize());
         if (token.countTokens() == 1) {
             String firstName = token.nextToken(); // First Token could be first name or the last name
-            return demographicsRepository.findAllByFirstNameLikesOrLastNameLikes("%" + firstName + "%",  pageRequest)
+            return demographicsRepository.findAllByFirstNameLikesOrLastNameLikes("%" + firstName + "%", pageRequest)
                     .stream()
                     .map(demographics -> modelMapper.map(demographics.getUser(), UserDto.class))
                     .collect(Collectors.toList());
         } else if (token.countTokens() >= 2) {
             String firstName = token.nextToken(); // First Token is the first name
             String lastName = token.nextToken();  // Last Token is the last name
-            return demographicsRepository.findAllByFirstNameLikesAndLastNameLikes("%" + firstName + "%", "%" + lastName + "%",  pageRequest)
+            return demographicsRepository.findAllByFirstNameLikesAndLastNameLikes("%" + firstName + "%", "%" + lastName + "%", pageRequest)
                     .stream()
                     .map(demographics -> modelMapper.map(demographics.getUser(), UserDto.class))
                     .collect(Collectors.toList());
@@ -260,6 +253,10 @@ public class UserServiceImpl implements UserService {
         return getUserDtoList;
     }
 
-
-
+    private void assertUserAccountHasBeenActivated(Long userId) {
+        Optional.of(userRepository.findOne(userId))
+                .map(User::getUserAuthId)
+                .filter(StringUtils::hasText)
+                .orElseThrow(UserActivationNotFoundException::new);
+    }
 }
