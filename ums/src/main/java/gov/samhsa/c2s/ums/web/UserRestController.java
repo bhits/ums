@@ -110,8 +110,7 @@ public class UserRestController {
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
     public Page<UserDto> getAllUsers(@RequestParam("page") Optional<Integer> page,
-                            @RequestParam("size") Optional<Integer> size) {
-        //Get User based on User AUTH Id
+                                     @RequestParam("size") Optional<Integer> size) {
         return userService.getAllUsers(page, size);
     }
 

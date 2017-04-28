@@ -167,7 +167,7 @@ public class UserActivationServiceImpl implements UserActivationService {
         response.setBirthDate(user.getDemographics().getBirthDay());
         response.setVerificationCode(userActivation.getVerificationCode());
         response.setEmailTokenExpiration(userActivation.getEmailTokenExpirationAsInstant());
-        response.setEmail(user.getDemographics().getTelecoms().stream().filter(telecom -> telecom.getSystem().equals("email")).map(Telecom::getValue).findFirst().get());
+        response.setEmail(user.getDemographics().getTelecoms().stream().filter(telecom -> telecom.getSystem().equals(Telecom.System.EMAIL)).map(Telecom::getValue).findFirst().get());
         response.setVerified(userActivation.isVerified());
         return response;
     }
