@@ -42,7 +42,7 @@ public class Demographics {
 
 
     @Size(min = 2, max = 30)
-    @Pattern(regexp = "^[a-zA-ZÀ-ÿ]+[-]?[a-zA-ZÀ-ÿ']*[a-zA-ZÀ-ÿ]$", message = "The First Name contains invalid characters. Please try again.")
+    @Pattern(regexp = "^[a-zA-ZÀ-ÿ]+[-]?[a-zA-ZÀ-ÿ']*[a-zA-ZÀ-ÿ]$", message = "The Middle Name contains invalid characters. Please try again.")
     private String middleName;
 
 
