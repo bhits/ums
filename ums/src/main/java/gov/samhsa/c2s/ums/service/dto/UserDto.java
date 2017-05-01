@@ -46,4 +46,6 @@ public class UserDto {
 
     private boolean disabled;
 
+    private String mrn;
+
 }

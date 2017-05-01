@@ -5,8 +5,10 @@ import gov.samhsa.c2s.ums.domain.Address;
 import gov.samhsa.c2s.ums.domain.AddressRepository;
 import gov.samhsa.c2s.ums.domain.Demographics;
 import gov.samhsa.c2s.ums.domain.DemographicsRepository;
+import gov.samhsa.c2s.ums.domain.LocaleRepository;
 import gov.samhsa.c2s.ums.domain.Patient;
 import gov.samhsa.c2s.ums.domain.PatientRepository;
+import gov.samhsa.c2s.ums.domain.RoleRepository;
 import gov.samhsa.c2s.ums.domain.Telecom;
 import gov.samhsa.c2s.ums.domain.TelecomRepository;
 import gov.samhsa.c2s.ums.domain.User;
@@ -15,10 +17,16 @@ import gov.samhsa.c2s.ums.domain.UserPatientRelationshipRepository;
 import gov.samhsa.c2s.ums.domain.UserRepository;
 import gov.samhsa.c2s.ums.domain.reference.AdministrativeGenderCode;
 import gov.samhsa.c2s.ums.domain.reference.AdministrativeGenderCodeRepository;
+import gov.samhsa.c2s.ums.domain.reference.CountryCodeRepository;
+import gov.samhsa.c2s.ums.domain.reference.StateCodeRepository;
 import gov.samhsa.c2s.ums.domain.valueobject.UserPatientRelationshipId;
 import gov.samhsa.c2s.ums.infrastructure.ScimService;
+import gov.samhsa.c2s.ums.service.dto.AccessDecisionDto;
+import gov.samhsa.c2s.ums.service.dto.AddressDto;
 import gov.samhsa.c2s.ums.service.dto.RelationDto;
+import gov.samhsa.c2s.ums.service.dto.TelecomDto;
 import gov.samhsa.c2s.ums.service.dto.UserDto;
+import gov.samhsa.c2s.ums.service.exception.PatientNotFoundException;
 import gov.samhsa.c2s.ums.service.exception.UserActivationNotFoundException;
 import gov.samhsa.c2s.ums.service.exception.UserNotFoundException;
 import lombok.extern.slf4j.Slf4j;
@@ -35,6 +43,7 @@ import org.springframework.util.StringUtils;
 import javax.transaction.Transactional;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.StringTokenizer;
@@ -59,6 +68,16 @@ public class UserServiceImpl implements UserService {
     private MrnService mrnService;
     @Autowired
     private PatientRepository patientRepository;
+
+    @Autowired
+    private LocaleRepository localeRepository;
+    @Autowired
+    private RoleRepository roleRepository;
+    @Autowired
+    private StateCodeRepository stateCodeRepository;
+    @Autowired
+    private CountryCodeRepository countryCodeRepository;
+
     @Autowired
     private TelecomRepository telecomRepository;
     @Autowired
@@ -69,6 +88,7 @@ public class UserServiceImpl implements UserService {
     private ScimService scimService;
     @Autowired
     private DemographicsRepository demographicsRepository;
+
 
 
     @Override
@@ -164,7 +184,106 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void updateUser(Long userId, UserDto userDto) {
+
+        /* Get User Entity from UserDto */
+        User user = userRepository.findOne(userId);
+
+        user.setLocale(localeRepository.findByCode(userDto.getLocale()));
+        user.setRoles(userDto.getRoles().stream().flatMap(roleDto -> roleRepository.findAllByCode(roleDto.getCode()).stream()).collect(Collectors.toSet()));
+        user.getDemographics().setMiddleName(userDto.getMiddleName());
+        user.getDemographics().setFirstName(userDto.getFirstName());
+        user.getDemographics().setLastName(userDto.getLastName());
+        user.getDemographics().setBirthDay(userDto.getBirthDate());
+        user.getDemographics().setSocialSecurityNumber(userDto.getSocialSecurityNumber());
+        user.getDemographics().setAdministrativeGenderCode(administrativeGenderCodeRepository.findByCode(userDto.getGenderCode()));
+        if(userDto.getAddresses()!=null) {
+            if(user.getDemographics().getAddresses()!=null) {
+                mapAddressDtoToAddress(user.getDemographics().getAddresses().get(0),userDto.getAddresses().get(0));
+            }
+            else {
+                Address address = mapAddressDtoToAddress(new Address(), userDto.getAddresses().get(0));
+                address.setDemographics(user.getDemographics());
+                user.getDemographics().setAddresses(Arrays.asList(address));
+            }
+
+        }
+
+        if(userDto.getTelecoms()!=null) {
+            if(user.getDemographics().getTelecoms()!=null) {
+                mapTelecomDtoToTelcom(user.getDemographics().getTelecoms().get(0),userDto.getTelecoms().get(0));
+            }
+            else {
+                Telecom telecom = mapTelecomDtoToTelcom(new Telecom(), userDto.getTelecoms().get(0));
+                telecom.setDemographics(user.getDemographics());
+                user.getDemographics().setTelecoms(Arrays.asList(telecom));
+            }
+
+        }
+
+        user = userRepository.save(user);
     }
+
+    private Address mapAddressDtoToAddress(Address address,AddressDto addressDto){
+        address.setCity(addressDto.getCity());
+        address.setStateCode(stateCodeRepository.findByCode(addressDto.getStateCode()));
+        address.setCountryCode(countryCodeRepository.findByCode(addressDto.getCity()));
+        address.setLine1(addressDto.getLine1());
+        address.setLine2(addressDto.getLine2());
+        if(addressDto.getUse()=="HOME")
+            address.setUse(Address.Use.HOME);
+        if(addressDto.getUse()=="WORK")
+            address.setUse(Address.Use.WORK);
+        return address;
+    }
+
+    private Telecom mapTelecomDtoToTelcom(Telecom telecom,TelecomDto telecomDto){
+        telecom.setValue(telecomDto.getValue());
+
+        if(telecomDto.getUse()=="HOME")
+            telecom.setUse(Telecom.Use.HOME);
+        if(telecomDto.getUse()=="WORK")
+            telecom.setUse(Telecom.Use.WORK);
+
+        if(telecomDto.getSystem()=="EMAIL")
+            telecom.setSystem(Telecom.System.EMAIL);
+        if(telecomDto.getUse()=="PHONE")
+            telecom.setSystem(Telecom.System.PHONE);
+
+        return telecom;
+    }
+
+
+    @Override
+    public void updateUserLocale(Long userId, String localeCode) {
+
+        /* Get User Entity from UserDto */
+        User user = userRepository.findOne(userId);
+        user.setLocale(localeRepository.findByCode(localeCode));
+        user = userRepository.save(user);
+    }
+
+    @Override
+    public void updateUserLocaleByUserAuthId(String userAuthId, String localeCode) {
+
+        /* Get User Entity from UserDto */
+        User user = userRepository.findOneByUserAuthIdAndDisabled(userAuthId,false).orElseThrow(() -> new UserNotFoundException("User Not Found!"));
+        user.setLocale(localeRepository.findByCode(localeCode));
+        user = userRepository.save(user);
+    }
+
+    @Override
+    public AccessDecisionDto accessDecision(String userAuthId, String patientMrn) {
+        User user = userRepository.findOneByUserAuthIdAndDisabled(userAuthId,false).orElseThrow(() -> new UserNotFoundException("User Not Found!"));
+        Patient patient=patientRepository.findOneByMrn(patientMrn).orElseThrow(() -> new PatientNotFoundException("Patient Not Found!"));
+        List<UserPatientRelationship> userPatientRelationshipList = userPatientRelationshipRepository.findAllByIdUserIdAndIdPatientId(user.getId(), patient.getId());
+
+        if(userPatientRelationshipList == null || userPatientRelationshipList.size() < 1){
+            return new AccessDecisionDto(false);
+        }
+        else
+            return new AccessDecisionDto(true);
+    }
+
 
 
     @Override

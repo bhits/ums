@@ -59,6 +59,8 @@ public class ModelMapperConfig {
             map().setAddresses(mapAddressListToAddressDtoList(source.getDemographics().getAddresses()));
             map().setRoles(mapRoleListToRoleDtoList(source.getRoles()));
             map().setLocale(source.getLocale().getCode());
+            map().setMrn(source.getDemographics().getPatient().getMrn());
+
         }
     }
 
