@@ -4,6 +4,7 @@ import lombok.Data;
 import org.hibernate.validator.constraints.NotEmpty;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Data
 public class PatientDto {
@@ -12,11 +13,17 @@ public class PatientDto {
     @NotEmpty
     private String mrn;
     private String firstName;
+    private String middleName;
     private String lastName;
-    private String email;
-
     private LocalDate birthDate;
 
+    @NotEmpty
     private String genderCode;
+
+    private String socialSecurityNumber;
+
+    private List<AddressDto> addresses;
+
+    private List<TelecomDto> telecoms;
 
 }

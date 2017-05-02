@@ -136,10 +136,14 @@ public class ModelMapperConfig {
         protected void configure() {
             map().setId(source.getId());
             map().setFirstName(source.getDemographics().getFirstName());
+            map().setMiddleName(source.getDemographics().getMiddleName());
             map().setLastName(source.getDemographics().getLastName());
             map().setGenderCode(source.getDemographics().getAdministrativeGenderCode().getCode());
             map().setBirthDate(source.getDemographics().getBirthDay());
             map().setMrn(source.getMrn());
+            map().setSocialSecurityNumber(source.getDemographics().getSocialSecurityNumber());
+            map().setTelecoms(mapTelecomListToTelecomDtoList(source.getDemographics().getTelecoms()));
+            map().setAddresses(mapAddressListToAddressDtoList(source.getDemographics().getAddresses()));
         }
     }
 
