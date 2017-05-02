@@ -74,7 +74,7 @@ public class Address {
 
     @Column(name="`use`")
     @Enumerated(EnumType.STRING)
-    private Use use;
+    private Use use =Use.HOME;
 
 
     public enum Use{
