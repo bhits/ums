@@ -1,6 +1,9 @@
 package gov.samhsa.c2s.ums.service.dto;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.NotEmpty;
 
 import javax.validation.constraints.NotNull;
@@ -10,6 +13,9 @@ import java.time.Instant;
 import java.time.LocalDate;
 
 @Data
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class UserActivationResponseDto {
     @NotNull
     private Long id;
