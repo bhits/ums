@@ -26,4 +26,6 @@ public class PatientDto {
 
     private List<TelecomDto> telecoms;
 
+    private String relationship;
+
 }
