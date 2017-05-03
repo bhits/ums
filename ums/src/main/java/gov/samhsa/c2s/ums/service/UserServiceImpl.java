@@ -29,6 +29,7 @@ import gov.samhsa.c2s.ums.service.dto.UserDto;
 import gov.samhsa.c2s.ums.service.exception.PatientNotFoundException;
 import gov.samhsa.c2s.ums.service.exception.UserActivationNotFoundException;
 import gov.samhsa.c2s.ums.service.exception.UserNotFoundException;
+import gov.samhsa.c2s.ums.service.fhir.FhirPatientService;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.TypeToken;
@@ -88,7 +89,8 @@ public class UserServiceImpl implements UserService {
     @Autowired
     private DemographicsRepository demographicsRepository;
 
-
+    @Autowired
+    private FhirPatientService fhirPatientService;
 
     @Override
     @Transactional
@@ -123,7 +125,10 @@ public class UserServiceImpl implements UserService {
             // Add User patient relationship if User is a Patient
             createUserPatientRelationship(user.getId(), patient.getId(), "patient");
             // Publish FHIR Patient to FHir Service
-
+            if(umsProperties.getFhir().getPublish().isEnabled()){
+                userDto.setMrn(patient.getMrn());
+                fhirPatientService.publishFhirPatient(userDto);
+            }
         }
 
     }
