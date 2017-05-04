@@ -1,7 +1,10 @@
 package gov.samhsa.c2s.ums.domain;
 
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.hibernate.envers.Audited;
 
 import javax.persistence.Column;
@@ -20,6 +23,9 @@ import javax.validation.constraints.Size;
 @Entity
 @Audited
 @Data
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class Telecom {
     /**
      * The id.
@@ -46,7 +52,7 @@ public class Telecom {
 
     @Column(name="`use`")
     @Enumerated(EnumType.STRING)
-    private Use use;
+    private Use use=Use.HOME;
 
 
 

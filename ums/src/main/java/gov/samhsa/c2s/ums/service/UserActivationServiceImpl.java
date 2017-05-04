@@ -1,33 +1,11 @@
 package gov.samhsa.c2s.ums.service;
 
 import gov.samhsa.c2s.ums.config.EmailSenderProperties;
-import gov.samhsa.c2s.ums.domain.Demographics;
-import gov.samhsa.c2s.ums.domain.RoleRepository;
-import gov.samhsa.c2s.ums.domain.Scope;
-import gov.samhsa.c2s.ums.domain.ScopeRepository;
-import gov.samhsa.c2s.ums.domain.Telecom;
-import gov.samhsa.c2s.ums.domain.User;
-import gov.samhsa.c2s.ums.domain.UserActivation;
-import gov.samhsa.c2s.ums.domain.UserActivationRepository;
-import gov.samhsa.c2s.ums.domain.UserRepository;
-import gov.samhsa.c2s.ums.domain.UserScopeAssignment;
-import gov.samhsa.c2s.ums.domain.UserScopeAssignmentRepository;
+import gov.samhsa.c2s.ums.domain.*;
 import gov.samhsa.c2s.ums.infrastructure.EmailSender;
 import gov.samhsa.c2s.ums.infrastructure.ScimService;
-import gov.samhsa.c2s.ums.service.dto.ScopeAssignmentRequestDto;
-import gov.samhsa.c2s.ums.service.dto.ScopeAssignmentResponseDto;
-import gov.samhsa.c2s.ums.service.dto.UserActivationRequestDto;
-import gov.samhsa.c2s.ums.service.dto.UserActivationResponseDto;
-import gov.samhsa.c2s.ums.service.dto.UserVerificationRequestDto;
-import gov.samhsa.c2s.ums.service.dto.UsernameUsedDto;
-import gov.samhsa.c2s.ums.service.dto.VerificationResponseDto;
-import gov.samhsa.c2s.ums.service.exception.EmailTokenExpiredException;
-import gov.samhsa.c2s.ums.service.exception.PasswordConfirmationFailedException;
-import gov.samhsa.c2s.ums.service.exception.ScopeDoesNotExistInDBException;
-import gov.samhsa.c2s.ums.service.exception.UserActivationCannotBeVerifiedException;
-import gov.samhsa.c2s.ums.service.exception.UserActivationNotFoundException;
-import gov.samhsa.c2s.ums.service.exception.UserIsAlreadyVerifiedException;
-import gov.samhsa.c2s.ums.service.exception.VerificationFailedException;
+import gov.samhsa.c2s.ums.service.dto.*;
+import gov.samhsa.c2s.ums.service.exception.*;
 import org.cloudfoundry.identity.uaa.scim.ScimUser;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -117,45 +95,45 @@ public class UserActivationServiceImpl implements UserActivationService {
     @Override
     @Transactional(readOnly = true)
     public VerificationResponseDto verify(UserVerificationRequestDto userVerificationRequest) {
-            String emailToken=userVerificationRequest.getEmailToken();
-            Optional<String> verificationCode = Optional.ofNullable(userVerificationRequest.getVerificationCode());
-            Optional<LocalDate> birthDate =Optional.ofNullable(userVerificationRequest.getBirthDate());
+        String emailToken = userVerificationRequest.getEmailToken();
+        Optional<String> verificationCode = Optional.ofNullable(userVerificationRequest.getVerificationCode());
+        Optional<LocalDate> birthDate = Optional.ofNullable(userVerificationRequest.getBirthDate());
 
-            Assert.hasText(emailToken, "emailToken must have text");
-            final Instant now = Instant.now();
-            // Only emailToken is available
-            if (!verificationCode.isPresent() && !birthDate.isPresent()) {
-                final Optional<UserActivation> userActivationOptional = userActivationRepository.findOneByEmailToken(emailToken);
-                if (userActivationOptional.filter(uc -> uc.isVerified() == true).isPresent()) {
-                    throw new UserIsAlreadyVerifiedException();
-                }
-                final Boolean verified = userActivationRepository.findOneByEmailToken(emailToken)
-                        .map(UserActivation::getEmailTokenExpirationAsInstant)
-                        .map(expiration -> expiration.isAfter(now))
-                        .filter(Boolean.TRUE::equals)
-                        .orElseThrow(VerificationFailedException::new);
-                return new VerificationResponseDto(verified);
-            } else {
-                // All arguments must be available
-                final String verificationCodeNullSafe = verificationCode.filter(StringUtils::hasText).orElseThrow(VerificationFailedException::new);
-                final LocalDate birthDateNullSafe = birthDate.filter(Objects::nonNull).orElseThrow(VerificationFailedException::new);
-                // Assert user activation email token
-                assertEmailTokenNotExpired(userActivationRepository.findOneByEmailToken(emailToken).get());
-                User user = userActivationRepository.findOneByEmailToken(emailToken).get().getUser();
-                final Long userId = userActivationRepository
-                        .findOneByEmailTokenAndVerificationCode(emailToken, verificationCodeNullSafe)
-                        .filter(uc -> uc.getEmailTokenExpirationAsInstant().isAfter(now))
-                        .map(UserActivation::getUser)
-                        .map(User::getId)
-                        .orElseThrow(VerificationFailedException::new);
-                final boolean verified = Optional.of(user)
-                        .map(User::getDemographics)
-                        .map(Demographics::getBirthDay)
-                        .map(birthDateNullSafe::equals)
-                        .filter(Boolean.TRUE::equals)
-                        .orElseThrow(VerificationFailedException::new);
-                return new VerificationResponseDto(verified, userId.toString());
+        Assert.hasText(emailToken, "emailToken must have text");
+        final Instant now = Instant.now();
+        // Only emailToken is available
+        if (!verificationCode.isPresent() && !birthDate.isPresent()) {
+            final Optional<UserActivation> userActivationOptional = userActivationRepository.findOneByEmailToken(emailToken);
+            if (userActivationOptional.filter(uc -> uc.isVerified() == true).isPresent()) {
+                throw new UserIsAlreadyVerifiedException();
             }
+            final Boolean verified = userActivationRepository.findOneByEmailToken(emailToken)
+                    .map(UserActivation::getEmailTokenExpirationAsInstant)
+                    .map(expiration -> expiration.isAfter(now))
+                    .filter(Boolean.TRUE::equals)
+                    .orElseThrow(VerificationFailedException::new);
+            return new VerificationResponseDto(verified);
+        } else {
+            // All arguments must be available
+            final String verificationCodeNullSafe = verificationCode.filter(StringUtils::hasText).orElseThrow(VerificationFailedException::new);
+            final LocalDate birthDateNullSafe = birthDate.filter(Objects::nonNull).orElseThrow(VerificationFailedException::new);
+            // Assert user activation email token
+            assertEmailTokenNotExpired(userActivationRepository.findOneByEmailToken(emailToken).get());
+            User user = userActivationRepository.findOneByEmailToken(emailToken).get().getUser();
+            final Long userId = userActivationRepository
+                    .findOneByEmailTokenAndVerificationCode(emailToken, verificationCodeNullSafe)
+                    .filter(uc -> uc.getEmailTokenExpirationAsInstant().isAfter(now))
+                    .map(UserActivation::getUser)
+                    .map(User::getId)
+                    .orElseThrow(VerificationFailedException::new);
+            final boolean verified = Optional.of(user)
+                    .map(User::getDemographics)
+                    .map(Demographics::getBirthDay)
+                    .map(birthDateNullSafe::equals)
+                    .filter(Boolean.TRUE::equals)
+                    .orElseThrow(VerificationFailedException::new);
+            return new VerificationResponseDto(verified, userId.toString());
+        }
 
     }
 
@@ -193,9 +171,17 @@ public class UserActivationServiceImpl implements UserActivationService {
         userActivation.setVerified(true);
         userActivationRepository.save(userActivation);
         // Prepare response
-        final UserActivationResponseDto response = modelMapper.map(user, UserActivationResponseDto.class);
-        response.setBirthDate(user.getDemographics().getBirthDay());
-        response.setVerified(userActivation.isVerified());
+        final UserActivationResponseDto response = UserActivationResponseDto.builder()
+                .id(user.getId())
+                .firstName(user.getDemographics().getFirstName())
+                .lastName(user.getDemographics().getLastName())
+                .email(user.getDemographics().getTelecoms().stream().filter(telecom -> telecom.getSystem().equals(Telecom.System.EMAIL)).map(Telecom::getValue).findFirst().orElse(null))
+                .birthDate(user.getDemographics().getBirthDay())
+                .genderCode(user.getDemographics().getAdministrativeGenderCode().getCode())
+                .verified(userActivation.isVerified())
+                .verificationCode(userActivation.getVerificationCode())
+                .emailTokenExpiration(userActivation.getEmailTokenExpirationAsInstant())
+                .build();
         // Create user using SCIM
         ScimUser scimUser = new ScimUser(null, userActivationRequest.getUsername(), user.getDemographics().getFirstName(), user.getDemographics().getLastName());
         scimUser.setPassword(userActivationRequest.getPassword());
@@ -279,7 +265,6 @@ public class UserActivationServiceImpl implements UserActivationService {
     public UsernameUsedDto checkUsername(String username) {
         return scimService.checkUsername(username);
     }
-
 
 
 }

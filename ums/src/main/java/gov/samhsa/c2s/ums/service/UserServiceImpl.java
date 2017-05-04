@@ -43,7 +43,6 @@ import org.springframework.util.StringUtils;
 import javax.transaction.Transactional;
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.StringTokenizer;
@@ -196,42 +195,53 @@ public class UserServiceImpl implements UserService {
         user.getDemographics().setBirthDay(userDto.getBirthDate());
         user.getDemographics().setSocialSecurityNumber(userDto.getSocialSecurityNumber());
         user.getDemographics().setAdministrativeGenderCode(administrativeGenderCodeRepository.findByCode(userDto.getGenderCode()));
+
+        //update address
+        List<Address> addresses = user.getDemographics().getAddresses();
         if(userDto.getAddresses()!=null) {
-            if(user.getDemographics().getAddresses()!=null) {
-                mapAddressDtoToAddress(user.getDemographics().getAddresses().get(0),userDto.getAddresses().get(0));
-            }
-            else {
-                Address address = mapAddressDtoToAddress(new Address(), userDto.getAddresses().get(0));
-                address.setDemographics(user.getDemographics());
-                user.getDemographics().setAddresses(Arrays.asList(address));
-            }
-
+            userDto.getAddresses().stream().forEach(addressDto -> {
+                Optional<Address> tempAddress=addresses.stream().filter(address -> address.getUse().toString().equals(addressDto.getUse())).findFirst();
+                if(tempAddress.isPresent()){
+                    mapAddressDtoToAddress(tempAddress.get(), addressDto);
+                }
+                else {
+                    Address address =  mapAddressDtoToAddress(new Address(), addressDto);
+                    address.setDemographics(user.getDemographics());
+                    addresses.add(address);
+                }
+            });
         }
 
+       //update telephone
+        List<Telecom> telecoms = user.getDemographics().getTelecoms();
         if(userDto.getTelecoms()!=null) {
-            if(user.getDemographics().getTelecoms()!=null) {
-                mapTelecomDtoToTelcom(user.getDemographics().getTelecoms().get(0),userDto.getTelecoms().get(0));
-            }
-            else {
-                Telecom telecom = mapTelecomDtoToTelcom(new Telecom(), userDto.getTelecoms().get(0));
-                telecom.setDemographics(user.getDemographics());
-                user.getDemographics().setTelecoms(Arrays.asList(telecom));
-            }
-
+            userDto.getTelecoms().stream().forEach(telecomDto -> {
+                Optional<Telecom> tempTeleCom=telecoms.stream().filter(telecom -> telecom.getSystem().toString().equals(telecomDto.getSystem())&&telecom.getUse().toString().equals(telecomDto.getUse())).findFirst();
+                if(tempTeleCom.isPresent()){
+                    tempTeleCom.get().setValue(telecomDto.getValue());
+                }
+                else {
+                    Telecom telecom=mapTelecomDtoToTelcom(new Telecom(),telecomDto);
+                    telecom.setDemographics(user.getDemographics());
+                    telecoms.add(telecom);
+                }
+            });
         }
 
-        user = userRepository.save(user);
+        userRepository.save(user);
     }
+
 
     private Address mapAddressDtoToAddress(Address address,AddressDto addressDto){
         address.setCity(addressDto.getCity());
         address.setStateCode(stateCodeRepository.findByCode(addressDto.getStateCode()));
-        address.setCountryCode(countryCodeRepository.findByCode(addressDto.getCity()));
+        address.setCountryCode(countryCodeRepository.findByCode(addressDto.getCountryCode()));
         address.setLine1(addressDto.getLine1());
         address.setLine2(addressDto.getLine2());
-        if(addressDto.getUse()=="HOME")
+        address.setPostalCode(addressDto.getPostalCode());
+        if(addressDto.getUse().equals(Address.Use.HOME.toString()))
             address.setUse(Address.Use.HOME);
-        if(addressDto.getUse()=="WORK")
+        if(addressDto.getUse().equals(Address.Use.WORK.toString()))
             address.setUse(Address.Use.WORK);
         return address;
     }
@@ -239,14 +249,14 @@ public class UserServiceImpl implements UserService {
     private Telecom mapTelecomDtoToTelcom(Telecom telecom,TelecomDto telecomDto){
         telecom.setValue(telecomDto.getValue());
 
-        if(telecomDto.getUse()=="HOME")
+        if(telecomDto.getUse().equals(Telecom.Use.HOME.toString()))
             telecom.setUse(Telecom.Use.HOME);
-        if(telecomDto.getUse()=="WORK")
+        if(telecomDto.getUse().equals(Telecom.Use.WORK.toString()))
             telecom.setUse(Telecom.Use.WORK);
 
-        if(telecomDto.getSystem()=="EMAIL")
+        if(telecomDto.getSystem().equals(Telecom.System.EMAIL.toString()))
             telecom.setSystem(Telecom.System.EMAIL);
-        if(telecomDto.getUse()=="PHONE")
+        if(telecomDto.getSystem().equals(Telecom.System.PHONE.toString()))
             telecom.setSystem(Telecom.System.PHONE);
 
         return telecom;

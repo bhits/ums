@@ -2,23 +2,21 @@ package gov.samhsa.c2s.ums.config;
 
 
 import gov.samhsa.c2s.ums.domain.Address;
-import gov.samhsa.c2s.ums.domain.Demographics;
+import gov.samhsa.c2s.ums.domain.Patient;
 import gov.samhsa.c2s.ums.domain.Role;
 import gov.samhsa.c2s.ums.domain.Telecom;
 import gov.samhsa.c2s.ums.domain.User;
 import gov.samhsa.c2s.ums.service.dto.AddressDto;
+import gov.samhsa.c2s.ums.service.dto.PatientDto;
 import gov.samhsa.c2s.ums.service.dto.RoleDto;
 import gov.samhsa.c2s.ums.service.dto.TelecomDto;
 import gov.samhsa.c2s.ums.service.dto.UserDto;
-import org.modelmapper.AbstractConverter;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.PropertyMap;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -126,6 +124,27 @@ public class ModelMapperConfig {
             );
         }
         return roleDtoList;
+    }
+
+    /**
+     * Map User to UserDto
+     */
+    @Component
+    static class PatientToPatientDtoMap extends PropertyMap<Patient, PatientDto> {
+
+        @Override
+        protected void configure() {
+            map().setId(source.getId());
+            map().setFirstName(source.getDemographics().getFirstName());
+            map().setMiddleName(source.getDemographics().getMiddleName());
+            map().setLastName(source.getDemographics().getLastName());
+            map().setGenderCode(source.getDemographics().getAdministrativeGenderCode().getCode());
+            map().setBirthDate(source.getDemographics().getBirthDay());
+            map().setMrn(source.getMrn());
+            map().setSocialSecurityNumber(source.getDemographics().getSocialSecurityNumber());
+            map().setTelecoms(mapTelecomListToTelecomDtoList(source.getDemographics().getTelecoms()));
+            map().setAddresses(mapAddressListToAddressDtoList(source.getDemographics().getAddresses()));
+        }
     }
 
 }

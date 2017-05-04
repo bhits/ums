@@ -117,7 +117,7 @@ public class UserRestController {
 
     @GetMapping(value = "/authId/{userAuthId}")
     @ResponseStatus(HttpStatus.OK)
-    public UserDto getUserById(@RequestParam("userAuthId") String userAuthId) {
+    public UserDto getUserById(@PathVariable("userAuthId") String userAuthId) {
         //Get User based on User AUTH Id
         if (userAuthId != null)
             return userService.getUserByUserAuthId(userAuthId);

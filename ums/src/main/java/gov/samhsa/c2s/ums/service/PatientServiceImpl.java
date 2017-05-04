@@ -2,6 +2,7 @@ package gov.samhsa.c2s.ums.service;
 
 import gov.samhsa.c2s.ums.domain.Patient;
 import gov.samhsa.c2s.ums.domain.PatientRepository;
+import gov.samhsa.c2s.ums.domain.RelationshipRepository;
 import gov.samhsa.c2s.ums.domain.User;
 import gov.samhsa.c2s.ums.domain.UserPatientRelationship;
 import gov.samhsa.c2s.ums.domain.UserPatientRelationshipRepository;
@@ -14,6 +15,7 @@ import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -25,12 +27,14 @@ public class PatientServiceImpl implements PatientService{
     private final ModelMapper modelMapper;
     private final UserRepository userRepository;
     private final UserPatientRelationshipRepository userPatientRelationshipRepository;
+    private final RelationshipRepository relationshipRepository;
 
-    public PatientServiceImpl(PatientRepository patientRepository, ModelMapper modelMapper, UserRepository userRepository, UserPatientRelationshipRepository userPatientRelationshipRepository) {
+    public PatientServiceImpl(PatientRepository patientRepository, ModelMapper modelMapper, UserRepository userRepository, UserPatientRelationshipRepository userPatientRelationshipRepository, RelationshipRepository relationshipRepository) {
         this.patientRepository = patientRepository;
         this.modelMapper = modelMapper;
         this.userRepository = userRepository;
         this.userPatientRelationshipRepository = userPatientRelationshipRepository;
+        this.relationshipRepository = relationshipRepository;
     }
 
     @Override
@@ -54,4 +58,15 @@ public class PatientServiceImpl implements PatientService{
     }
 
 
+    public List<PatientDto> getPatientByUserAuthId(String userAuthId){
+        User user = userRepository.findOneByUserAuthIdAndDisabled(userAuthId,false).orElseThrow(() -> new UserNotFoundException("User Not Found!"));
+        List<UserPatientRelationship> userPatientRelationshipList = userPatientRelationshipRepository.findAllByIdUserId(user.getId());
+        List<PatientDto> patientDtos=new ArrayList<>();
+        userPatientRelationshipList.stream().forEach(userPatientRelationship -> {
+            PatientDto patientDto= modelMapper.map(userPatientRelationship.getId().getPatient(),PatientDto.class);
+            patientDto.setRelationship(userPatientRelationship.getId().getRelationship().getId().getRole().getCode());
+            patientDtos.add(patientDto);
+        });
+        return  patientDtos;
+    }
 }
