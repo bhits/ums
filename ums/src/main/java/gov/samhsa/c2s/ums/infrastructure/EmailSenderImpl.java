@@ -52,11 +52,13 @@ public class EmailSenderImpl implements EmailSender {
     private MessageSource messageSource;
 
     @Override
-    public void sendEmailWithVerificationLink(String xForwardedProto, String xForwardedHost, int xForwardedPort, String email, String emailToken, String recipientFullName) {
+    public void sendEmailWithVerificationLink(String xForwardedProto, String xForwardedHost, int xForwardedPort, String email,
+                                              String emailToken, String userPreferredLocale, String recipientFullName) {
         Assert.hasText(emailToken, "emailToken must have text");
+        Assert.hasText(userPreferredLocale, "defaultLocale must have text");
         Assert.hasText(email, "email must have text");
         Assert.hasText(recipientFullName, "recipientFullName must have text");
-        final String fragment = emailSenderProperties.getC2sUiVerificationEmailTokenArgName() + "=" + emailToken;
+        final String fragment = emailSenderProperties.getC2sUiVerificationEmailTokenArgName().concat("=") + emailToken.concat("&") + userPreferredLocale;
 
         final String verificationUrl = toC2SUIVerificationUri(xForwardedProto, xForwardedHost, xForwardedPort, fragment);
         final Context ctx = new Context();
