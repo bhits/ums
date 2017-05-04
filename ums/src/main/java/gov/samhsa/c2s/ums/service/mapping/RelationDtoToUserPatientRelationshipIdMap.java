@@ -1,4 +1,4 @@
-package gov.samhsa.c2s.ums.service.util;
+package gov.samhsa.c2s.ums.service.mapping;
 
 import gov.samhsa.c2s.ums.domain.Patient;
 import gov.samhsa.c2s.ums.domain.PatientRepository;

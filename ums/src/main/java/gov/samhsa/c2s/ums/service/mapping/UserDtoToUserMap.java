@@ -1,4 +1,4 @@
-package gov.samhsa.c2s.ums.service.util;
+package gov.samhsa.c2s.ums.service.mapping;
 
 import gov.samhsa.c2s.ums.domain.Locale;
 import gov.samhsa.c2s.ums.domain.LocaleRepository;
