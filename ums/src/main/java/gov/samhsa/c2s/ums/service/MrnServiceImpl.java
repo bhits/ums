@@ -34,7 +34,7 @@ public class MrnServiceImpl implements MrnService {
         StringBuilder localIdIdBuilder = new StringBuilder();
         if (null != umsProperties.getMrn().getPrefix()) {
             localIdIdBuilder.append(umsProperties.getMrn().getPrefix());
-            localIdIdBuilder.append(".");
+            localIdIdBuilder.append("-");
         }
         localIdIdBuilder.append(RandomStringUtils
                 .randomAlphanumeric((umsProperties.getMrn().getLength())));

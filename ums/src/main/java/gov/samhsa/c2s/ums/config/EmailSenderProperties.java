@@ -1,6 +1,7 @@
 package gov.samhsa.c2s.ums.config;
 
 import lombok.Data;
+import org.hibernate.validator.constraints.NotBlank;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
@@ -21,6 +22,9 @@ public class EmailSenderProperties {
 
     @NotEmpty
     private String c2sUiVerificationEmailTokenArgName;
+
+    @NotBlank
+    private String c2sUiVerificationUserPreferredLocaleArgName;
 
     @NotEmpty
     private String brand;

@@ -1,7 +1,7 @@
 package gov.samhsa.c2s.ums.web;
 
 import gov.samhsa.c2s.ums.service.UserService;
-import gov.samhsa.c2s.ums.service.dto.GetUserResponseDto;
+import gov.samhsa.c2s.ums.service.dto.AccessDecisionDto;
 import gov.samhsa.c2s.ums.service.dto.UserDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -48,7 +48,7 @@ public class UserRestController {
      *
      * @param userId PK of User
      */
-    @PutMapping("/{userId}/enable")
+    @PutMapping("/{userId}/enabled")
     @ResponseStatus(HttpStatus.OK)
     public void enableUser(@PathVariable Long userId) {
         userService.enableUser(userId);
@@ -60,10 +60,30 @@ public class UserRestController {
      *
      * @param userId PK of User
      */
-    @PutMapping("/{userId}/disable")
+    @PutMapping("/{userId}/disabled")
     @ResponseStatus(HttpStatus.OK)
     public void disableUser(@PathVariable Long userId) {
         userService.disableUser(userId);
+    }
+
+    /**
+     * Update User locale by userAuthId
+     *
+     * @param userAuthId
+     */
+
+    @PutMapping("/locale")
+    @ResponseStatus(HttpStatus.OK)
+    public void updateUserLocaleByUserAuthId(@RequestParam String userAuthId,@RequestParam String localeCode)
+    {
+        userService.updateUserLocaleByUserAuthId(userAuthId,localeCode);
+    }
+
+    @GetMapping("/accessDecision")
+    @ResponseStatus(HttpStatus.OK)
+    public AccessDecisionDto accessDecision(@RequestParam String userAuthId, @RequestParam String patientMRN)
+    {
+        return userService.accessDecision(userAuthId,patientMRN);
     }
 
     /**
@@ -85,20 +105,10 @@ public class UserRestController {
      * @return User
      */
     @GetMapping("/{userId}")
-    public Object getUser(@PathVariable Long userId) {
+    public UserDto getUser(@PathVariable Long userId) {
         return userService.getUser(userId);
     }
 
-    /**
-     * Get User based on OAuth2 User Id
-     *
-     * @param oAuth2UserId OAUTH2 User Id
-     * @return UserDto Object
-     */
-    @GetMapping("/OAuth2/{oAuth2UserId}")
-    public Object getUserByOAuth2Id(@PathVariable String oAuth2UserId) {
-        return userService.getUserByOAuth2Id(oAuth2UserId);
-    }
 
     /**
      * Find All Users
@@ -107,9 +117,18 @@ public class UserRestController {
      */
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
-    public Page<GetUserResponseDto> getAllUsers(@RequestParam Optional<Integer> page,
-                                                @RequestParam Optional<Integer> size) {
+    public Page<UserDto> getAllUsers(@RequestParam("page") Optional<Integer> page,
+                                     @RequestParam("size") Optional<Integer> size) {
         return userService.getAllUsers(page, size);
+    }
+
+    @GetMapping(value = "/authId/{userAuthId}")
+    @ResponseStatus(HttpStatus.OK)
+    public UserDto getUserById(@PathVariable("userAuthId") String userAuthId) {
+        //Get User based on User AUTH Id
+        if (userAuthId != null)
+            return userService.getUserByUserAuthId(userAuthId);
+        else return null;
     }
 
     /**
@@ -120,7 +139,7 @@ public class UserRestController {
      */
     @GetMapping(value = "/search")
     @ResponseStatus(HttpStatus.OK)
-    public List<GetUserResponseDto> searchUsersByFirstNameAndORLastName(@RequestParam("term") String term) {
+    public List<UserDto> searchUsersByFirstNameAndORLastName(@RequestParam("term") String term) {
         StringTokenizer tokenizer = new StringTokenizer(term, " ");
         return userService.searchUsersByFirstNameAndORLastName(tokenizer);
     }
@@ -134,10 +153,10 @@ public class UserRestController {
      */
     @GetMapping(value = "/search/patientDemographic")
     @ResponseStatus(HttpStatus.OK)
-    public List<GetUserResponseDto> searchUsersByDemographic(@RequestParam("firstName") String firstName,
-                                                             @RequestParam("lastName") String lastName,
-                                                             @RequestParam("birthDate") @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate birthDate,
-                                                             @RequestParam("genderCode") String genderCode) {
+    public List<UserDto> searchUsersByDemographic(@RequestParam("firstName") String firstName,
+                                                  @RequestParam("lastName") String lastName,
+                                                  @RequestParam("birthDate") @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate birthDate,
+                                                  @RequestParam("genderCode") String genderCode) {
         return userService.searchUsersByDemographic(firstName, lastName, birthDate, genderCode);
     }
 

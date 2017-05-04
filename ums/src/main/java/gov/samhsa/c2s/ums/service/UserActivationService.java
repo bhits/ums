@@ -5,6 +5,7 @@ import gov.samhsa.c2s.ums.service.dto.ScopeAssignmentResponseDto;
 import gov.samhsa.c2s.ums.service.dto.UserActivationRequestDto;
 import gov.samhsa.c2s.ums.service.dto.UserActivationResponseDto;
 import gov.samhsa.c2s.ums.service.dto.UserVerificationRequestDto;
+import gov.samhsa.c2s.ums.service.dto.UsernameUsedDto;
 import gov.samhsa.c2s.ums.service.dto.VerificationResponseDto;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,5 +26,8 @@ public interface UserActivationService {
 
     @Transactional
     ScopeAssignmentResponseDto assignScopeToUser(ScopeAssignmentRequestDto scopeAssignmentRequestDto);
+
+    @Transactional
+    UsernameUsedDto checkUsername(String username);
 
 }

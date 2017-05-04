@@ -1,4 +1,4 @@
-package gov.samhsa.c2s.ums.service.util;
+package gov.samhsa.c2s.ums.service.mapping;
 
 import gov.samhsa.c2s.ums.domain.Locale;
 import gov.samhsa.c2s.ums.domain.LocaleRepository;
@@ -33,12 +33,13 @@ public class UserDtoToUserMap extends PropertyMap<UserDto, User> {
     @Override
     protected void configure() {
         //Required Fields
-        map().setFirstName(source.getFirstName());
-        map().setLastName(source.getLastName());
-        map().setBirthDay(source.getBirthDate());
-        map().setSocialSecurityNumber(source.getSocialSecurityNumber());
-        using(genderConverter).map(source).setAdministrativeGenderCode(null);
-        skip().setAddress(null);
+        map().getDemographics().setFirstName(source.getFirstName());
+        map().getDemographics().setMiddleName(source.getMiddleName());
+        map().getDemographics().setLastName(source.getLastName());
+        map().getDemographics().setBirthDay(source.getBirthDate());
+        map().getDemographics().setSocialSecurityNumber(source.getSocialSecurityNumber());
+        using(genderConverter).map(source).getDemographics().setAdministrativeGenderCode(null);
+        skip().getDemographics().setAddresses(null);
         using(roleConverter).map(source).setRoles(null);
         using(localeConverter).map(source).setLocale(null);
     }
@@ -77,7 +78,7 @@ public class UserDtoToUserMap extends PropertyMap<UserDto, User> {
 
         @Override
         protected Set<Role> convert(UserDto source) {
-            return source.getRole().stream().flatMap(roleDto -> roleRepository.findAllByCode(roleDto.getCode()).stream()).distinct().collect(Collectors.toSet());
+            return source.getRoles().stream().flatMap(roleDto -> roleRepository.findAllByCode(roleDto.getCode()).stream()).collect(Collectors.toSet());
         }
     }
 
@@ -99,6 +100,7 @@ public class UserDtoToUserMap extends PropertyMap<UserDto, User> {
             return localeRepository.findByCode(source.getLocale());
         }
     }
+
 }
 
 

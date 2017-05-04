@@ -1,489 +1,59 @@
--- MySQL Workbench Forward Engineering
-
-SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0;
-SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0;
-SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='TRADITIONAL,ALLOW_INVALID_DATES';
-
--- -----------------------------------------------------
--- Schema mydb
--- -----------------------------------------------------
--- -----------------------------------------------------
--- Schema ums
--- -----------------------------------------------------
-
--- -----------------------------------------------------
--- Schema ums
--- -----------------------------------------------------
-CREATE SCHEMA IF NOT EXISTS `ums` DEFAULT CHARACTER SET utf8 ;
-USE `ums` ;
-
--- -----------------------------------------------------
--- Table `state_code`
--- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `state_code` (
-  `id` BIGINT(20) NOT NULL AUTO_INCREMENT,
-  `code` VARCHAR(255) NOT NULL,
-  `code_system` VARCHAR(255) NULL DEFAULT NULL,
-  `code_system_name` VARCHAR(255) NOT NULL,
-  `code_systemoid` VARCHAR(255) NULL DEFAULT NULL,
-  `description` VARCHAR(255) NULL DEFAULT NULL,
-  `display_name` VARCHAR(255) NOT NULL,
-  PRIMARY KEY (`id`))
-ENGINE = InnoDB
-DEFAULT CHARACTER SET = utf8;
-
-
--- -----------------------------------------------------
--- Table `country_code`
--- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `country_code` (
-  `id` BIGINT(20) NOT NULL AUTO_INCREMENT,
-  `code` VARCHAR(255) NOT NULL,
-  `code_system` VARCHAR(255) NULL DEFAULT NULL,
-  `code_system_name` VARCHAR(255) NOT NULL,
-  `code_systemoid` VARCHAR(255) NULL DEFAULT NULL,
-  `description` VARCHAR(255) NULL DEFAULT NULL,
-  `display_name` VARCHAR(255) NOT NULL,
-  PRIMARY KEY (`id`))
-ENGINE = InnoDB
-DEFAULT CHARACTER SET = utf8;
-
-
--- -----------------------------------------------------
--- Table `address`
--- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `address` (
-  `id` BIGINT(20) NOT NULL AUTO_INCREMENT,
-  `city` VARCHAR(30) NOT NULL,
-  `postal_code` VARCHAR(255) NOT NULL,
-  `street_address_line` VARCHAR(50) NOT NULL,
-  `country_code_id` BIGINT(20) NOT NULL,
-  `state_code_id` BIGINT(20) NOT NULL,
-  PRIMARY KEY (`id`),
-  INDEX `FK2apbqk15r1fk1ce5c3dfs1ndn` (`country_code_id` ASC),
-  INDEX `FKbqj2j4pyht7nxbxqdwcr9ei87` (`state_code_id` ASC),
-  CONSTRAINT `FKbqj2j4pyht7nxbxqdwcr9ei87`
-    FOREIGN KEY (`state_code_id`)
-    REFERENCES `state_code` (`id`),
-  CONSTRAINT `FK2apbqk15r1fk1ce5c3dfs1ndn`
-    FOREIGN KEY (`country_code_id`)
-    REFERENCES `country_code` (`id`))
-ENGINE = InnoDB
-DEFAULT CHARACTER SET = utf8;
-
-
--- -----------------------------------------------------
--- Table `revinfo`
--- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `revinfo` (
-  `rev` INT(11) NOT NULL AUTO_INCREMENT,
-  `revtstmp` BIGINT(20) NULL DEFAULT NULL,
-  PRIMARY KEY (`rev`))
-ENGINE = InnoDB
-DEFAULT CHARACTER SET = utf8;
-
-
--- -----------------------------------------------------
--- Table `address_aud`
--- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `address_aud` (
-  `id` BIGINT(20) NOT NULL,
-  `rev` INT(11) NOT NULL,
-  `revtype` TINYINT(4) NULL DEFAULT NULL,
-  `city` VARCHAR(255) NULL DEFAULT NULL,
-  `postal_code` VARCHAR(255) NULL DEFAULT NULL,
-  `street_address_line` VARCHAR(255) NULL DEFAULT NULL,
-  `country_code_id` BIGINT(20) NULL DEFAULT NULL,
-  `state_code_id` BIGINT(20) NULL DEFAULT NULL,
-  PRIMARY KEY (`id`, `rev`),
-  INDEX `FKcc7vlgg86eqe1dmvivbkv046v` (`rev` ASC),
-  CONSTRAINT `FKcc7vlgg86eqe1dmvivbkv046v`
-    FOREIGN KEY (`rev`)
-    REFERENCES `revinfo` (`rev`))
-ENGINE = InnoDB
-DEFAULT CHARACTER SET = utf8;
-
-
--- -----------------------------------------------------
--- Table `locale`
--- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `locale` (
-  `id` BIGINT(20) NOT NULL AUTO_INCREMENT,
-  `code` VARCHAR(255) NOT NULL,
-  `code_system` VARCHAR(255) NULL DEFAULT NULL,
-  `code_system_name` VARCHAR(255) NOT NULL,
-  `code_systemoid` VARCHAR(255) NULL DEFAULT NULL,
-  `description` VARCHAR(255) NULL DEFAULT NULL,
-  `display_name` VARCHAR(255) NOT NULL,
-  PRIMARY KEY (`id`))
-ENGINE = InnoDB
-DEFAULT CHARACTER SET = utf8;
-
-
--- -----------------------------------------------------
--- Table `administrative_gender_code`
--- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `administrative_gender_code` (
-  `id` BIGINT(20) NOT NULL AUTO_INCREMENT,
-  `code` VARCHAR(255) NOT NULL,
-  `code_system` VARCHAR(255) NULL DEFAULT NULL,
-  `code_system_name` VARCHAR(255) NOT NULL,
-  `code_systemoid` VARCHAR(255) NULL DEFAULT NULL,
-  `description` VARCHAR(255) NULL DEFAULT NULL,
-  `display_name` VARCHAR(255) NOT NULL,
-  PRIMARY KEY (`id`))
-ENGINE = InnoDB
-DEFAULT CHARACTER SET = utf8;
-
-
--- -----------------------------------------------------
--- Table `user`
--- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `user` (
-  `id` BIGINT(20) NOT NULL AUTO_INCREMENT,
-  `birth_day` DATETIME NULL DEFAULT NULL,
-  `first_name` VARCHAR(30) NOT NULL,
-  `is_disabled` BIT(1) NOT NULL,
-  `last_name` VARCHAR(30) NOT NULL,
-  `oauth2user_id` VARCHAR(255) NULL DEFAULT NULL,
-  `social_security_number` VARCHAR(255) NULL DEFAULT NULL,
-  `address_id` BIGINT(20) NULL DEFAULT NULL,
-  `administrative_gender_code_id` BIGINT(20) NULL DEFAULT NULL,
-  `locale_id` BIGINT(20) NULL DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  INDEX `FKddefmvbrws3hvl5t0hnnsv8ox` (`address_id` ASC),
-  INDEX `FK7d89j3j1pmvbfbxafigy2mlkb` (`administrative_gender_code_id` ASC),
-  INDEX `FKfbdc5480okukpuvd43xidfahh` (`locale_id` ASC),
-  CONSTRAINT `FKfbdc5480okukpuvd43xidfahh`
-    FOREIGN KEY (`locale_id`)
-    REFERENCES `locale` (`id`),
-  CONSTRAINT `FK7d89j3j1pmvbfbxafigy2mlkb`
-    FOREIGN KEY (`administrative_gender_code_id`)
-    REFERENCES `administrative_gender_code` (`id`),
-  CONSTRAINT `FKddefmvbrws3hvl5t0hnnsv8ox`
-    FOREIGN KEY (`address_id`)
-    REFERENCES `address` (`id`))
-ENGINE = InnoDB
-DEFAULT CHARACTER SET = utf8;
-
-
--- -----------------------------------------------------
--- Table `address_users`
--- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `address_users` (
-  `address_id` BIGINT(20) NOT NULL,
-  `users_id` BIGINT(20) NOT NULL,
-  UNIQUE INDEX `UK_moh08f2ymndlthxp7rxvokm16` (`users_id` ASC),
-  INDEX `FK4a8j1hau5xcc6oi2561e4lw63` (`address_id` ASC),
-  CONSTRAINT `FK4a8j1hau5xcc6oi2561e4lw63`
-    FOREIGN KEY (`address_id`)
-    REFERENCES `address` (`id`),
-  CONSTRAINT `FKqgtytujw3se5lgom2i9ppp8rd`
-    FOREIGN KEY (`users_id`)
-    REFERENCES `user` (`id`))
-ENGINE = InnoDB
-DEFAULT CHARACTER SET = utf8;
-
-
--- -----------------------------------------------------
--- Table `patient`
--- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `patient` (
-  `id` BIGINT(20) NOT NULL AUTO_INCREMENT,
-  `mrn` VARCHAR(255) NULL DEFAULT NULL,
-  `user_id` BIGINT(20) NULL DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  INDEX `FKp6ttmfrxo2ejiunew4ov805uc` (`user_id` ASC),
-  CONSTRAINT `FKp6ttmfrxo2ejiunew4ov805uc`
-    FOREIGN KEY (`user_id`)
-    REFERENCES `user` (`id`))
-ENGINE = InnoDB
-DEFAULT CHARACTER SET = utf8;
-
-
--- -----------------------------------------------------
--- Table `relationship`
--- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `relationship` (
-  `id` BIGINT(20) NOT NULL AUTO_INCREMENT,
-  `code` VARCHAR(255) NOT NULL,
-  `name` VARCHAR(255) NOT NULL,
-  PRIMARY KEY (`id`))
-ENGINE = InnoDB
-DEFAULT CHARACTER SET = utf8;
-
-
--- -----------------------------------------------------
--- Table `role`
--- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `role` (
-  `id` BIGINT(20) NOT NULL AUTO_INCREMENT,
-  `code` VARCHAR(255) NOT NULL,
-  `name` VARCHAR(255) NOT NULL,
-  PRIMARY KEY (`id`))
-ENGINE = InnoDB
-DEFAULT CHARACTER SET = utf8;
-
-
--- -----------------------------------------------------
--- Table `role_aud`
--- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `role_aud` (
-  `id` BIGINT(20) NOT NULL,
-  `rev` INT(11) NOT NULL,
-  `revtype` TINYINT(4) NULL DEFAULT NULL,
-  `code` VARCHAR(255) NULL DEFAULT NULL,
-  `name` VARCHAR(255) NULL DEFAULT NULL,
-  PRIMARY KEY (`id`, `rev`),
-  INDEX `FKrks7qtsmup3w81fdp0d6omfk7` (`rev` ASC),
-  CONSTRAINT `FKrks7qtsmup3w81fdp0d6omfk7`
-    FOREIGN KEY (`rev`)
-    REFERENCES `revinfo` (`rev`))
-ENGINE = InnoDB
-DEFAULT CHARACTER SET = utf8;
-
-
--- -----------------------------------------------------
--- Table `scope`
--- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `scope` (
-  `id` BIGINT(20) NOT NULL AUTO_INCREMENT,
-  `scope_description` VARCHAR(255) NOT NULL,
-  `scope_name` VARCHAR(255) NOT NULL,
-  PRIMARY KEY (`id`))
-ENGINE = InnoDB
-DEFAULT CHARACTER SET = utf8;
-
-
--- -----------------------------------------------------
--- Table `role_scopes`
--- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `role_scopes` (
-  `roles_id` BIGINT(20) NOT NULL,
-  `scopes_id` BIGINT(20) NOT NULL,
-  PRIMARY KEY (`roles_id`, `scopes_id`),
-  INDEX `FK7qfwaml7g6mtnl6w4xm9be0hp` (`scopes_id` ASC),
-  CONSTRAINT `FKj4benp61mf5m7wnast2llih1`
-    FOREIGN KEY (`roles_id`)
-    REFERENCES `role` (`id`),
-  CONSTRAINT `FK7qfwaml7g6mtnl6w4xm9be0hp`
-    FOREIGN KEY (`scopes_id`)
-    REFERENCES `scope` (`id`))
-ENGINE = InnoDB
-DEFAULT CHARACTER SET = utf8;
-
-
--- -----------------------------------------------------
--- Table `role_scopes_aud`
--- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `role_scopes_aud` (
-  `rev` INT(11) NOT NULL,
-  `roles_id` BIGINT(20) NOT NULL,
-  `scopes_id` BIGINT(20) NOT NULL,
-  `revtype` TINYINT(4) NULL DEFAULT NULL,
-  PRIMARY KEY (`rev`, `roles_id`, `scopes_id`),
-  CONSTRAINT `FKhi78gervneyp2v5aw2ky5l0p6`
-    FOREIGN KEY (`rev`)
-    REFERENCES `revinfo` (`rev`))
-ENGINE = InnoDB
-DEFAULT CHARACTER SET = utf8;
-
-
--- -----------------------------------------------------
--- Table `scope_aud`
--- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `scope_aud` (
-  `id` BIGINT(20) NOT NULL,
-  `rev` INT(11) NOT NULL,
-  `revtype` TINYINT(4) NULL DEFAULT NULL,
-  `scope_description` VARCHAR(255) NULL DEFAULT NULL,
-  `scope_name` VARCHAR(255) NULL DEFAULT NULL,
-  PRIMARY KEY (`id`, `rev`),
-  INDEX `FKqvi4bxfyyv068d1x8gff1gsid` (`rev` ASC),
-  CONSTRAINT `FKqvi4bxfyyv068d1x8gff1gsid`
-    FOREIGN KEY (`rev`)
-    REFERENCES `revinfo` (`rev`))
-ENGINE = InnoDB
-DEFAULT CHARACTER SET = utf8;
-
-
--- -----------------------------------------------------
--- Table `telecom`
--- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `telecom` (
-  `id` BIGINT(20) NOT NULL AUTO_INCREMENT,
-  `system` VARCHAR(30) NOT NULL,
-  `value` VARCHAR(30) NOT NULL,
-  `user_id` BIGINT(20) NULL DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  INDEX `FKtjrtnyppa9bm7x0sy3bp77w5n` (`user_id` ASC),
-  CONSTRAINT `FKtjrtnyppa9bm7x0sy3bp77w5n`
-    FOREIGN KEY (`user_id`)
-    REFERENCES `user` (`id`))
-ENGINE = InnoDB
-DEFAULT CHARACTER SET = utf8;
-
-
--- -----------------------------------------------------
--- Table `telecom_aud`
--- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `telecom_aud` (
-  `id` BIGINT(20) NOT NULL,
-  `rev` INT(11) NOT NULL,
-  `revtype` TINYINT(4) NULL DEFAULT NULL,
-  `system` VARCHAR(255) NULL DEFAULT NULL,
-  `value` VARCHAR(255) NULL DEFAULT NULL,
-  `user_id` BIGINT(20) NULL DEFAULT NULL,
-  PRIMARY KEY (`id`, `rev`),
-  INDEX `FKix3c360mmqvddy76o1m46ihar` (`rev` ASC),
-  CONSTRAINT `FKix3c360mmqvddy76o1m46ihar`
-    FOREIGN KEY (`rev`)
-    REFERENCES `revinfo` (`rev`))
-ENGINE = InnoDB
-DEFAULT CHARACTER SET = utf8;
-
-
--- -----------------------------------------------------
--- Table `user_activation`
--- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `user_activation` (
-  `id` BIGINT(20) NOT NULL AUTO_INCREMENT,
-  `email_token` VARCHAR(255) NOT NULL,
-  `email_token_expiration` DATETIME NOT NULL,
-  `is_verified` BIT(1) NOT NULL,
-  `verification_code` VARCHAR(255) NOT NULL,
-  `user_id` BIGINT(20) NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE INDEX `email_token_idx` (`email_token` ASC),
-  INDEX `FKidgebcgp5cij94pf1tup1f62p` (`user_id` ASC),
-  CONSTRAINT `FKidgebcgp5cij94pf1tup1f62p`
-    FOREIGN KEY (`user_id`)
-    REFERENCES `user` (`id`))
-ENGINE = InnoDB
-DEFAULT CHARACTER SET = utf8;
-
-
--- -----------------------------------------------------
--- Table `user_activation_aud`
--- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `user_activation_aud` (
-  `id` BIGINT(20) NOT NULL,
-  `rev` INT(11) NOT NULL,
-  `revtype` TINYINT(4) NULL DEFAULT NULL,
-  `email_token` VARCHAR(255) NULL DEFAULT NULL,
-  `email_token_expiration` DATETIME NULL DEFAULT NULL,
-  `is_verified` BIT(1) NULL DEFAULT NULL,
-  `verification_code` VARCHAR(255) NULL DEFAULT NULL,
-  `user_id` BIGINT(20) NULL DEFAULT NULL,
-  PRIMARY KEY (`id`, `rev`),
-  INDEX `FK9re0c59t3i31p2ujugy4tujpk` (`rev` ASC),
-  CONSTRAINT `FK9re0c59t3i31p2ujugy4tujpk`
-    FOREIGN KEY (`rev`)
-    REFERENCES `revinfo` (`rev`))
-ENGINE = InnoDB
-DEFAULT CHARACTER SET = utf8;
-
-
--- -----------------------------------------------------
--- Table `user_aud`
--- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `user_aud` (
-  `id` BIGINT(20) NOT NULL,
-  `rev` INT(11) NOT NULL,
-  `revtype` TINYINT(4) NULL DEFAULT NULL,
-  `address_id` BIGINT(20) NULL DEFAULT NULL,
-  `administrative_gender_code_id` BIGINT(20) NULL DEFAULT NULL,
-  `locale_id` BIGINT(20) NULL DEFAULT NULL,
-  PRIMARY KEY (`id`, `rev`),
-  INDEX `FK89ntto9kobwahrwxbne2nqcnr` (`rev` ASC),
-  CONSTRAINT `FK89ntto9kobwahrwxbne2nqcnr`
-    FOREIGN KEY (`rev`)
-    REFERENCES `revinfo` (`rev`))
-ENGINE = InnoDB
-DEFAULT CHARACTER SET = utf8;
-
-
--- -----------------------------------------------------
--- Table `user_patient_relationship`
--- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `user_patient_relationship` (
-  `user_id` BIGINT(20) NOT NULL,
-  `relationship_id` BIGINT(20) NOT NULL,
-  `patient_id` BIGINT(20) NOT NULL,
-  PRIMARY KEY (`patient_id`, `relationship_id`, `user_id`),
-  INDEX `FKcueft195i7ut2u6mddio89uvc` (`user_id` ASC),
-  INDEX `FKk1yggc721hn2263rr543bm4k1` (`relationship_id` ASC),
-  CONSTRAINT `FKg70k723dfb4benj3lv2rjhp76`
-    FOREIGN KEY (`patient_id`)
-    REFERENCES `patient` (`id`),
-  CONSTRAINT `FKcueft195i7ut2u6mddio89uvc`
-    FOREIGN KEY (`user_id`)
-    REFERENCES `user` (`id`),
-  CONSTRAINT `FKk1yggc721hn2263rr543bm4k1`
-    FOREIGN KEY (`relationship_id`)
-    REFERENCES `relationship` (`id`))
-ENGINE = InnoDB
-DEFAULT CHARACTER SET = utf8;
-
-
--- -----------------------------------------------------
--- Table `user_roles`
--- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `user_roles` (
-  `users_id` BIGINT(20) NOT NULL,
-  `roles_id` BIGINT(20) NOT NULL,
-  PRIMARY KEY (`users_id`, `roles_id`),
-  INDEX `FKj9553ass9uctjrmh0gkqsmv0d` (`roles_id` ASC),
-  CONSTRAINT `FK7ecyobaa59vxkxckg6t355l86`
-    FOREIGN KEY (`users_id`)
-    REFERENCES `user` (`id`),
-  CONSTRAINT `FKj9553ass9uctjrmh0gkqsmv0d`
-    FOREIGN KEY (`roles_id`)
-    REFERENCES `role` (`id`))
-ENGINE = InnoDB
-DEFAULT CHARACTER SET = utf8;
-
-
--- -----------------------------------------------------
--- Table `user_scope_assignment`
--- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `user_scope_assignment` (
-  `id` BIGINT(20) NOT NULL AUTO_INCREMENT,
-  `assigned` BIT(1) NOT NULL,
-  `scope_id` BIGINT(20) NULL DEFAULT NULL,
-  `user_activation_id` BIGINT(20) NULL DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE INDEX `UK89m6kbqn388uowpe9ph77ruwt` (`user_activation_id` ASC, `scope_id` ASC),
-  INDEX `FKmvcfov9puvk2higv7h54wbyii` (`scope_id` ASC),
-  CONSTRAINT `FKtldupmh35x5ragy1g4x2wcj84`
-    FOREIGN KEY (`user_activation_id`)
-    REFERENCES `user_activation` (`id`),
-  CONSTRAINT `FKmvcfov9puvk2higv7h54wbyii`
-    FOREIGN KEY (`scope_id`)
-    REFERENCES `scope` (`id`))
-ENGINE = InnoDB
-DEFAULT CHARACTER SET = utf8;
-
-
--- -----------------------------------------------------
--- Table `user_scope_assignment_aud`
--- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `user_scope_assignment_aud` (
-  `id` BIGINT(20) NOT NULL,
-  `rev` INT(11) NOT NULL,
-  `revtype` TINYINT(4) NULL DEFAULT NULL,
-  `assigned` BIT(1) NULL DEFAULT NULL,
-  `scope_id` BIGINT(20) NULL DEFAULT NULL,
-  `user_activation_id` BIGINT(20) NULL DEFAULT NULL,
-  PRIMARY KEY (`id`, `rev`),
-  INDEX `FKrgqa5ttc70311wm8a2g5x9p1i` (`rev` ASC),
-  CONSTRAINT `FKrgqa5ttc70311wm8a2g5x9p1i`
-    FOREIGN KEY (`rev`)
-    REFERENCES `revinfo` (`rev`))
-ENGINE = InnoDB
-DEFAULT CHARACTER SET = utf8;
-
-
-SET SQL_MODE=@OLD_SQL_MODE;
-SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;
-SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;
+create table address (id bigint not null auto_increment, city varchar(30), line1 varchar(50), line2 varchar(50), postal_code varchar(255), `use` varchar(255), country_code_id bigint, demographics_id bigint, state_code_id bigint, primary key (id)) ENGINE=InnoDB;
+create table address_aud (id bigint not null, rev integer not null, revtype tinyint, city varchar(255), line1 varchar(255), line2 varchar(255), postal_code varchar(255), `use` varchar(255), primary key (id, rev)) ENGINE=InnoDB;
+create table administrative_gender_code (id bigint not null auto_increment, code varchar(255) not null, code_system varchar(255), code_system_name varchar(255) not null, code_systemoid varchar(255), description varchar(255), display_name varchar(255) not null, primary key (id)) ENGINE=InnoDB;
+create table country_code (id bigint not null auto_increment, code varchar(255) not null, code_system varchar(255), code_system_name varchar(255) not null, code_systemoid varchar(255), description varchar(255), display_name varchar(255) not null, primary key (id)) ENGINE=InnoDB;
+create table demographics (id bigint not null auto_increment, birth_day datetime, first_name varchar(30) not null, last_name varchar(30) not null, middle_name varchar(30), social_security_number varchar(255), administrative_gender_code_id bigint, primary key (id)) ENGINE=InnoDB;
+create table demographics_aud (id bigint not null, rev integer not null, revtype tinyint, birth_day datetime, first_name varchar(255), last_name varchar(255), middle_name varchar(255), social_security_number varchar(255), primary key (id, rev)) ENGINE=InnoDB;
+create table locale (id bigint not null auto_increment, code varchar(255) not null, code_system varchar(255), code_system_name varchar(255) not null, code_systemoid varchar(255), description varchar(255), display_name varchar(255) not null, primary key (id)) ENGINE=InnoDB;
+create table patient (id bigint not null auto_increment, mrn varchar(255), demographics_id bigint, primary key (id)) ENGINE=InnoDB;
+create table relationship (role_id bigint not null, primary key (role_id)) ENGINE=InnoDB;
+create table revinfo (rev integer not null auto_increment, revtstmp bigint, primary key (rev)) ENGINE=InnoDB;
+create table role (id bigint not null auto_increment, code varchar(255) not null, name varchar(255) not null, primary key (id)) ENGINE=InnoDB;
+create table role_aud (id bigint not null, rev integer not null, revtype tinyint, code varchar(255), name varchar(255), primary key (id, rev)) ENGINE=InnoDB;
+create table role_scopes (roles_id bigint not null, scopes_id bigint not null, primary key (roles_id, scopes_id)) ENGINE=InnoDB;
+create table role_scopes_aud (rev integer not null, roles_id bigint not null, scopes_id bigint not null, revtype tinyint, primary key (rev, roles_id, scopes_id)) ENGINE=InnoDB;
+create table scope (id bigint not null auto_increment, scope_description varchar(255) not null, scope_name varchar(255) not null, primary key (id)) ENGINE=InnoDB;
+create table scope_aud (id bigint not null, rev integer not null, revtype tinyint, scope_description varchar(255), scope_name varchar(255), primary key (id, rev)) ENGINE=InnoDB;
+create table state_code (id bigint not null auto_increment, code varchar(255) not null, code_system varchar(255), code_system_name varchar(255) not null, code_systemoid varchar(255), description varchar(255), display_name varchar(255) not null, primary key (id)) ENGINE=InnoDB;
+create table telecom (id bigint not null auto_increment, system varchar(255) not null, `use` varchar(255), value varchar(30) not null, demographics_id bigint, primary key (id)) ENGINE=InnoDB;
+create table telecom_aud (id bigint not null, rev integer not null, revtype tinyint, system varchar(255), `use` varchar(255), value varchar(255), demographics_id bigint, primary key (id, rev)) ENGINE=InnoDB;
+create table user (id bigint not null auto_increment, disabled bit not null, user_auth_id varchar(255), demographics_id bigint, locale_id bigint, primary key (id)) ENGINE=InnoDB;
+create table user_activation_aud (id bigint not null, rev integer not null, revtype tinyint, email_token varchar(255), email_token_expiration datetime, verification_code varchar(255), verified bit, user_id bigint, primary key (id, rev)) ENGINE=InnoDB;
+create table user_aud (id bigint not null, rev integer not null, revtype tinyint, disabled bit, user_auth_id varchar(255), demographics_id bigint, primary key (id, rev)) ENGINE=InnoDB;
+create table user_roles (users_id bigint not null, roles_id bigint not null, primary key (users_id, roles_id)) ENGINE=InnoDB;
+create table user_roles_aud (rev integer not null, users_id bigint not null, roles_id bigint not null, revtype tinyint, primary key (rev, users_id, roles_id)) ENGINE=InnoDB;
+create table user_scope_assignment_aud (id bigint not null, rev integer not null, revtype tinyint, assigned bit, scope_id bigint, user_activation_id bigint, primary key (id, rev)) ENGINE=InnoDB;
+create table user_activation (id bigint not null auto_increment, email_token varchar(255) not null, email_token_expiration datetime not null, verification_code varchar(255) not null, verified bit not null, user_id bigint not null, primary key (id)) ENGINE=InnoDB;
+create table user_patient_relationship (user_id bigint not null, patient_id bigint not null, relationship_role_id bigint not null, primary key (patient_id, relationship_role_id, user_id)) ENGINE=InnoDB;
+create table user_scope_assignment (id bigint not null auto_increment, assigned bit not null, scope_id bigint, user_activation_id bigint, primary key (id)) ENGINE=InnoDB;
+alter table user_activation add constraint email_token_idx unique (email_token);
+alter table user_scope_assignment add constraint UK89m6kbqn388uowpe9ph77ruwt unique (user_activation_id, scope_id);
+alter table address add constraint FK2apbqk15r1fk1ce5c3dfs1ndn foreign key (country_code_id) references country_code (id);
+alter table address add constraint FK4s6v8tnwdssaad9pvbpxxww26 foreign key (demographics_id) references demographics (id);
+alter table address add constraint FKbqj2j4pyht7nxbxqdwcr9ei87 foreign key (state_code_id) references state_code (id);
+alter table address_aud add constraint FKcc7vlgg86eqe1dmvivbkv046v foreign key (rev) references revinfo (rev);
+alter table demographics add constraint FKth4oabffvjwonyb2yd73d8l1p foreign key (administrative_gender_code_id) references administrative_gender_code (id);
+alter table demographics_aud add constraint FKj5txfm6up1klfqp8t169wtxxm foreign key (rev) references revinfo (rev);
+alter table patient add constraint FK2vbcmahxhdltsjwfhlg9nxdrv foreign key (demographics_id) references demographics (id);
+alter table relationship add constraint FKrs9kp18yr2fwale7ammcm07b6 foreign key (role_id) references role (id);
+alter table role_aud add constraint FKrks7qtsmup3w81fdp0d6omfk7 foreign key (rev) references revinfo (rev);
+alter table role_scopes add constraint FK7qfwaml7g6mtnl6w4xm9be0hp foreign key (scopes_id) references scope (id);
+alter table role_scopes add constraint FKj4benp61mf5m7wnast2llih1 foreign key (roles_id) references role (id);
+alter table role_scopes_aud add constraint FKhi78gervneyp2v5aw2ky5l0p6 foreign key (rev) references revinfo (rev);
+alter table scope_aud add constraint FKqvi4bxfyyv068d1x8gff1gsid foreign key (rev) references revinfo (rev);
+alter table telecom add constraint FKef2vqks3gvmws7cxg84pxucx foreign key (demographics_id) references demographics (id);
+alter table telecom_aud add constraint FKix3c360mmqvddy76o1m46ihar foreign key (rev) references revinfo (rev);
+alter table user add constraint FKoacji0w1da8jv5yqpnyxvxv5t foreign key (demographics_id) references demographics (id);
+alter table user add constraint FKfbdc5480okukpuvd43xidfahh foreign key (locale_id) references locale (id);
+alter table user_activation_aud add constraint FK9re0c59t3i31p2ujugy4tujpk foreign key (rev) references revinfo (rev);
+alter table user_aud add constraint FK89ntto9kobwahrwxbne2nqcnr foreign key (rev) references revinfo (rev);
+alter table user_roles add constraint FKj9553ass9uctjrmh0gkqsmv0d foreign key (roles_id) references role (id);
+alter table user_roles add constraint FK7ecyobaa59vxkxckg6t355l86 foreign key (users_id) references user (id);
+alter table user_roles_aud add constraint FKox6xyy64fyq0y3dvv5ve53a0h foreign key (rev) references revinfo (rev);
+alter table user_scope_assignment_aud add constraint FKrgqa5ttc70311wm8a2g5x9p1i foreign key (rev) references revinfo (rev);
+alter table user_activation add constraint FKidgebcgp5cij94pf1tup1f62p foreign key (user_id) references user (id);
+alter table user_patient_relationship add constraint FKcueft195i7ut2u6mddio89uvc foreign key (user_id) references user (id);
+alter table user_patient_relationship add constraint FKg70k723dfb4benj3lv2rjhp76 foreign key (patient_id) references patient (id);
+alter table user_patient_relationship add constraint FK52xkj4gtw7jsy4ndcf24ce1sc foreign key (relationship_role_id) references relationship (role_id);
+alter table user_scope_assignment add constraint FKmvcfov9puvk2higv7h54wbyii foreign key (scope_id) references scope (id);
+alter table user_scope_assignment add constraint FKtldupmh35x5ragy1g4x2wcj84 foreign key (user_activation_id) references user_activation (id);

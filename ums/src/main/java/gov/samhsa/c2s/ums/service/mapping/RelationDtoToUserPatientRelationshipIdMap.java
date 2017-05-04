@@ -1,12 +1,14 @@
-package gov.samhsa.c2s.ums.service.util;
+package gov.samhsa.c2s.ums.service.mapping;
 
 import gov.samhsa.c2s.ums.domain.Patient;
 import gov.samhsa.c2s.ums.domain.PatientRepository;
 import gov.samhsa.c2s.ums.domain.Relationship;
 import gov.samhsa.c2s.ums.domain.RelationshipRepository;
+import gov.samhsa.c2s.ums.domain.RoleRepository;
 import gov.samhsa.c2s.ums.domain.User;
 import gov.samhsa.c2s.ums.domain.UserPatientRelationship;
 import gov.samhsa.c2s.ums.domain.UserRepository;
+import gov.samhsa.c2s.ums.domain.valueobject.RelationshipRoleId;
 import gov.samhsa.c2s.ums.domain.valueobject.UserPatientRelationshipId;
 import gov.samhsa.c2s.ums.service.dto.RelationDto;
 import org.modelmapper.AbstractConverter;
@@ -84,15 +86,18 @@ public class RelationDtoToUserPatientRelationshipIdMap extends PropertyMap<Relat
     private static class RelationshipConverter extends AbstractConverter<RelationDto, Relationship> {
 
         private final RelationshipRepository relationshipRepository;
+        private final RoleRepository roleRepository;
+
 
         @Autowired
-        public RelationshipConverter(RelationshipRepository relationshipRepository) {
+        public RelationshipConverter(RelationshipRepository relationshipRepository, RoleRepository roleRepository) {
             this.relationshipRepository = relationshipRepository;
+            this.roleRepository = roleRepository;
         }
 
         @Override
         protected Relationship convert(RelationDto source) {
-            return relationshipRepository.findByCode(source.getRelationshipCode());
-        }
+            return Relationship.builder().id(RelationshipRoleId.builder().role(roleRepository.findByCode(source.getRelationshipCode())).build()).build();
     }
+}
 }
