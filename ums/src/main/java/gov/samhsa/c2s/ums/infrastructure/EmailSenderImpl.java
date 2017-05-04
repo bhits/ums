@@ -58,7 +58,9 @@ public class EmailSenderImpl implements EmailSender {
         Assert.hasText(userPreferredLocale, "defaultLocale must have text");
         Assert.hasText(email, "email must have text");
         Assert.hasText(recipientFullName, "recipientFullName must have text");
-        final String fragment = emailSenderProperties.getC2sUiVerificationEmailTokenArgName().concat("=") + emailToken.concat("&") + userPreferredLocale;
+        final String fragment = emailSenderProperties.getC2sUiVerificationEmailTokenArgName().concat("=")
+                + emailToken.concat("&") + emailSenderProperties.getC2sUiVerificationUserPreferredLocaleArgName().concat("=")
+                + userPreferredLocale;
 
         final String verificationUrl = toC2SUIVerificationUri(xForwardedProto, xForwardedHost, xForwardedPort, fragment);
         final Context ctx = new Context();
