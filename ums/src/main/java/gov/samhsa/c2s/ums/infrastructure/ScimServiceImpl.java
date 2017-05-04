@@ -104,7 +104,7 @@ public class ScimServiceImpl implements ScimService {
     }
 
     @Override
-    public void setUserAsInactive(String userId) {
+    public void inactivateUser(String userId) {
         //get scim user by userId
         ScimUser scimUser = restTemplate.getForObject(usersEndpoint+"/{userId}",ScimUser.class,userId);
 
@@ -120,7 +120,7 @@ public class ScimServiceImpl implements ScimService {
     }
 
     @Override
-    public void setUserAsActive(String userId) {
+    public void activateUser(String userId) {
         //get scim user by userId
         final ScimUser scimUser = restTemplate.getForObject(usersEndpoint+"/{userId}", ScimUser.class,userId);
 

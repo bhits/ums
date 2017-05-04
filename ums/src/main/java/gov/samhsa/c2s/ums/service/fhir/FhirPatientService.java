@@ -11,4 +11,6 @@ public interface FhirPatientService {
 
     public void publishFhirPatient(UserDto userDto);
 
+    public void updateFhirPatient(UserDto userDto);
+
 }
