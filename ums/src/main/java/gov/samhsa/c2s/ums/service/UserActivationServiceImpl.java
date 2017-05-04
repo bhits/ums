@@ -18,6 +18,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.Period;
 import java.util.Collections;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -202,7 +203,7 @@ public class UserActivationServiceImpl implements UserActivationService {
         emailSender.sendEmailToConfirmVerification(
                 xForwardedProto, xForwardedHost, xForwardedPort,
                 user.getDemographics().getTelecoms().stream().filter(telecom -> telecom.getSystem().equals(Telecom.System.EMAIL)).map(Telecom::getValue).findFirst().get(),
-                getRecipientFullName(user));
+                getRecipientFullName(user), new Locale(user.getLocale().getCode()));
         return response;
     }
 
