@@ -7,6 +7,7 @@ import org.hibernate.envers.Audited;
 import org.hibernate.envers.NotAudited;
 
 import javax.persistence.CascadeType;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -64,6 +65,7 @@ public class Demographics {
      * The social security number.
      */
     @Pattern(regexp = "(\\d{3}-?\\d{2}-?\\d{4})*")
+    @Column(unique = true)
     private String socialSecurityNumber;
 
     /**
