@@ -84,13 +84,11 @@ public class UserActivationServiceImpl implements UserActivationService {
         response.setEmail(user.getDemographics().getTelecoms().stream().filter(telecom -> telecom.getSystem().equals(Telecom.System.EMAIL)).map(Telecom::getValue).findFirst().get());
         response.setGenderCode(user.getDemographics().getAdministrativeGenderCode().getCode());
         // Send email with verification link
-        String userPreferredLocale = user.getLocale().getCode();
         emailSender.sendEmailWithVerificationLink(
                 xForwardedProto, xForwardedHost, xForwardedPort,
                 user.getDemographics().getTelecoms().stream().filter(telecom -> telecom.getSystem().equals(Telecom.System.EMAIL)).map(Telecom::getValue).findFirst().get(),
                 saved.getEmailToken(),
-                userPreferredLocale,
-                getRecipientFullName(user));
+                getRecipientFullName(user), new Locale(user.getLocale().getCode()));
         return response;
     }
 
