@@ -3,6 +3,8 @@ package gov.samhsa.c2s.ums.domain;
 
 import gov.samhsa.c2s.ums.domain.reference.AdministrativeGenderCode;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.NotAudited;
 
@@ -24,6 +26,8 @@ import java.util.List;
 @Entity
 @Data
 @Audited
+@ToString(exclude = {"patient","user"})
+@EqualsAndHashCode(exclude= {"patient","user"})
 public class Demographics {
     /**
      * The id.
