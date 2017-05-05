@@ -83,3 +83,15 @@ spring:
   profiles: docker
   datasource:
     url: jdbc:mysql://${C2S_DB_HOST:ums-db.c2s.com}:${C2S_DB_PORT:3306}/ums?autoReconnect=true
+security:
+  oauth2:
+    client:
+      access-token-uri: http://uaa.c2s.com:8080/uaa/oauth/token
+c2s:
+  ums:
+    scim:
+      url: http://uaa.c2s.com:8080/uaa
+    fhir:
+      publish:
+        # configure fhir server base url
+        serverUrl: http://fhir.c2s.com/hapi-fhir-jpaserver/baseStu3
