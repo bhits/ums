@@ -62,7 +62,7 @@ c2s:
       publish:
         enabled: false
         # configure fhir server base url
-        serverUrl: http://fhirtest.uhn.ca/baseDstu3
+        serverUrl: http://bhitsdevhie01/hapi-fhir-jpaserver/baseStu3
         clientSocketTimeoutInMs: 768000
 
 security:
@@ -94,4 +94,4 @@ c2s:
     fhir:
       publish:
         # configure fhir server base url
-        serverUrl: http://fhir.c2s.com/hapi-fhir-jpaserver/baseStu3
+        serverUrl: http://hapi-fhir.c2s.com:8080/hapi-fhir-jpaserver/baseStu3
