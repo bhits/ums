@@ -40,11 +40,12 @@ c2s:
       codeSystemOID: urn:oid:2.16.840.1.113883.4.642.1.2
       displayName: GENDER
     mrn:
-      codeSystem: https://bhits.github.io/consent2share/
+      codeSystem: https://bhits.github.io/consent2share
       codeSystemOID: urn:oid:1.3.6.1.4.1.21367.13.20.200
       displayName: MRN
       prefix: C2S-DEV
       length: 6
+      update-in-database-on-startup: true
     Pagination:
       defaultSize: 10
       maxSize: 100

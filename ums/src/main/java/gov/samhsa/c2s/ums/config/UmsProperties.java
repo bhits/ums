@@ -32,32 +32,36 @@ public class UmsProperties {
     }
 
     @Data
-    public static class Mrn extends Identifier{
+    public static class Mrn extends Identifier {
         @NotBlank
         private String prefix;
 
         @NotBlank
         private int length;
+
+        private boolean updateInDatabaseOnStartup = true;
     }
 
     @Data
-    public static class Ssn extends Identifier{ }
-
-    @Data
-    public static class Gender extends Identifier{ }
-
-    @Data
-    public static class Pagination{
-            @Min(1)
-            @NotNull
-            private int defaultSize;
-
-            @NotNull
-            private int maxSize;
+    public static class Ssn extends Identifier {
     }
 
     @Data
-    public static class Fhir{
+    public static class Gender extends Identifier {
+    }
+
+    @Data
+    public static class Pagination {
+        @Min(1)
+        @NotNull
+        private int defaultSize;
+
+        @NotNull
+        private int maxSize;
+    }
+
+    @Data
+    public static class Fhir {
 
         private Publish publish;
 

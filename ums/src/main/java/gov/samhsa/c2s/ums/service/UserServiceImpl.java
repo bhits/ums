@@ -5,6 +5,10 @@ import gov.samhsa.c2s.ums.domain.Address;
 import gov.samhsa.c2s.ums.domain.AddressRepository;
 import gov.samhsa.c2s.ums.domain.Demographics;
 import gov.samhsa.c2s.ums.domain.DemographicsRepository;
+import gov.samhsa.c2s.ums.domain.Identifier;
+import gov.samhsa.c2s.ums.domain.IdentifierRepository;
+import gov.samhsa.c2s.ums.domain.IdentifierSystem;
+import gov.samhsa.c2s.ums.domain.IdentifierSystemRepository;
 import gov.samhsa.c2s.ums.domain.LocaleRepository;
 import gov.samhsa.c2s.ums.domain.Patient;
 import gov.samhsa.c2s.ums.domain.PatientRepository;
@@ -30,6 +34,8 @@ import gov.samhsa.c2s.ums.service.exception.PatientNotFoundException;
 import gov.samhsa.c2s.ums.service.exception.UserActivationNotFoundException;
 import gov.samhsa.c2s.ums.service.exception.UserNotFoundException;
 import gov.samhsa.c2s.ums.service.fhir.FhirPatientService;
+import gov.samhsa.c2s.ums.service.mapping.PatientToMrnConverter;
+import gov.samhsa.c2s.ums.service.mapping.UserToMrnConverter;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.TypeToken;
@@ -48,6 +54,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.StringTokenizer;
 import java.util.stream.Collectors;
+
+import static java.util.stream.Collectors.toList;
 
 
 @Service
@@ -92,6 +100,17 @@ public class UserServiceImpl implements UserService {
     @Autowired
     private FhirPatientService fhirPatientService;
 
+    @Autowired
+    private IdentifierSystemRepository identifierSystemRepository;
+    @Autowired
+    private IdentifierRepository identifierRepository;
+
+    @Autowired
+    private UserToMrnConverter userToMrnConverter;
+
+    @Autowired
+    private PatientToMrnConverter patientToMrnConverter;
+
     @Override
     @Transactional
     public void registerUser(UserDto userDto) {
@@ -125,8 +144,8 @@ public class UserServiceImpl implements UserService {
             // Add User patient relationship if User is a Patient
             createUserPatientRelationship(user.getId(), patient.getId(), "patient");
             // Publish FHIR Patient to FHir Service
-            if(umsProperties.getFhir().getPublish().isEnabled()){
-                userDto.setMrn(patient.getMrn());
+            if (umsProperties.getFhir().getPublish().isEnabled()) {
+                userDto.setMrn(patientToMrnConverter.convert(patient));
                 fhirPatientService.publishFhirPatient(userDto);
             }
         }
@@ -137,7 +156,12 @@ public class UserServiceImpl implements UserService {
     private Patient createPatient(User user) {
         //set the patient object
         Patient patient = new Patient();
-        patient.setMrn(mrnService.generateMrn());
+        final List<IdentifierSystem> systems = identifierSystemRepository.findAllBySystemGenerated(true);
+        final List<Identifier> identifiers = systems.stream()
+                .map(system -> Identifier.builder().system(system).value(mrnService.generateMrn()).build())
+                .collect(toList());
+        identifierRepository.save(identifiers);
+        patient.setIdentifiers(identifiers);
         patient.setDemographics(user.getDemographics());
         return patientRepository.save(patient);
     }
@@ -203,38 +227,36 @@ public class UserServiceImpl implements UserService {
 
         //update address
         List<Address> addresses = user.getDemographics().getAddresses();
-        if(userDto.getAddresses()!=null) {
+        if (userDto.getAddresses() != null) {
             userDto.getAddresses().stream().forEach(addressDto -> {
-                Optional<Address> tempAddress=addresses.stream().filter(address -> address.getUse().toString().equals(addressDto.getUse())).findFirst();
-                if(tempAddress.isPresent()){
+                Optional<Address> tempAddress = addresses.stream().filter(address -> address.getUse().toString().equals(addressDto.getUse())).findFirst();
+                if (tempAddress.isPresent()) {
                     mapAddressDtoToAddress(tempAddress.get(), addressDto);
-                }
-                else {
-                    Address address =  mapAddressDtoToAddress(new Address(), addressDto);
+                } else {
+                    Address address = mapAddressDtoToAddress(new Address(), addressDto);
                     address.setDemographics(user.getDemographics());
                     addresses.add(address);
                 }
             });
         }
 
-       //update telephone
+        //update telephone
         List<Telecom> telecoms = user.getDemographics().getTelecoms();
-        if(userDto.getTelecoms()!=null) {
+        if (userDto.getTelecoms() != null) {
             userDto.getTelecoms().stream().forEach(telecomDto -> {
-                Optional<Telecom> tempTeleCom=telecoms.stream().filter(telecom -> telecom.getSystem().toString().equals(telecomDto.getSystem())&&telecom.getUse().toString().equals(telecomDto.getUse())).findFirst();
-                if(tempTeleCom.isPresent()){
+                Optional<Telecom> tempTeleCom = telecoms.stream().filter(telecom -> telecom.getSystem().toString().equals(telecomDto.getSystem()) && telecom.getUse().toString().equals(telecomDto.getUse())).findFirst();
+                if (tempTeleCom.isPresent()) {
                     tempTeleCom.get().setValue(telecomDto.getValue());
-                }
-                else {
-                    Telecom telecom=mapTelecomDtoToTelcom(new Telecom(),telecomDto);
+                } else {
+                    Telecom telecom = mapTelecomDtoToTelcom(new Telecom(), telecomDto);
                     telecom.setDemographics(user.getDemographics());
                     telecoms.add(telecom);
                 }
             });
         }
 
-        if(umsProperties.getFhir().getPublish().isEnabled()&& user.getDemographics().getPatient()!=null){
-            userDto.setMrn(user.getDemographics().getPatient().getMrn());
+        if (umsProperties.getFhir().getPublish().isEnabled() && user.getDemographics().getPatient() != null) {
+            userDto.setMrn(userToMrnConverter.convert(user));
             fhirPatientService.updateFhirPatient(userDto);
         }
 
@@ -242,31 +264,31 @@ public class UserServiceImpl implements UserService {
     }
 
 
-    private Address mapAddressDtoToAddress(Address address,AddressDto addressDto){
+    private Address mapAddressDtoToAddress(Address address, AddressDto addressDto) {
         address.setCity(addressDto.getCity());
         address.setStateCode(stateCodeRepository.findByCode(addressDto.getStateCode()));
         address.setCountryCode(countryCodeRepository.findByCode(addressDto.getCountryCode()));
         address.setLine1(addressDto.getLine1());
         address.setLine2(addressDto.getLine2());
         address.setPostalCode(addressDto.getPostalCode());
-        if(addressDto.getUse().equals(Address.Use.HOME.toString()))
+        if (addressDto.getUse().equals(Address.Use.HOME.toString()))
             address.setUse(Address.Use.HOME);
-        if(addressDto.getUse().equals(Address.Use.WORK.toString()))
+        if (addressDto.getUse().equals(Address.Use.WORK.toString()))
             address.setUse(Address.Use.WORK);
         return address;
     }
 
-    private Telecom mapTelecomDtoToTelcom(Telecom telecom,TelecomDto telecomDto){
+    private Telecom mapTelecomDtoToTelcom(Telecom telecom, TelecomDto telecomDto) {
         telecom.setValue(telecomDto.getValue());
 
-        if(telecomDto.getUse().equals(Telecom.Use.HOME.toString()))
+        if (telecomDto.getUse().equals(Telecom.Use.HOME.toString()))
             telecom.setUse(Telecom.Use.HOME);
-        if(telecomDto.getUse().equals(Telecom.Use.WORK.toString()))
+        if (telecomDto.getUse().equals(Telecom.Use.WORK.toString()))
             telecom.setUse(Telecom.Use.WORK);
 
-        if(telecomDto.getSystem().equals(Telecom.System.EMAIL.toString()))
+        if (telecomDto.getSystem().equals(Telecom.System.EMAIL.toString()))
             telecom.setSystem(Telecom.System.EMAIL);
-        if(telecomDto.getSystem().equals(Telecom.System.PHONE.toString()))
+        if (telecomDto.getSystem().equals(Telecom.System.PHONE.toString()))
             telecom.setSystem(Telecom.System.PHONE);
 
         return telecom;
@@ -286,24 +308,22 @@ public class UserServiceImpl implements UserService {
     public void updateUserLocaleByUserAuthId(String userAuthId, String localeCode) {
 
         /* Get User Entity from UserDto */
-        User user = userRepository.findOneByUserAuthIdAndDisabled(userAuthId,false).orElseThrow(() -> new UserNotFoundException("User Not Found!"));
+        User user = userRepository.findOneByUserAuthIdAndDisabled(userAuthId, false).orElseThrow(() -> new UserNotFoundException("User Not Found!"));
         user.setLocale(localeRepository.findByCode(localeCode));
         user = userRepository.save(user);
     }
 
     @Override
     public AccessDecisionDto accessDecision(String userAuthId, String patientMrn) {
-        User user = userRepository.findOneByUserAuthIdAndDisabled(userAuthId,false).orElseThrow(() -> new UserNotFoundException("User Not Found!"));
-        Patient patient=patientRepository.findOneByMrn(patientMrn).orElseThrow(() -> new PatientNotFoundException("Patient Not Found!"));
+        User user = userRepository.findOneByUserAuthIdAndDisabled(userAuthId, false).orElseThrow(() -> new UserNotFoundException("User Not Found!"));
+        Patient patient = patientRepository.findOneByIdentifiersValueAndIdentifiersSystemSystem(patientMrn, umsProperties.getMrn().getCodeSystem()).orElseThrow(() -> new PatientNotFoundException("Patient Not Found!"));
         List<UserPatientRelationship> userPatientRelationshipList = userPatientRelationshipRepository.findAllByIdUserIdAndIdPatientId(user.getId(), patient.getId());
 
-        if(userPatientRelationshipList == null || userPatientRelationshipList.size() < 1){
+        if (userPatientRelationshipList == null || userPatientRelationshipList.size() < 1) {
             return new AccessDecisionDto(false);
-        }
-        else
+        } else
             return new AccessDecisionDto(true);
     }
-
 
 
     @Override
@@ -337,14 +357,14 @@ public class UserServiceImpl implements UserService {
             return demographicsRepository.findAllByFirstNameLikesOrLastNameLikes("%" + firstName + "%", pageRequest)
                     .stream()
                     .map(demographics -> modelMapper.map(demographics.getUser(), UserDto.class))
-                    .collect(Collectors.toList());
+                    .collect(toList());
         } else if (token.countTokens() >= 2) {
             String firstName = token.nextToken(); // First Token is the first name
             String lastName = token.nextToken();  // Last Token is the last name
             return demographicsRepository.findAllByFirstNameLikesAndLastNameLikes("%" + firstName + "%", "%" + lastName + "%", pageRequest)
                     .stream()
                     .map(demographics -> modelMapper.map(demographics.getUser(), UserDto.class))
-                    .collect(Collectors.toList());
+                    .collect(toList());
         } else {
             return new ArrayList<>();
         }

@@ -8,7 +8,5 @@ import java.util.Optional;
 public interface PatientRepository extends JpaRepository<Patient, Long> {
     List<Patient> findAll();
 
-    Optional<Patient> findOneByMrn(String mrn);
-
-
+    Optional<Patient> findOneByIdentifiersValueAndIdentifiersSystemSystem(String value, String system);
 }

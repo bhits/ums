@@ -3,10 +3,14 @@ package gov.samhsa.c2s.ums.service.mapping;
 import gov.samhsa.c2s.ums.domain.User;
 import gov.samhsa.c2s.ums.service.dto.UserDto;
 import org.modelmapper.PropertyMap;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component
 public class UserToUserDtoMap extends PropertyMap<User, UserDto> {
+
+    @Autowired
+    private UserToMrnConverter userToMrnConverter;
 
     @Override
     protected void configure() {
@@ -20,7 +24,7 @@ public class UserToUserDtoMap extends PropertyMap<User, UserDto> {
         using(new TelecomListToTelecomDtoListConverter()).map(source.getDemographics().getTelecoms()).setTelecoms(null);
         using(new AddressListToAddressDtoListConverter()).map(source.getDemographics().getAddresses()).setAddresses(null);
         map().setLocale(source.getLocale().getCode());
-        map().setMrn(source.getDemographics().getPatient().getMrn());
+        using(userToMrnConverter).map(source).setMrn(null);
     }
 }
 
