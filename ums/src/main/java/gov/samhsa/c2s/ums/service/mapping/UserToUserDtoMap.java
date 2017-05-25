@@ -28,6 +28,7 @@ public class UserToUserDtoMap extends PropertyMap<User, UserDto> {
         using(new AddressListToAddressDtoListConverter()).map(source.getDemographics().getAddresses()).setAddresses(null);
         map().setLocale(source.getLocale().getCode());
         using(userToMrnConverter).map(source).setMrn(null);
+        map().setRegistrationPurposeEmail(source.getDemographics().getPatient().getRegistrationPurposeEmail());
     }
 }
 

@@ -30,6 +30,7 @@ import gov.samhsa.c2s.ums.service.dto.AddressDto;
 import gov.samhsa.c2s.ums.service.dto.RelationDto;
 import gov.samhsa.c2s.ums.service.dto.TelecomDto;
 import gov.samhsa.c2s.ums.service.dto.UserDto;
+import gov.samhsa.c2s.ums.service.exception.MissingEmailException;
 import gov.samhsa.c2s.ums.service.exception.PatientNotFoundException;
 import gov.samhsa.c2s.ums.service.exception.SsnSystemNotFoundException;
 import gov.samhsa.c2s.ums.service.exception.UserActivationNotFoundException;
@@ -147,7 +148,13 @@ public class UserServiceImpl implements UserService {
         TODO remove the hardcoding with FHIR enum value
         */
         if (userDto.getRoles().stream().anyMatch(roleDto -> roleDto.getCode().equalsIgnoreCase("patient"))) {
-            Patient patient = createPatient(user);
+            // Assert that the patient has at least one email OR a registrationPurposeEmail
+            final boolean patientHasEmail = user.getDemographics().getTelecoms().stream().map(Telecom::getSystem).anyMatch(Telecom.System.EMAIL::equals);
+            if (!patientHasEmail && !StringUtils.hasText(userDto.getRegistrationPurposeEmail())) {
+                throw new MissingEmailException("At least one of personal email OR a registration purpose email is required");
+            }
+
+            Patient patient = createPatient(user, userDto.getRegistrationPurposeEmail());
             // Step 2.1: Create User Patient Relationship Mapping in UMS
             // Add User patient relationship if User is a Patient
             createUserPatientRelationship(user.getId(), patient.getId(), "patient");
@@ -160,8 +167,7 @@ public class UserServiceImpl implements UserService {
 
     }
 
-
-    private Patient createPatient(User user) {
+    private Patient createPatient(User user, String registrationPurposeEmail) {
         //set the patient object
         Patient patient = new Patient();
         final List<IdentifierSystem> systems = identifierSystemRepository.findAllBySystemGenerated(true);
@@ -172,6 +178,7 @@ public class UserServiceImpl implements UserService {
         final Demographics demographics = user.getDemographics();
         demographics.getIdentifiers().addAll(identifiers);
         patient.setDemographics(demographics);
+        patient.setRegistrationPurposeEmail(registrationPurposeEmail);
         return patientRepository.save(patient);
     }
 
@@ -232,6 +239,9 @@ public class UserServiceImpl implements UserService {
         user.getDemographics().setLastName(userDto.getLastName());
         user.getDemographics().setBirthDay(userDto.getBirthDate());
 
+        // Update registration purpose email
+        user.getDemographics().getPatient().setRegistrationPurposeEmail(userDto.getRegistrationPurposeEmail());
+
         // Update SSN
         final String ssn = userDto.getSocialSecurityNumber();
         // Find current SSN if different
@@ -289,7 +299,6 @@ public class UserServiceImpl implements UserService {
         userRepository.save(user);
     }
 
-
     private Address mapAddressDtoToAddress(Address address, AddressDto addressDto) {
         address.setCity(addressDto.getCity());
         address.setStateCode(stateCodeRepository.findByCode(addressDto.getStateCode()));
@@ -319,7 +328,6 @@ public class UserServiceImpl implements UserService {
 
         return telecom;
     }
-
 
     @Override
     public void updateUserLocale(Long userId, String localeCode) {
@@ -352,7 +360,6 @@ public class UserServiceImpl implements UserService {
         } else
             return new AccessDecisionDto(true);
     }
-
 
     @Override
     public UserDto getUser(Long userId) {
@@ -437,7 +444,7 @@ public class UserServiceImpl implements UserService {
     }
 
     private void assertUserAccountHasBeenActivated(Long userId) {
-        Optional.of(userRepository.findOne(userId))
+        userRepository.findOneById(userId)
                 .map(User::getUserAuthId)
                 .filter(StringUtils::hasText)
                 .orElseThrow(UserActivationNotFoundException::new);

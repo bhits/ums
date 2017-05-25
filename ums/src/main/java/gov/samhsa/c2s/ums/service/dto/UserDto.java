@@ -1,5 +1,6 @@
 package gov.samhsa.c2s.ums.service.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -15,6 +16,7 @@ import java.util.List;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class UserDto {
 
     private Long id;
@@ -48,4 +50,5 @@ public class UserDto {
 
     private String mrn;
 
+    private String registrationPurposeEmail;
 }
