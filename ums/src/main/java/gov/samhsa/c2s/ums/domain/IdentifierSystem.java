@@ -1,6 +1,7 @@
 package gov.samhsa.c2s.ums.domain;
 
 import lombok.Data;
+import org.hibernate.envers.Audited;
 
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -9,6 +10,7 @@ import javax.persistence.Index;
 import javax.persistence.Table;
 
 @Entity
+@Audited
 @Table(indexes = @Index(columnList = "system", name = "system_idx", unique = true))
 @Data
 public class IdentifierSystem {

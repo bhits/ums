@@ -11,6 +11,9 @@ public class PatientToPatientDtoMap extends PropertyMap<Patient, PatientDto> {
     @Autowired
     private PatientToMrnConverter patientToMrnConverter;
 
+    @Autowired
+    private PatientToSsnConverter patientToSsnConverter;
+
     @Override
     protected void configure() {
         map().setId(source.getId());
@@ -20,7 +23,7 @@ public class PatientToPatientDtoMap extends PropertyMap<Patient, PatientDto> {
         map().setGenderCode(source.getDemographics().getAdministrativeGenderCode().getCode());
         map().setBirthDate(source.getDemographics().getBirthDay());
         using(patientToMrnConverter).map(source).setMrn(null);
-        map().setSocialSecurityNumber(source.getDemographics().getSocialSecurityNumber());
+        using(patientToSsnConverter).map(source).setSocialSecurityNumber(null);
         using(new TelecomListToTelecomDtoListConverter()).map(source.getDemographics().getTelecoms()).setTelecoms(null);
         using(new AddressListToAddressDtoListConverter()).map(source.getDemographics().getAddresses()).setAddresses(null);
     }

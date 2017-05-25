@@ -9,7 +9,6 @@ import org.hibernate.envers.Audited;
 import org.hibernate.envers.NotAudited;
 
 import javax.persistence.CascadeType;
-import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -21,13 +20,14 @@ import javax.validation.constraints.Past;
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
 @Data
 @Audited
-@ToString(exclude = {"patient","user"})
-@EqualsAndHashCode(exclude= {"patient","user"})
+@ToString(exclude = {"patient", "user"})
+@EqualsAndHashCode(exclude = {"patient", "user"})
 public class Demographics {
     /**
      * The id.
@@ -66,16 +66,9 @@ public class Demographics {
     private LocalDate birthDay;
 
     /**
-     * The social security number.
-     */
-    @Pattern(regexp = "(\\d{3}-?\\d{2}-?\\d{4})*")
-    @Column(unique = true)
-    private String socialSecurityNumber;
-
-    /**
      * The telephone.
      */
-    @OneToMany(mappedBy = "demographics",cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "demographics", cascade = CascadeType.ALL)
     @NotAudited
     private List<Telecom> telecoms;
     /**
@@ -86,7 +79,7 @@ public class Demographics {
     private AdministrativeGenderCode administrativeGenderCode;
 
 
-    @OneToMany(mappedBy = "demographics",cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "demographics", cascade = CascadeType.ALL)
     @NotAudited
     private List<Address> addresses;
 
@@ -96,4 +89,6 @@ public class Demographics {
     @OneToOne(mappedBy = "demographics")
     private Patient patient;
 
+    @OneToMany
+    private List<Identifier> identifiers = new ArrayList<>();
 }

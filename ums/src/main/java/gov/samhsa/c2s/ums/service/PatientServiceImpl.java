@@ -1,6 +1,8 @@
 package gov.samhsa.c2s.ums.service;
 
 import gov.samhsa.c2s.ums.config.UmsProperties;
+import gov.samhsa.c2s.ums.domain.Demographics;
+import gov.samhsa.c2s.ums.domain.DemographicsRepository;
 import gov.samhsa.c2s.ums.domain.Patient;
 import gov.samhsa.c2s.ums.domain.PatientRepository;
 import gov.samhsa.c2s.ums.domain.RelationshipRepository;
@@ -28,6 +30,8 @@ public class PatientServiceImpl implements PatientService {
     @Autowired
     private PatientRepository patientRepository;
     @Autowired
+    private DemographicsRepository demographicsRepository;
+    @Autowired
     private ModelMapper modelMapper;
     @Autowired
     private UserRepository userRepository;
@@ -42,7 +46,9 @@ public class PatientServiceImpl implements PatientService {
     @Transactional
     public PatientDto getPatientByPatientId(String patientId, Optional<String> userAuthId) {
         //patientId is MRN, not Patient.id
-        final Patient patient = patientRepository.findOneByIdentifiersValueAndIdentifiersSystemSystem(patientId, umsProperties.getMrn().getCodeSystem()).orElseThrow(() -> new PatientNotFoundException("Patient Not Found!"));
+        final Patient patient = demographicsRepository.findOneByIdentifiersValueAndIdentifiersSystemSystem(patientId, umsProperties.getMrn().getCodeSystem())
+                .map(Demographics::getPatient)
+                .orElseThrow(() -> new PatientNotFoundException("Patient Not Found!"));
 
         if (userAuthId.isPresent()) {
             //Validate if the given userAuthId has access to the given MRN/PatientID

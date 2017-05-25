@@ -12,6 +12,9 @@ public class UserToUserDtoMap extends PropertyMap<User, UserDto> {
     @Autowired
     private UserToMrnConverter userToMrnConverter;
 
+    @Autowired
+    private UserToSsnConverter userToSsnConverter;
+
     @Override
     protected void configure() {
         map().setId(source.getId());
@@ -20,7 +23,7 @@ public class UserToUserDtoMap extends PropertyMap<User, UserDto> {
         map().setLastName(source.getDemographics().getLastName());
         map().setBirthDate(source.getDemographics().getBirthDay());
         map().setGenderCode(source.getDemographics().getAdministrativeGenderCode().getCode());
-        map().setSocialSecurityNumber(source.getDemographics().getSocialSecurityNumber());
+        using(userToSsnConverter).map(source).setSocialSecurityNumber(null);
         using(new TelecomListToTelecomDtoListConverter()).map(source.getDemographics().getTelecoms()).setTelecoms(null);
         using(new AddressListToAddressDtoListConverter()).map(source.getDemographics().getAddresses()).setAddresses(null);
         map().setLocale(source.getLocale().getCode());

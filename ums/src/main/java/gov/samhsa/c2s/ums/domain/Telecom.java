@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 import org.hibernate.envers.Audited;
 
 import javax.persistence.Column;
@@ -26,6 +27,7 @@ import javax.validation.constraints.Size;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
+@ToString(exclude = "demographics")
 public class Telecom {
     /**
      * The id.
@@ -50,26 +52,24 @@ public class Telecom {
     private String value;
 
 
-    @Column(name="`use`")
+    @Column(name = "`use`")
     @Enumerated(EnumType.STRING)
-    private Use use=Use.HOME;
-
+    private Use use = Use.HOME;
 
 
     @ManyToOne
     private Demographics demographics;
 
 
-   public enum Use{
+    public enum Use {
         HOME,
         WORK
     }
 
-    public enum System{
+    public enum System {
         PHONE,
         EMAIL
     }
-
 
 
 }

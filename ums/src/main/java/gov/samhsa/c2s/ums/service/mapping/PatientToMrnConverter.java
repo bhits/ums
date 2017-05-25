@@ -3,7 +3,6 @@ package gov.samhsa.c2s.ums.service.mapping;
 import gov.samhsa.c2s.ums.config.UmsProperties;
 import gov.samhsa.c2s.ums.domain.Identifier;
 import gov.samhsa.c2s.ums.domain.Patient;
-import gov.samhsa.c2s.ums.service.exception.MrnNotFoundException;
 import org.modelmapper.AbstractConverter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -17,11 +16,11 @@ public class PatientToMrnConverter extends AbstractConverter<Patient, String> {
 
     @Override
     public String convert(Patient patient) {
-        return convertAsOptional(patient).orElseThrow(MrnNotFoundException::new);
+        return convertAsOptional(patient).orElse(null);
     }
 
     public Optional<String> convertAsOptional(Patient patient) {
-        return patient.getIdentifiers().stream()
+        return patient.getDemographics().getIdentifiers().stream()
                 .filter(id -> umsProperties.getMrn().getCodeSystem().equals(id.getSystem().getSystem()))
                 .map(Identifier::getValue)
                 .findAny();

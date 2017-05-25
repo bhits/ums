@@ -10,18 +10,18 @@ import org.springframework.stereotype.Component;
 import java.util.Optional;
 
 @Component
-public class UserToMrnConverter extends AbstractConverter<User, String> {
+public class UserToSsnConverter extends AbstractConverter<User, String> {
     @Autowired
     private UmsProperties umsProperties;
 
     @Override
-    public String convert(User user) {
+    protected String convert(User user) {
         return convertAsOptional(user).orElse(null);
     }
 
     public Optional<String> convertAsOptional(User user) {
         return user.getDemographics().getIdentifiers().stream()
-                .filter(id -> umsProperties.getMrn().getCodeSystem().equals(id.getSystem().getSystem()))
+                .filter(id -> umsProperties.getSsn().getCodeSystem().equals(id.getSystem().getSystem()))
                 .map(Identifier::getValue)
                 .findAny();
     }

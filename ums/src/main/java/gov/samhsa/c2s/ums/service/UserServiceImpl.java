@@ -31,6 +31,7 @@ import gov.samhsa.c2s.ums.service.dto.RelationDto;
 import gov.samhsa.c2s.ums.service.dto.TelecomDto;
 import gov.samhsa.c2s.ums.service.dto.UserDto;
 import gov.samhsa.c2s.ums.service.exception.PatientNotFoundException;
+import gov.samhsa.c2s.ums.service.exception.SsnSystemNotFoundException;
 import gov.samhsa.c2s.ums.service.exception.UserActivationNotFoundException;
 import gov.samhsa.c2s.ums.service.exception.UserNotFoundException;
 import gov.samhsa.c2s.ums.service.fhir.FhirPatientService;
@@ -120,6 +121,13 @@ public class UserServiceImpl implements UserService {
         /* Get User Entity from UserDto */
         User user = modelMapper.map(userDto, User.class);
 
+        // SSN
+        final String socialSecurityNumber = userDto.getSocialSecurityNumber();
+        final IdentifierSystem identifierSystem = identifierSystemRepository.findOneBySystem(umsProperties.getSsn().getCodeSystem()).orElseThrow(SsnSystemNotFoundException::new);
+        final Identifier ssnIdentifier = Identifier.of(socialSecurityNumber, identifierSystem);
+        identifierRepository.save(ssnIdentifier);
+        user.getDemographics().getIdentifiers().add(ssnIdentifier);
+
         // Add user contact details to Telecom Table
         user.getDemographics().setTelecoms(modelMapper.map(userDto.getTelecoms(), new TypeToken<List<Telecom>>() {
         }.getType()));
@@ -161,8 +169,9 @@ public class UserServiceImpl implements UserService {
                 .map(system -> Identifier.builder().system(system).value(mrnService.generateMrn()).build())
                 .collect(toList());
         identifierRepository.save(identifiers);
-        patient.setIdentifiers(identifiers);
-        patient.setDemographics(user.getDemographics());
+        final Demographics demographics = user.getDemographics();
+        demographics.getIdentifiers().addAll(identifiers);
+        patient.setDemographics(demographics);
         return patientRepository.save(patient);
     }
 
@@ -222,7 +231,24 @@ public class UserServiceImpl implements UserService {
         user.getDemographics().setFirstName(userDto.getFirstName());
         user.getDemographics().setLastName(userDto.getLastName());
         user.getDemographics().setBirthDay(userDto.getBirthDate());
-        user.getDemographics().setSocialSecurityNumber(userDto.getSocialSecurityNumber());
+
+        // Update SSN
+        final String ssn = userDto.getSocialSecurityNumber();
+        // Find current SSN if different
+        final Optional<Identifier> oldSsn = user.getDemographics().getIdentifiers().stream()
+                .filter(id -> umsProperties.getSsn().getCodeSystem().equals(id.getSystem().getSystem()))
+                .filter(id -> !id.getValue().equals(ssn))
+                .findAny();
+        // Delete old SSN if different
+        oldSsn.ifPresent(user.getDemographics().getIdentifiers()::remove);
+        // Update SSN with new value if different
+        if (StringUtils.hasText(ssn) && oldSsn.isPresent()) {
+            final IdentifierSystem ssnSystem = identifierSystemRepository.findOneBySystem(umsProperties.getSsn().getCodeSystem()).orElseThrow(SsnSystemNotFoundException::new);
+            final Identifier ssnIdentifier = identifierRepository.findByValueAndSystem(ssn, ssnSystem).orElseGet(() -> Identifier.of(ssn, ssnSystem));
+            identifierRepository.save(ssnIdentifier);
+            user.getDemographics().getIdentifiers().add(ssnIdentifier);
+        }
+
         user.getDemographics().setAdministrativeGenderCode(administrativeGenderCodeRepository.findByCode(userDto.getGenderCode()));
 
         //update address
@@ -315,8 +341,10 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public AccessDecisionDto accessDecision(String userAuthId, String patientMrn) {
-        User user = userRepository.findOneByUserAuthIdAndDisabled(userAuthId, false).orElseThrow(() -> new UserNotFoundException("User Not Found!"));
-        Patient patient = patientRepository.findOneByIdentifiersValueAndIdentifiersSystemSystem(patientMrn, umsProperties.getMrn().getCodeSystem()).orElseThrow(() -> new PatientNotFoundException("Patient Not Found!"));
+        final User user = userRepository.findOneByUserAuthIdAndDisabled(userAuthId, false).orElseThrow(() -> new UserNotFoundException("User Not Found!"));
+        final Patient patient = demographicsRepository.findOneByIdentifiersValueAndIdentifiersSystemSystem(patientMrn, umsProperties.getMrn().getCodeSystem())
+                .map(Demographics::getPatient)
+                .orElseThrow(() -> new PatientNotFoundException("Patient Not Found!"));
         List<UserPatientRelationship> userPatientRelationshipList = userPatientRelationshipRepository.findAllByIdUserIdAndIdPatientId(user.getId(), patient.getId());
 
         if (userPatientRelationshipList == null || userPatientRelationshipList.size() < 1) {
