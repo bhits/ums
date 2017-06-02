@@ -11,6 +11,7 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Past;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 @Data
 @Builder
@@ -36,7 +37,7 @@ public class UserDto {
     @NotEmpty
     private String genderCode;
 
-    private String socialSecurityNumber;
+    private Optional<String> socialSecurityNumber;
 
     private List<AddressDto> addresses;
 

@@ -120,14 +120,15 @@ public class UserServiceImpl implements UserService {
         // Step 1: Create User Record and User Role Mapping in UMS
 
         /* Get User Entity from UserDto */
-        User user = modelMapper.map(userDto, User.class);
+        final User user = modelMapper.map(userDto, User.class);
 
         // SSN
-        final String socialSecurityNumber = userDto.getSocialSecurityNumber();
-        final IdentifierSystem identifierSystem = identifierSystemRepository.findOneBySystem(umsProperties.getSsn().getCodeSystem()).orElseThrow(SsnSystemNotFoundException::new);
-        final Identifier ssnIdentifier = Identifier.of(socialSecurityNumber, identifierSystem);
-        identifierRepository.save(ssnIdentifier);
-        user.getDemographics().getIdentifiers().add(ssnIdentifier);
+        userDto.getSocialSecurityNumber().ifPresent(socialSecurityNumber -> {
+            final IdentifierSystem identifierSystem = identifierSystemRepository.findOneBySystem(umsProperties.getSsn().getCodeSystem()).orElseThrow(SsnSystemNotFoundException::new);
+            final Identifier ssnIdentifier = Identifier.of(socialSecurityNumber, identifierSystem);
+            identifierRepository.save(ssnIdentifier);
+            user.getDemographics().getIdentifiers().add(ssnIdentifier);
+        });
 
         // Add user contact details to Telecom Table
         user.getDemographics().setTelecoms(modelMapper.map(userDto.getTelecoms(), new TypeToken<List<Telecom>>() {
@@ -140,7 +141,7 @@ public class UserServiceImpl implements UserService {
         for (Address address : user.getDemographics().getAddresses())
             address.setDemographics(user.getDemographics());
 
-        user = userRepository.save(user);
+        userRepository.save(user);
 
         /*
         Step 2: Create User Patient Record in UMS  if User is a Patient
@@ -230,7 +231,7 @@ public class UserServiceImpl implements UserService {
     public void updateUser(Long userId, UserDto userDto) {
 
         /* Get User Entity from UserDto */
-        User user = userRepository.findOne(userId);
+        final User user = userRepository.findOneById(userId).orElseThrow(UserNotFoundException::new);
 
         user.setLocale(localeRepository.findByCode(userDto.getLocale()));
         user.setRoles(userDto.getRoles().stream().flatMap(roleDto -> roleRepository.findAllByCode(roleDto.getCode()).stream()).collect(Collectors.toSet()));
@@ -243,21 +244,26 @@ public class UserServiceImpl implements UserService {
         user.getDemographics().getPatient().setRegistrationPurposeEmail(userDto.getRegistrationPurposeEmail());
 
         // Update SSN
-        final String ssn = userDto.getSocialSecurityNumber();
-        // Find current SSN if different
-        final Optional<Identifier> oldSsn = user.getDemographics().getIdentifiers().stream()
+        // Find new SSN value
+        final Optional<String> newSsnValue = userDto.getSocialSecurityNumber().filter(StringUtils::hasText).map(String::trim);
+        // Find old SSN identifier
+        final Optional<Identifier> oldSsnIdentifier = user.getDemographics().getIdentifiers().stream()
                 .filter(id -> umsProperties.getSsn().getCodeSystem().equals(id.getSystem().getSystem()))
-                .filter(id -> !id.getValue().equals(ssn))
                 .findAny();
+        // Filter old SSN identifier if different
+        final Optional<Identifier> oldSsnIdentifierIfDifferent = oldSsnIdentifier.filter(oldId -> !newSsnValue.filter(ssnValue -> oldId.getValue().equals(ssnValue)).isPresent());
         // Delete old SSN if different
-        oldSsn.ifPresent(user.getDemographics().getIdentifiers()::remove);
+        oldSsnIdentifierIfDifferent.ifPresent(user.getDemographics().getIdentifiers()::remove);
+        oldSsnIdentifierIfDifferent.ifPresent(identifierRepository::delete);
+
         // Update SSN with new value if different
-        if (StringUtils.hasText(ssn) && oldSsn.isPresent()) {
-            final IdentifierSystem ssnSystem = identifierSystemRepository.findOneBySystem(umsProperties.getSsn().getCodeSystem()).orElseThrow(SsnSystemNotFoundException::new);
-            final Identifier ssnIdentifier = identifierRepository.findByValueAndSystem(ssn, ssnSystem).orElseGet(() -> Identifier.of(ssn, ssnSystem));
-            identifierRepository.save(ssnIdentifier);
-            user.getDemographics().getIdentifiers().add(ssnIdentifier);
-        }
+        newSsnValue.filter(ssn -> !oldSsnIdentifier.map(Identifier::getValue).filter(ssn::equals).isPresent())
+                .ifPresent(ssn -> {
+                    final IdentifierSystem ssnSystem = identifierSystemRepository.findOneBySystem(umsProperties.getSsn().getCodeSystem()).orElseThrow(SsnSystemNotFoundException::new);
+                    final Identifier ssnIdentifier = identifierRepository.findByValueAndSystem(ssn, ssnSystem).orElseGet(() -> Identifier.of(ssn, ssnSystem));
+                    identifierRepository.save(ssnIdentifier);
+                    user.getDemographics().getIdentifiers().add(ssnIdentifier);
+                });
 
         user.getDemographics().setAdministrativeGenderCode(administrativeGenderCodeRepository.findByCode(userDto.getGenderCode()));
 

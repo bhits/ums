@@ -22,96 +22,6 @@ import java.util.function.Function;
 @Service
 public class FhirPatientServiceImpl implements FhirPatientService {
 
-    @Autowired
-    private UmsProperties umsProperties;
-
-    @Autowired
-    private IGenericClient fhirClient;
-
-    @Autowired
-    private FhirValidator fhirValidator;
-
-
-    @Override
-    public void publishFhirPatient(UserDto userDto) {
-        Patient patient = createFhirPatient(userDto);
-        ValidationResult validationResult = fhirValidator.validateWithResult(patient);
-        if (validationResult.isSuccessful())
-            fhirClient.create().resource(patient).execute();
-        else
-            throw new FHIRFormatErrorException("FHIR Patient Validation is not successful" + validationResult.getMessages());
-    }
-
-    @Override
-    public void updateFhirPatient(UserDto userDto) {
-        Bundle bundle = fhirClient.search().forResource(Patient.class)
-                .where(Patient.IDENTIFIER.exactly().systemAndCode(umsProperties.getMrn().getCodeSystem(), userDto.getMrn()))
-                .returnBundle(Bundle.class).execute();
-
-        Patient patient = createFhirPatient(userDto);
-        ValidationResult validationResult = fhirValidator.validateWithResult(patient);
-
-        if (validationResult.isSuccessful()) {
-            if (bundle.getEntry().size()>0)
-                fhirClient.update().resource(patient)
-                        .conditional()
-                        .where(Patient.IDENTIFIER.exactly().systemAndCode(umsProperties.getMrn().getCodeSystem(), patient.getId()))
-                        .execute();
-            else fhirClient.create().resource(patient).execute();
-        }
-        else
-            throw new FHIRFormatErrorException("FHIR Patient Validation is not successful" + validationResult.getMessages());
-    }
-
-    @Override
-    public Patient createFhirPatient(UserDto userDto) {
-        return userDtoToPatient.apply(userDto);
-    }
-
-    Function<UserDto, Patient> userDtoToPatient = new Function<UserDto, Patient>() {
-        @Override
-        public Patient apply(UserDto userDto) {
-            // set patient information
-            Patient fhirPatient = new Patient();
-
-            //setting mandatory fields
-            fhirPatient.addName().setFamily(userDto.getLastName()).addGiven(userDto.getFirstName());
-            fhirPatient.setBirthDate(Date.valueOf(userDto.getBirthDate()));
-            fhirPatient.setGender(getPatientGender.apply(userDto.getGenderCode()));
-            fhirPatient.setActive(true);
-
-            //Add an Identifier
-            setIdentifiers(fhirPatient, userDto);
-
-            //optional fields
-            userDto.getAddresses().stream().forEach(addressDto ->
-                    fhirPatient.addAddress().addLine(addressDto.getLine1()).addLine(addressDto.getLine2()).setCity(addressDto.getCity()).setState(addressDto.getStateCode()).setPostalCode(addressDto.getPostalCode())
-            );
-
-            userDto.getTelecoms().stream().forEach(telecomDto ->
-                    fhirPatient.addTelecom().setSystem(ContactPoint.ContactPointSystem.valueOf(telecomDto.getSystem())).setUse(ContactPoint.ContactPointUse.valueOf(telecomDto.getUse())).setValue(telecomDto.getValue())
-            );
-
-            return fhirPatient;
-        }
-    };
-
-
-    private void setIdentifiers(Patient patient, UserDto userDto) {
-
-        //setting patient mrn
-        patient.addIdentifier().setSystem(umsProperties.getMrn().getCodeSystem())
-                .setUse(Identifier.IdentifierUse.OFFICIAL).setValue(userDto.getMrn());
-
-        patient.setId(new IdType(userDto.getMrn()));
-
-        // setting ssn value
-        String ssnValue = userDto.getSocialSecurityNumber();
-        if (null != ssnValue && !ssnValue.isEmpty())
-            patient.addIdentifier().setSystem(umsProperties.getSsn().getCodeSystem())
-                    .setValue(ssnValue);
-    }
-
     Function<String, Enumerations.AdministrativeGender> getPatientGender = new Function<String, Enumerations.AdministrativeGender>() {
         @Override
         public Enumerations.AdministrativeGender apply(String codeString) {
@@ -139,6 +49,89 @@ public class FhirPatientServiceImpl implements FhirPatientService {
 
         }
     };
+    @Autowired
+    private UmsProperties umsProperties;
+    Function<UserDto, Patient> userDtoToPatient = new Function<UserDto, Patient>() {
+        @Override
+        public Patient apply(UserDto userDto) {
+            // set patient information
+            Patient fhirPatient = new Patient();
+
+            //setting mandatory fields
+            fhirPatient.addName().setFamily(userDto.getLastName()).addGiven(userDto.getFirstName());
+            fhirPatient.setBirthDate(Date.valueOf(userDto.getBirthDate()));
+            fhirPatient.setGender(getPatientGender.apply(userDto.getGenderCode()));
+            fhirPatient.setActive(true);
+
+            //Add an Identifier
+            setIdentifiers(fhirPatient, userDto);
+
+            //optional fields
+            userDto.getAddresses().stream().forEach(addressDto ->
+                    fhirPatient.addAddress().addLine(addressDto.getLine1()).addLine(addressDto.getLine2()).setCity(addressDto.getCity()).setState(addressDto.getStateCode()).setPostalCode(addressDto.getPostalCode())
+            );
+
+            userDto.getTelecoms().stream().forEach(telecomDto ->
+                    fhirPatient.addTelecom().setSystem(ContactPoint.ContactPointSystem.valueOf(telecomDto.getSystem())).setUse(ContactPoint.ContactPointUse.valueOf(telecomDto.getUse())).setValue(telecomDto.getValue())
+            );
+
+            return fhirPatient;
+        }
+    };
+    @Autowired
+    private IGenericClient fhirClient;
+    @Autowired
+    private FhirValidator fhirValidator;
+
+    @Override
+    public void publishFhirPatient(UserDto userDto) {
+        Patient patient = createFhirPatient(userDto);
+        ValidationResult validationResult = fhirValidator.validateWithResult(patient);
+        if (validationResult.isSuccessful())
+            fhirClient.create().resource(patient).execute();
+        else
+            throw new FHIRFormatErrorException("FHIR Patient Validation is not successful" + validationResult.getMessages());
+    }
+
+    @Override
+    public void updateFhirPatient(UserDto userDto) {
+        Bundle bundle = fhirClient.search().forResource(Patient.class)
+                .where(Patient.IDENTIFIER.exactly().systemAndCode(umsProperties.getMrn().getCodeSystem(), userDto.getMrn()))
+                .returnBundle(Bundle.class).execute();
+
+        Patient patient = createFhirPatient(userDto);
+        ValidationResult validationResult = fhirValidator.validateWithResult(patient);
+
+        if (validationResult.isSuccessful()) {
+            if (bundle.getEntry().size() > 0)
+                fhirClient.update().resource(patient)
+                        .conditional()
+                        .where(Patient.IDENTIFIER.exactly().systemAndCode(umsProperties.getMrn().getCodeSystem(), patient.getId()))
+                        .execute();
+            else fhirClient.create().resource(patient).execute();
+        } else
+            throw new FHIRFormatErrorException("FHIR Patient Validation is not successful" + validationResult.getMessages());
+    }
+
+    @Override
+    public Patient createFhirPatient(UserDto userDto) {
+        return userDtoToPatient.apply(userDto);
+    }
+
+    private void setIdentifiers(Patient patient, UserDto userDto) {
+
+        //setting patient mrn
+        patient.addIdentifier().setSystem(umsProperties.getMrn().getCodeSystem())
+                .setUse(Identifier.IdentifierUse.OFFICIAL).setValue(userDto.getMrn());
+
+        patient.setId(new IdType(userDto.getMrn()));
+
+        // setting ssn value
+        userDto.getSocialSecurityNumber()
+                .map(String::trim)
+                .ifPresent(ssnValue -> patient.addIdentifier().setSystem(umsProperties.getSsn().getCodeSystem())
+                        .setValue(ssnValue));
+    }
 }
 
 

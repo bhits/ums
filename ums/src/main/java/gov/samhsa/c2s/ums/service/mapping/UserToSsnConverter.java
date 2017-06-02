@@ -10,13 +10,13 @@ import org.springframework.stereotype.Component;
 import java.util.Optional;
 
 @Component
-public class UserToSsnConverter extends AbstractConverter<User, String> {
+public class UserToSsnConverter extends AbstractConverter<User, Optional<String>> {
     @Autowired
     private UmsProperties umsProperties;
 
     @Override
-    protected String convert(User user) {
-        return convertAsOptional(user).orElse(null);
+    protected Optional<String> convert(User user) {
+        return convertAsOptional(user);
     }
 
     public Optional<String> convertAsOptional(User user) {
