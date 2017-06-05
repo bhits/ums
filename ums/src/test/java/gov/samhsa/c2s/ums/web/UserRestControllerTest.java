@@ -33,15 +33,18 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.StringTokenizer;
 
 import static org.hamcrest.Matchers.anyOf;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
@@ -53,15 +56,16 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @RunWith(MockitoJUnitRunner.class)
 public class UserRestControllerTest {
 
+    Long userId=20L;
+
     @Rule
     public ExpectedException thrown = ExpectedException.none();
 
-    private ObjectMapper objectMapper;
-    private ModelMapper modelMapper;
-    private MockMvc mvc;
-
     @Mock
     private UserService userServiceMock;
+
+    @Mock
+    private UserDto userDto;
 
     @InjectMocks
     private UserRestController sut;
@@ -72,31 +76,114 @@ public class UserRestControllerTest {
     @AfterClass
     public static void after(){}
 
-    @Before
-    public void setUp() throws Exception {
-        objectMapper = new ObjectMapper();
-        mvc = MockMvcBuilders.standaloneSetup(this.sut).build();
-        modelMapper = new ModelMapper();
+
+    @Test
+    public void testRegisterUser(){
+
+        //Act
+        sut.registerUser(userDto);
+
+        //Assert and verify
+        verify(userServiceMock).registerUser(userDto);
     }
 
-    @After
-    public void tearDown(){
+    @Test
+    public void testEnableUser(){
+
+
+        //Act
+        sut.enableUser(userId);
+
+        //Assert
+        verify(userServiceMock).enableUser(userId);
+    }
+
+    @Test
+    public void testDisableUser(){
+        //Act
+        sut.disableUser(userId);
+
+        //Assert
+        verify(userServiceMock).disableUser(userId);
+    }
+
+
+    @Test
+    public void testUpdateUser(){
+        UserDto userDto=mock(UserDto.class);
+
+        //Act
+        sut.updateUser(userId,userDto);
+
+        //Assert
+        verify(userServiceMock).updateUser(userId,userDto);
+    }
+
+    @Test
+    public void testGetUser(){
+
+        //Act
+        sut.getUser(userId);
+
+        //Verify
+        verify(userServiceMock).getUser(userId);
+    }
+
+    @Test
+    public void testGetUserByOAuth2Id(){
+
+        String oAuth2UserId="OAuth2UserId";
+        //Act
+        sut.getUserByOAuth2Id(oAuth2UserId);
+
+        //Verify
+        verify(userServiceMock).getUserByOAuth2Id(oAuth2UserId);
+    }
+
+    @Test
+    public void testGetAllUsers(){
+        //Arrange
+        Optional<Integer> page= Optional.of(1233);
+        Optional<Integer> size=Optional.of(234);
+
+        //Act
+        sut.getAllUsers(page,size);
+
+        //Assert
+        verify(userServiceMock).getAllUsers(page,size);
+    }
+
+    @Test
+    public void testSearchUsersByFirstNameAndOrLastName(){
+        //Arrange
+        String term="term";
+        List<GetUserResponseDto> list=new ArrayList<>();
+
+        StringTokenizer tokenizer=new StringTokenizer(term," ");
+        when(userServiceMock.searchUsersByFirstNameAndORLastName(tokenizer)).thenReturn(list);
+
+        //Act
+        List<GetUserResponseDto> list2=sut.searchUsersByFirstNameAndORLastName(term);
+
+        //Assert
+        assertEquals(list,list2);
 
     }
 
     @Test
-    public void testCreateUser() throws Exception {
-        //TODO:
-    }
+    public void testSearchUsersByDemographic(){
+        //Arrange
+        String firstName="firstName";
+        String lastName="lastName";
+        LocalDate birthDate=LocalDate.now();
+        String genderCode="genderCode";
 
-    @Test
-    public void testUpdateUser() throws Exception {
-        //TODO:
-    }
+        //Act
+        sut.searchUsersByDemographic(firstName, lastName,birthDate,genderCode);
 
-    @Test
-    public void testDisableUser() throws Exception {
-        //TODO:
+        //Assert
+        verify(userServiceMock).searchUsersByDemographic(firstName,lastName,birthDate,genderCode);
+
     }
 
 
