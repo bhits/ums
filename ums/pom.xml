@@ -28,6 +28,7 @@
         <c2s.common-libraries.version>1.10.0</c2s.common-libraries.version>
         <hapi.fhir.version>2.2</hapi.fhir.version>
         <docker.maven.version>0.4.13</docker.maven.version>
+        <common-unit.version>1.9.0</common-unit.version>
     </properties>
 
     <dependencies>
@@ -165,6 +166,11 @@
         <dependency>
             <groupId>org.modelmapper</groupId>
             <artifactId>modelmapper</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>gov.samhsa.c2s</groupId>
+            <artifactId>common-unit</artifactId>
+            <version>${common-unit.version}</version>
         </dependency>
         <!-- HAPI FHIR JARS -->
     </dependencies>
