@@ -27,7 +27,7 @@ public class MrnConfig {
         logger.info("Updating MRN configuration in database");
         final UmsProperties.Mrn mrn = umsProperties.getMrn();
         final String codeSystem = mrn.getCodeSystem();
-        final IdentifierSystem identifierSystem = identifierSystemRepository.findOneBySystem(codeSystem).orElseGet(IdentifierSystem::new);
+        final IdentifierSystem identifierSystem = identifierSystemRepository.findBySystem(codeSystem).orElseGet(IdentifierSystem::new);
         identifierSystem.setSystem(codeSystem);
         identifierSystem.setDisplay(mrn.getDisplayName());
         identifierSystem.setOid(mrn.getCodeSystemOID());

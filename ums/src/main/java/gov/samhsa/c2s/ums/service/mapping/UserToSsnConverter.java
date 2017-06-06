@@ -21,7 +21,7 @@ public class UserToSsnConverter extends AbstractConverter<User, Optional<String>
 
     public Optional<String> convertAsOptional(User user) {
         return user.getDemographics().getIdentifiers().stream()
-                .filter(id -> umsProperties.getSsn().getCodeSystem().equals(id.getSystem().getSystem()))
+                .filter(id -> umsProperties.getSsn().getCodeSystem().equals(id.getIdentifierSystem().getSystem()))
                 .map(Identifier::getValue)
                 .findAny();
     }

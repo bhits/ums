@@ -27,9 +27,11 @@ import gov.samhsa.c2s.ums.domain.valueobject.UserPatientRelationshipId;
 import gov.samhsa.c2s.ums.infrastructure.ScimService;
 import gov.samhsa.c2s.ums.service.dto.AccessDecisionDto;
 import gov.samhsa.c2s.ums.service.dto.AddressDto;
+import gov.samhsa.c2s.ums.service.dto.IdentifierDto;
 import gov.samhsa.c2s.ums.service.dto.RelationDto;
 import gov.samhsa.c2s.ums.service.dto.TelecomDto;
 import gov.samhsa.c2s.ums.service.dto.UserDto;
+import gov.samhsa.c2s.ums.service.exception.IdentifierSystemNotFoundException;
 import gov.samhsa.c2s.ums.service.exception.MissingEmailException;
 import gov.samhsa.c2s.ums.service.exception.PatientNotFoundException;
 import gov.samhsa.c2s.ums.service.exception.SsnSystemNotFoundException;
@@ -122,9 +124,18 @@ public class UserServiceImpl implements UserService {
         /* Get User Entity from UserDto */
         final User user = modelMapper.map(userDto, User.class);
 
+        // Identifiers
+        final List<Identifier> identifiers = userDto.getIdentifiers().stream()
+                .map(idDto -> identifierRepository
+                        .findByValueAndIdentifierSystemSystem(idDto.getValue(), idDto.getSystem())
+                        .orElseGet(() -> createIdentifier(idDto)))
+                .peek(identifierRepository::save)
+                .collect(toList());
+        user.getDemographics().setIdentifiers(identifiers);
+
         // SSN
         userDto.getSocialSecurityNumber().ifPresent(socialSecurityNumber -> {
-            final IdentifierSystem identifierSystem = identifierSystemRepository.findOneBySystem(umsProperties.getSsn().getCodeSystem()).orElseThrow(SsnSystemNotFoundException::new);
+            final IdentifierSystem identifierSystem = identifierSystemRepository.findBySystem(umsProperties.getSsn().getCodeSystem()).orElseThrow(SsnSystemNotFoundException::new);
             final Identifier ssnIdentifier = Identifier.of(socialSecurityNumber, identifierSystem);
             identifierRepository.save(ssnIdentifier);
             user.getDemographics().getIdentifiers().add(ssnIdentifier);
@@ -167,29 +178,6 @@ public class UserServiceImpl implements UserService {
         }
 
     }
-
-    private Patient createPatient(User user, String registrationPurposeEmail) {
-        //set the patient object
-        Patient patient = new Patient();
-        final List<IdentifierSystem> systems = identifierSystemRepository.findAllBySystemGenerated(true);
-        final List<Identifier> identifiers = systems.stream()
-                .map(system -> Identifier.builder().system(system).value(mrnService.generateMrn()).build())
-                .collect(toList());
-        identifierRepository.save(identifiers);
-        final Demographics demographics = user.getDemographics();
-        demographics.getIdentifiers().addAll(identifiers);
-        patient.setDemographics(demographics);
-        patient.setRegistrationPurposeEmail(registrationPurposeEmail);
-        return patientRepository.save(patient);
-    }
-
-    private void createUserPatientRelationship(long userId, long patientId, String role) {
-        RelationDto relationDto = new RelationDto(userId, patientId, role);
-        UserPatientRelationship userPatientRelationship = new UserPatientRelationship();
-        userPatientRelationship.setId(modelMapper.map(relationDto, UserPatientRelationshipId.class));
-        userPatientRelationshipRepository.save(userPatientRelationship);
-    }
-
 
     @Override
     @Transactional
@@ -243,12 +231,28 @@ public class UserServiceImpl implements UserService {
         // Update registration purpose email
         user.getDemographics().getPatient().setRegistrationPurposeEmail(userDto.getRegistrationPurposeEmail());
 
+        // Identifiers
+        final List<Identifier> identifiersToRemove = user.getDemographics().getIdentifiers().stream()
+                .filter(id -> id.getIdentifierSystem().isSystemGenerated() == false)
+                .filter(id -> userDto.getIdentifiers().stream()
+                        .noneMatch(idDto -> deepEquals(id, idDto)))
+                .collect(toList());
+        user.getDemographics().getIdentifiers().removeAll(identifiersToRemove);
+        final List<Identifier> identifiersToAdd = userDto.getIdentifiers().stream()
+                .filter(idDto -> user.getDemographics().getIdentifiers().stream()
+                        .noneMatch(id -> deepEquals(id, idDto)))
+                .map(idDto -> identifierRepository.findByValueAndIdentifierSystemSystem(idDto.getValue(), idDto.getSystem())
+                        .orElseGet(() -> createIdentifier(idDto)))
+                .collect(toList());
+        identifierRepository.save(identifiersToAdd);
+        user.getDemographics().getIdentifiers().addAll(identifiersToAdd);
+
         // Update SSN
         // Find new SSN value
         final Optional<String> newSsnValue = userDto.getSocialSecurityNumber().filter(StringUtils::hasText).map(String::trim);
         // Find old SSN identifier
         final Optional<Identifier> oldSsnIdentifier = user.getDemographics().getIdentifiers().stream()
-                .filter(id -> umsProperties.getSsn().getCodeSystem().equals(id.getSystem().getSystem()))
+                .filter(id -> umsProperties.getSsn().getCodeSystem().equals(id.getIdentifierSystem().getSystem()))
                 .findAny();
         // Filter old SSN identifier if different
         final Optional<Identifier> oldSsnIdentifierIfDifferent = oldSsnIdentifier.filter(oldId -> !newSsnValue.filter(ssnValue -> oldId.getValue().equals(ssnValue)).isPresent());
@@ -259,8 +263,8 @@ public class UserServiceImpl implements UserService {
         // Update SSN with new value if different
         newSsnValue.filter(ssn -> !oldSsnIdentifier.map(Identifier::getValue).filter(ssn::equals).isPresent())
                 .ifPresent(ssn -> {
-                    final IdentifierSystem ssnSystem = identifierSystemRepository.findOneBySystem(umsProperties.getSsn().getCodeSystem()).orElseThrow(SsnSystemNotFoundException::new);
-                    final Identifier ssnIdentifier = identifierRepository.findByValueAndSystem(ssn, ssnSystem).orElseGet(() -> Identifier.of(ssn, ssnSystem));
+                    final IdentifierSystem ssnSystem = identifierSystemRepository.findBySystem(umsProperties.getSsn().getCodeSystem()).orElseThrow(SsnSystemNotFoundException::new);
+                    final Identifier ssnIdentifier = identifierRepository.findByValueAndIdentifierSystem(ssn, ssnSystem).orElseGet(() -> Identifier.of(ssn, ssnSystem));
                     identifierRepository.save(ssnIdentifier);
                     user.getDemographics().getIdentifiers().add(ssnIdentifier);
                 });
@@ -305,36 +309,6 @@ public class UserServiceImpl implements UserService {
         userRepository.save(user);
     }
 
-    private Address mapAddressDtoToAddress(Address address, AddressDto addressDto) {
-        address.setCity(addressDto.getCity());
-        address.setStateCode(stateCodeRepository.findByCode(addressDto.getStateCode()));
-        address.setCountryCode(countryCodeRepository.findByCode(addressDto.getCountryCode()));
-        address.setLine1(addressDto.getLine1());
-        address.setLine2(addressDto.getLine2());
-        address.setPostalCode(addressDto.getPostalCode());
-        if (addressDto.getUse().equals(Address.Use.HOME.toString()))
-            address.setUse(Address.Use.HOME);
-        if (addressDto.getUse().equals(Address.Use.WORK.toString()))
-            address.setUse(Address.Use.WORK);
-        return address;
-    }
-
-    private Telecom mapTelecomDtoToTelcom(Telecom telecom, TelecomDto telecomDto) {
-        telecom.setValue(telecomDto.getValue());
-
-        if (telecomDto.getUse().equals(Telecom.Use.HOME.toString()))
-            telecom.setUse(Telecom.Use.HOME);
-        if (telecomDto.getUse().equals(Telecom.Use.WORK.toString()))
-            telecom.setUse(Telecom.Use.WORK);
-
-        if (telecomDto.getSystem().equals(Telecom.System.EMAIL.toString()))
-            telecom.setSystem(Telecom.System.EMAIL);
-        if (telecomDto.getSystem().equals(Telecom.System.PHONE.toString()))
-            telecom.setSystem(Telecom.System.PHONE);
-
-        return telecom;
-    }
-
     @Override
     public void updateUserLocale(Long userId, String localeCode) {
 
@@ -356,7 +330,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public AccessDecisionDto accessDecision(String userAuthId, String patientMrn) {
         final User user = userRepository.findOneByUserAuthIdAndDisabled(userAuthId, false).orElseThrow(() -> new UserNotFoundException("User Not Found!"));
-        final Patient patient = demographicsRepository.findOneByIdentifiersValueAndIdentifiersSystemSystem(patientMrn, umsProperties.getMrn().getCodeSystem())
+        final Patient patient = demographicsRepository.findOneByIdentifiersValueAndIdentifiersIdentifierSystemSystem(patientMrn, umsProperties.getMrn().getCodeSystem())
                 .map(Demographics::getPatient)
                 .orElseThrow(() -> new PatientNotFoundException("Patient Not Found!"));
         List<UserPatientRelationship> userPatientRelationshipList = userPatientRelationshipRepository.findAllByIdUserIdAndIdPatientId(user.getId(), patient.getId());
@@ -391,6 +365,22 @@ public class UserServiceImpl implements UserService {
         return new PageImpl<>(getUserDtoList, pageRequest, usersPage.getTotalElements());
     }
 
+    @Override
+    public List<UserDto> searchUsersByDemographic(String firstName,
+                                                  String lastName,
+                                                  LocalDate birthDate,
+                                                  String genderCode) {
+        List<Demographics> demographicsesList;
+        final AdministrativeGenderCode administrativeGenderCode = administrativeGenderCodeRepository.findByCode(genderCode);
+        demographicsesList = demographicsRepository.findAllByFirstNameAndLastNameAndBirthDayAndAdministrativeGenderCode(firstName, lastName,
+                birthDate, administrativeGenderCode);
+        if (demographicsesList.size() < 1) {
+            throw new UserNotFoundException("User Not Found!");
+        } else {
+            return demographicsesListToUserDtoList(demographicsesList);
+        }
+    }
+
     public List<UserDto> searchUsersByFirstNameAndORLastName(StringTokenizer token) {
         Pageable pageRequest = new PageRequest(PAGE_NUMBER, umsProperties.getPagination().getDefaultSize());
         if (token.countTokens() == 1) {
@@ -411,20 +401,66 @@ public class UserServiceImpl implements UserService {
         }
     }
 
-    @Override
-    public List<UserDto> searchUsersByDemographic(String firstName,
-                                                  String lastName,
-                                                  LocalDate birthDate,
-                                                  String genderCode) {
-        List<Demographics> demographicsesList;
-        final AdministrativeGenderCode administrativeGenderCode = administrativeGenderCodeRepository.findByCode(genderCode);
-        demographicsesList = demographicsRepository.findAllByFirstNameAndLastNameAndBirthDayAndAdministrativeGenderCode(firstName, lastName,
-                birthDate, administrativeGenderCode);
-        if (demographicsesList.size() < 1) {
-            throw new UserNotFoundException("User Not Found!");
-        } else {
-            return demographicsesListToUserDtoList(demographicsesList);
-        }
+    private Identifier createIdentifier(IdentifierDto idDto) {
+        return Identifier.of(idDto.getValue(), identifierSystemRepository
+                .findBySystemAndSystemGeneratedIsFalse(idDto.getSystem())
+                .orElseThrow(() -> new IdentifierSystemNotFoundException("Identifier System is not found or it can be only generated by the system")));
+    }
+
+    private Patient createPatient(User user, String registrationPurposeEmail) {
+        //set the patient object
+        Patient patient = new Patient();
+        final List<IdentifierSystem> systems = identifierSystemRepository.findAllBySystemGenerated(true);
+        final List<Identifier> identifiers = systems.stream()
+                .map(system -> Identifier.builder().identifierSystem(system).value(mrnService.generateMrn()).build())
+                .collect(toList());
+        identifierRepository.save(identifiers);
+        final Demographics demographics = user.getDemographics();
+        demographics.getIdentifiers().addAll(identifiers);
+        patient.setDemographics(demographics);
+        patient.setRegistrationPurposeEmail(registrationPurposeEmail);
+        return patientRepository.save(patient);
+    }
+
+    private void createUserPatientRelationship(long userId, long patientId, String role) {
+        RelationDto relationDto = new RelationDto(userId, patientId, role);
+        UserPatientRelationship userPatientRelationship = new UserPatientRelationship();
+        userPatientRelationship.setId(modelMapper.map(relationDto, UserPatientRelationshipId.class));
+        userPatientRelationshipRepository.save(userPatientRelationship);
+    }
+
+    private boolean deepEquals(Identifier id, IdentifierDto idDto) {
+        return id.getValue().equals(idDto.getValue()) && id.getIdentifierSystem().getSystem().equals(idDto.getSystem());
+    }
+
+    private Address mapAddressDtoToAddress(Address address, AddressDto addressDto) {
+        address.setCity(addressDto.getCity());
+        address.setStateCode(stateCodeRepository.findByCode(addressDto.getStateCode()));
+        address.setCountryCode(countryCodeRepository.findByCode(addressDto.getCountryCode()));
+        address.setLine1(addressDto.getLine1());
+        address.setLine2(addressDto.getLine2());
+        address.setPostalCode(addressDto.getPostalCode());
+        if (addressDto.getUse().equals(Address.Use.HOME.toString()))
+            address.setUse(Address.Use.HOME);
+        if (addressDto.getUse().equals(Address.Use.WORK.toString()))
+            address.setUse(Address.Use.WORK);
+        return address;
+    }
+
+    private Telecom mapTelecomDtoToTelcom(Telecom telecom, TelecomDto telecomDto) {
+        telecom.setValue(telecomDto.getValue());
+
+        if (telecomDto.getUse().equals(Telecom.Use.HOME.toString()))
+            telecom.setUse(Telecom.Use.HOME);
+        if (telecomDto.getUse().equals(Telecom.Use.WORK.toString()))
+            telecom.setUse(Telecom.Use.WORK);
+
+        if (telecomDto.getSystem().equals(Telecom.System.EMAIL.toString()))
+            telecom.setSystem(Telecom.System.EMAIL);
+        if (telecomDto.getSystem().equals(Telecom.System.PHONE.toString()))
+            telecom.setSystem(Telecom.System.PHONE);
+
+        return telecom;
     }
 
     private List<UserDto> demographicsesListToUserDtoList(List<Demographics> demographicsesList) {

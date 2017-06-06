@@ -46,7 +46,7 @@ public class PatientServiceImpl implements PatientService {
     @Transactional
     public PatientDto getPatientByPatientId(String patientId, Optional<String> userAuthId) {
         //patientId is MRN, not Patient.id
-        final Patient patient = demographicsRepository.findOneByIdentifiersValueAndIdentifiersSystemSystem(patientId, umsProperties.getMrn().getCodeSystem())
+        final Patient patient = demographicsRepository.findOneByIdentifiersValueAndIdentifiersIdentifierSystemSystem(patientId, umsProperties.getMrn().getCodeSystem())
                 .map(Demographics::getPatient)
                 .orElseThrow(() -> new PatientNotFoundException("Patient Not Found!"));
 

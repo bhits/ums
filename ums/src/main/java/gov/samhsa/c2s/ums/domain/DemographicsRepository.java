@@ -20,5 +20,5 @@ public interface DemographicsRepository extends JpaRepository<Demographics, Long
     List<Demographics> findAllByFirstNameAndLastNameAndBirthDayAndAdministrativeGenderCode(String firstName, String lastName, LocalDate birthDate,
                                                                                            AdministrativeGenderCode administrativeGenderCode);
 
-    Optional<Demographics> findOneByIdentifiersValueAndIdentifiersSystemSystem(String value, String system);
+    Optional<Demographics> findOneByIdentifiersValueAndIdentifiersIdentifierSystemSystem(String value, String system);
 }

@@ -17,7 +17,7 @@ import javax.validation.constraints.NotNull;
 
 @Entity
 @Audited
-@Table(indexes = @Index(columnList = "value,system_id", name = "identifier_idx", unique = true))
+@Table(indexes = @Index(columnList = "value,identifier_system_id", name = "identifier_idx", unique = true))
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -30,7 +30,7 @@ public class Identifier {
     private String value;
     @ManyToOne
     @NotNull
-    private IdentifierSystem system;
+    private IdentifierSystem identifierSystem;
 
     public static Identifier of(String value, IdentifierSystem system) {
         return new Identifier(null, value, system);

@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.NotEmpty;
 
+import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Past;
 import java.time.LocalDate;
@@ -52,4 +53,7 @@ public class UserDto {
     private String mrn;
 
     private String registrationPurposeEmail;
+
+    @Valid
+    private List<IdentifierDto> identifiers;
 }

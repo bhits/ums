@@ -21,7 +21,7 @@ public class PatientToSsnConverter extends AbstractConverter<Patient, String> {
 
     public Optional<String> convertAsOptional(Patient patient) {
         return patient.getDemographics().getIdentifiers().stream()
-                .filter(id -> umsProperties.getSsn().getCodeSystem().equals(id.getSystem()))
+                .filter(id -> umsProperties.getSsn().getCodeSystem().equals(id.getIdentifierSystem()))
                 .map(Identifier::getValue)
                 .findAny();
     }

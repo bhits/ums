@@ -21,7 +21,7 @@ public class PatientToMrnConverter extends AbstractConverter<Patient, String> {
 
     public Optional<String> convertAsOptional(Patient patient) {
         return patient.getDemographics().getIdentifiers().stream()
-                .filter(id -> umsProperties.getMrn().getCodeSystem().equals(id.getSystem().getSystem()))
+                .filter(id -> umsProperties.getMrn().getCodeSystem().equals(id.getIdentifierSystem().getSystem()))
                 .map(Identifier::getValue)
                 .findAny();
     }

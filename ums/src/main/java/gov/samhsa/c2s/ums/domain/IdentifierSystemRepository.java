@@ -6,7 +6,9 @@ import java.util.List;
 import java.util.Optional;
 
 public interface IdentifierSystemRepository extends JpaRepository<IdentifierSystem, Long> {
-    Optional<IdentifierSystem> findOneBySystem(String system);
+    Optional<IdentifierSystem> findBySystem(String system);
+
+    Optional<IdentifierSystem> findBySystemAndSystemGeneratedIsFalse(String system);
 
     List<IdentifierSystem> findAllBySystemGenerated(boolean systemGenerated);
 }

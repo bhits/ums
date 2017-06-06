@@ -21,7 +21,7 @@ public class UserToMrnConverter extends AbstractConverter<User, String> {
 
     public Optional<String> convertAsOptional(User user) {
         return user.getDemographics().getIdentifiers().stream()
-                .filter(id -> umsProperties.getMrn().getCodeSystem().equals(id.getSystem().getSystem()))
+                .filter(id -> umsProperties.getMrn().getCodeSystem().equals(id.getIdentifierSystem().getSystem()))
                 .map(Identifier::getValue)
                 .findAny();
     }
