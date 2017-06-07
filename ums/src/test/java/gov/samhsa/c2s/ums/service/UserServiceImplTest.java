@@ -1,60 +1,39 @@
 package gov.samhsa.c2s.ums.service;
 
-import gov.samhsa.c2s.ums.domain.Address;
 import gov.samhsa.c2s.ums.domain.AddressRepository;
+import gov.samhsa.c2s.ums.domain.Demographics;
+import gov.samhsa.c2s.ums.domain.DemographicsRepository;
 import gov.samhsa.c2s.ums.domain.Patient;
 import gov.samhsa.c2s.ums.domain.PatientRepository;
-import gov.samhsa.c2s.ums.domain.Telecom;
 import gov.samhsa.c2s.ums.domain.TelecomRepository;
 import gov.samhsa.c2s.ums.domain.User;
-import gov.samhsa.c2s.ums.domain.UserPatientRelationship;
 import gov.samhsa.c2s.ums.domain.UserPatientRelationshipRepository;
 import gov.samhsa.c2s.ums.domain.UserRepository;
 import gov.samhsa.c2s.ums.domain.reference.AdministrativeGenderCode;
 import gov.samhsa.c2s.ums.domain.reference.AdministrativeGenderCodeRepository;
-import gov.samhsa.c2s.ums.domain.valueobject.UserPatientRelationshipId;
 import gov.samhsa.c2s.ums.infrastructure.ScimService;
-import gov.samhsa.c2s.ums.service.dto.AddressDto;
-import gov.samhsa.c2s.ums.service.dto.GetUserResponseDto;
 import gov.samhsa.c2s.ums.service.dto.RelationDto;
-import gov.samhsa.c2s.ums.service.dto.RoleDto;
-import gov.samhsa.c2s.ums.service.dto.TelecomDto;
 import gov.samhsa.c2s.ums.service.dto.UserDto;
 import gov.samhsa.c2s.ums.service.exception.UserNotFoundException;
-import gov.samhsa.c2s.ums.web.UserRestController;
-import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
 import org.mockito.runners.MockitoJUnitRunner;
-import org.mockito.stubbing.Answer;
 import org.modelmapper.ModelMapper;
-import org.modelmapper.TypeToken;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.ui.Model;
 
-import javax.management.relation.Relation;
-import java.lang.reflect.Type;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-
-import java.util.List;
-
-import static org.mockito.Mockito.mock;
 
 @RunWith(MockitoJUnitRunner.class)
 public class UserServiceImplTest {
@@ -97,6 +76,9 @@ public class UserServiceImplTest {
     @Mock
     UserPatientRelationshipRepository userPatientRelationshipRepository;
 
+    @Mock
+    DemographicsRepository demographicsRepository;
+
     @InjectMocks
     UserServiceImpl userServiceImpl;
 
@@ -104,12 +86,15 @@ public class UserServiceImplTest {
     @Test
     public void testDisableUser_WhenUserIsFoundById() {
         //Arrange
+        Long userId = 10L;
+
         User user = mock(User.class);
         String id = "id";
 
-        when(user.getOauth2UserId()).thenReturn(id);
+        when(userRepository.findOne(userId)).thenReturn(user);
+        when(user.getUserAuthId()).thenReturn(id);
 
-        when(userRepository.findOneByIdAndIsDisabled(userId, false)).thenReturn(Optional.ofNullable(user));
+        when(userRepository.findOneByIdAndDisabled(userId, false)).thenReturn(Optional.ofNullable(user));
 
         when(userRepository.save(user)).thenReturn(user);
 
@@ -128,13 +113,13 @@ public class UserServiceImplTest {
 
         Long userId = 10L;
 
-
         User user = mock(User.class);
         String id = "id";
 
-        when(user.getOauth2UserId()).thenReturn(id);
+        when(userRepository.findOne(userId)).thenReturn(user);
+        when(user.getUserAuthId()).thenReturn(id);
 
-        when(userRepository.findOneByIdAndIsDisabled(userId,false)).thenReturn(Optional.empty());
+        when(userRepository.findOneByIdAndDisabled(userId,false)).thenReturn(Optional.empty());
 
         //Act
         userServiceImpl.disableUser(userId);
@@ -148,17 +133,15 @@ public class UserServiceImplTest {
 
     @Test
     public void testEnableUser_whenUserIsFoundByIdAndIsDisabled() {
-
-
         Long userId = 10L;
-
 
         User user = mock(User.class);
         String id = "id";
 
-        when(user.getOauth2UserId()).thenReturn(id);
+        when(userRepository.findOne(userId)).thenReturn(user);
+        when(user.getUserAuthId()).thenReturn(id);
 
-        when(userRepository.findOneByIdAndIsDisabled(userId, true)).thenReturn(Optional.ofNullable(user));
+        when(userRepository.findOneByIdAndDisabled(userId, true)).thenReturn(Optional.ofNullable(user));
 
         when(userRepository.save(user)).thenReturn(user);
 
@@ -176,13 +159,14 @@ public class UserServiceImplTest {
         thrown.expectMessage("User Not Found!");
         Long userId = 10L;
 
-
         User user = mock(User.class);
         String id = "id";
 
-        when(user.getOauth2UserId()).thenReturn(id);
+        when(userRepository.findOne(userId)).thenReturn(user);
+        when(user.getUserAuthId()).thenReturn(id);
 
-        when(userRepository.findOneByIdAndIsDisabled(userId, true)).thenReturn(Optional.empty());
+
+        when(userRepository.findOneByIdAndDisabled(userId, true)).thenReturn(Optional.empty());
 
         when(userRepository.save(user)).thenReturn(user);
 
@@ -198,56 +182,37 @@ public class UserServiceImplTest {
 
     @Test
     public void testGetUser_WhoCanBeFoundByIdAndIsNotDisabled() {
-        GetUserResponseDto getUserResponseDto = mock(GetUserResponseDto.class);
+        UserDto getUserResponseDto = mock(UserDto.class);
         Long userId = 10L;
 
         User user = mock(User.class);
 
-        when(userRepository.findOneByIdAndIsDisabled(userId, false)).thenReturn(Optional.ofNullable(user));
+        when(userRepository.findOne(userId)).thenReturn(user);
 
-        when(modelMapper.map(user, GetUserResponseDto.class)).thenReturn(getUserResponseDto);
+        when(modelMapper.map(user, UserDto.class)).thenReturn(getUserResponseDto);
 
         //Act
-        GetUserResponseDto getUserResponseDto1= (GetUserResponseDto) userServiceImpl.getUser(userId);
+        UserDto getUserResponseDto1=  userServiceImpl.getUser(userId);
 
         //assert
         assertEquals(getUserResponseDto, getUserResponseDto1);
 
     }
 
-    @Test
-    public void testGetUser_WhoCannotBefoundById_throwsException() {
-        thrown.expect(UserNotFoundException.class);
-        thrown.expectMessage("User Not Found!");
-        GetUserResponseDto getUserResponseDto = mock(GetUserResponseDto.class);
-        Long userId = 10L;
-
-        User user = mock(User.class);
-
-        when(userRepository.findOneByIdAndIsDisabled(userId, false)).thenReturn(Optional.empty());
-
-
-        //act
-        GetUserResponseDto getUserResponseDto1= (GetUserResponseDto) userServiceImpl.getUser(userId);
-
-        //assert
-        assertNull(getUserResponseDto1);
-    }
-
 
     @Test
     public void testGetUserByOAuth2Id() {
-        GetUserResponseDto getUserResponseDto = mock(GetUserResponseDto.class);
+        UserDto getUserResponseDto = mock(UserDto.class);
         String oAuth2UserId = "userId";
 
         User user = mock(User.class);
 
-        when(userRepository.findOneByOauth2UserIdAndIsDisabled(oAuth2UserId, false)).thenReturn(Optional.ofNullable(user));
+        when(userRepository.findOneByUserAuthIdAndDisabled(oAuth2UserId, false)).thenReturn(Optional.ofNullable(user));
 
-        when(modelMapper.map(user, GetUserResponseDto.class)).thenReturn(getUserResponseDto);
+        when(modelMapper.map(user, UserDto.class)).thenReturn(getUserResponseDto);
 
         //Act and Assert
-        assertEquals(getUserResponseDto, userServiceImpl.getUserByOAuth2Id(oAuth2UserId));
+        assertEquals(getUserResponseDto, userServiceImpl.getUserByUserAuthId(oAuth2UserId));
 
     }
 
@@ -260,34 +225,40 @@ public class UserServiceImplTest {
         String genderCode="genderCode";
 
 
+        Demographics demographics1=mock(Demographics.class);
+        Demographics demographics2=mock(Demographics.class);
+
         User user1=mock(User.class);
         User user2=mock(User.class);
 
-        List<User> userList =new ArrayList<>();
-        userList.add(user1);
-        userList.add(user2);
+        List<Demographics> demographicsList =new ArrayList<>();
+        demographicsList.add(demographics1);
+        demographicsList.add(demographics2);
 
-        List<GetUserResponseDto> getUserResponseDtos=new ArrayList<>();
 
-        GetUserResponseDto getUserResponseDto1=mock(GetUserResponseDto.class);
-        GetUserResponseDto getUserResponseDto2=mock(GetUserResponseDto.class);
+        List<UserDto> getUserResponseDtos=new ArrayList<>();
+
+        UserDto getUserResponseDto1=mock(UserDto.class);
+        UserDto getUserResponseDto2=mock(UserDto.class);
 
         AdministrativeGenderCode administrativeGenderCode=mock(AdministrativeGenderCode.class);
 
         when(administrativeGenderCodeRepository.findByCode(genderCode)).thenReturn(administrativeGenderCode);
 
-        when(userRepository.findAllByFirstNameAndLastNameAndBirthDayAndAdministrativeGenderCodeAndIsDisabled(firstName,lastName,birthDate,administrativeGenderCode,false))
-                .thenReturn(userList);
+        when(demographicsRepository.findAllByFirstNameAndLastNameAndBirthDayAndAdministrativeGenderCode(firstName,lastName,birthDate,administrativeGenderCode))
+                .thenReturn(demographicsList);
 
-        when(modelMapper.map(user1,GetUserResponseDto.class)).thenReturn(getUserResponseDto1);
-        when(modelMapper.map(user2,GetUserResponseDto.class)).thenReturn(getUserResponseDto2);
+        when(demographics1.getUser()).thenReturn(user1);
+        when(demographics2.getUser()).thenReturn(user2);
+        when(modelMapper.map(user1,UserDto.class)).thenReturn(getUserResponseDto1);
+        when(modelMapper.map(user2,UserDto.class)).thenReturn(getUserResponseDto2);
 
 
         getUserResponseDtos.add(getUserResponseDto1);
         getUserResponseDtos.add(getUserResponseDto2);
 
         //Act
-        List<GetUserResponseDto> getUserResponseDtoList=userServiceImpl.searchUsersByDemographic(firstName,lastName,birthDate,genderCode);
+        List<UserDto> getUserResponseDtoList=userServiceImpl.searchUsersByDemographic(firstName,lastName,birthDate,genderCode);
 
         //Assert
         assertEquals(getUserResponseDtos,getUserResponseDtoList);
@@ -297,23 +268,24 @@ public class UserServiceImplTest {
     public void testSearchUsersByDemographic_whenThereIsNoUserOnUserList_throwsException() throws UserNotFoundException {
         thrown.expect(UserNotFoundException.class);
         thrown.expectMessage("User Not Found!");
-
         String firstName="firstName";
         String lastName="lastName";
         LocalDate birthDate=LocalDate.now();
         String genderCode="genderCode";
 
-        List<User> userList =new ArrayList<>();
+        User user1=mock(User.class);
+        User user2=mock(User.class);
 
+        List<Demographics> demographicsList =new ArrayList<>();
         AdministrativeGenderCode administrativeGenderCode=mock(AdministrativeGenderCode.class);
 
         when(administrativeGenderCodeRepository.findByCode(genderCode)).thenReturn(administrativeGenderCode);
 
-        when(userRepository.findAllByFirstNameAndLastNameAndBirthDayAndAdministrativeGenderCodeAndIsDisabled(firstName,lastName,birthDate,administrativeGenderCode,false))
-                .thenReturn(userList);
+        when(demographicsRepository.findAllByFirstNameAndLastNameAndBirthDayAndAdministrativeGenderCode(firstName,lastName,birthDate,administrativeGenderCode))
+                .thenReturn(demographicsList);
 
         //Act
-        List<GetUserResponseDto> list=userServiceImpl.searchUsersByDemographic(firstName,lastName,birthDate,genderCode);
+        List<UserDto> list=userServiceImpl.searchUsersByDemographic(firstName,lastName,birthDate,genderCode);
 
         //Assert
         assertNull(list);
