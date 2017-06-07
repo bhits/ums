@@ -3,10 +3,11 @@ package gov.samhsa.c2s.ums.web;
 import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import gov.samhsa.c2s.ums.domain.Locale;
 import gov.samhsa.c2s.ums.domain.User;
 import gov.samhsa.c2s.ums.service.UserService;
+import gov.samhsa.c2s.ums.service.dto.AccessDecisionDto;
 import gov.samhsa.c2s.ums.service.dto.AddressDto;
-import gov.samhsa.c2s.ums.service.dto.GetUserResponseDto;
 import gov.samhsa.c2s.ums.service.dto.TelecomDto;
 import gov.samhsa.c2s.ums.service.dto.UserDto;
 import gov.samhsa.c2s.ums.service.exception.UserNotFoundException;
@@ -89,9 +90,7 @@ public class UserRestControllerTest {
 
     @Test
     public void testEnableUser(){
-
-
-        //Act
+       //Act
         sut.enableUser(userId);
 
         //Assert
@@ -105,6 +104,20 @@ public class UserRestControllerTest {
 
         //Assert
         verify(userServiceMock).disableUser(userId);
+    }
+
+    @Test
+    public void testAccessDecision(){
+       String userAuthId="userAuthId";
+       String patientMrn="patientMrn";
+
+        AccessDecisionDto access=mock(AccessDecisionDto.class);
+        when(userServiceMock.accessDecision(userAuthId,patientMrn)).thenReturn(access);
+       //act
+        AccessDecisionDto accessDecision=sut.accessDecision(userAuthId,patientMrn);
+
+        //assert
+        assertEquals(access,accessDecision);
     }
 
 
@@ -121,23 +134,28 @@ public class UserRestControllerTest {
 
     @Test
     public void testGetUser(){
-
+        //Assert
+        UserDto user=mock(UserDto.class);
+        when(userServiceMock.getUser(userId)).thenReturn(user);
         //Act
-        sut.getUser(userId);
+       UserDto userGot= sut.getUser(userId);
 
-        //Verify
-        verify(userServiceMock).getUser(userId);
+        //Assert
+        assertEquals(user,userGot);
+
     }
 
     @Test
-    public void testGetUserByOAuth2Id(){
-
-        String oAuth2UserId="OAuth2UserId";
+    public void testGetUserById(){
+        //Arrange
+        String userAuthId="OAuth2UserId";
+        UserDto userDto=mock(UserDto.class);
+        when(userServiceMock.getUserByUserAuthId(userAuthId)).thenReturn(userDto);
         //Act
-        sut.getUserByOAuth2Id(oAuth2UserId);
+       UserDto userDto1=sut.getUserById(userAuthId);
 
-        //Verify
-        verify(userServiceMock).getUserByOAuth2Id(oAuth2UserId);
+        //Assert
+        assertEquals(userDto,userDto1);
     }
 
     @Test
@@ -157,13 +175,13 @@ public class UserRestControllerTest {
     public void testSearchUsersByFirstNameAndOrLastName(){
         //Arrange
         String term="term";
-        List<GetUserResponseDto> list=new ArrayList<>();
+        List<UserDto> list=new ArrayList<>();
 
         StringTokenizer tokenizer=new StringTokenizer(term," ");
         when(userServiceMock.searchUsersByFirstNameAndORLastName(tokenizer)).thenReturn(list);
 
         //Act
-        List<GetUserResponseDto> list2=sut.searchUsersByFirstNameAndORLastName(term);
+        List<UserDto> list2=sut.searchUsersByFirstNameAndORLastName(term);
 
         //Assert
         assertEquals(list,list2);
