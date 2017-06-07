@@ -1,5 +1,6 @@
 package gov.samhsa.c2s.ums.service;
 
+import gov.samhsa.c2s.ums.domain.IdentifierSystemRepository;
 import gov.samhsa.c2s.ums.domain.Locale;
 import gov.samhsa.c2s.ums.domain.LocaleRepository;
 import gov.samhsa.c2s.ums.domain.RelationshipRepository;
@@ -11,6 +12,7 @@ import gov.samhsa.c2s.ums.domain.reference.CountryCode;
 import gov.samhsa.c2s.ums.domain.reference.CountryCodeRepository;
 import gov.samhsa.c2s.ums.domain.reference.StateCode;
 import gov.samhsa.c2s.ums.domain.reference.StateCodeRepository;
+import gov.samhsa.c2s.ums.service.dto.IdentifierSystemDto;
 import gov.samhsa.c2s.ums.service.dto.LookupDto;
 import gov.samhsa.c2s.ums.service.dto.RoleDto;
 import org.modelmapper.ModelMapper;
@@ -18,6 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 import static java.util.stream.Collectors.toList;
 
@@ -25,26 +28,28 @@ import static java.util.stream.Collectors.toList;
 public class LookupServiceImpl implements LookupService {
 
     @Autowired
-    ModelMapper modelMapper;
+    private ModelMapper modelMapper;
 
     @Autowired
-    LocaleRepository localeRepository;
+    private LocaleRepository localeRepository;
 
     @Autowired
-    StateCodeRepository stateCodeRepository;
+    private StateCodeRepository stateCodeRepository;
 
     @Autowired
-    CountryCodeRepository countryCodeRepository;
+    private CountryCodeRepository countryCodeRepository;
 
     @Autowired
-    AdministrativeGenderCodeRepository administrativeGenderCodeRepository;
+    private AdministrativeGenderCodeRepository administrativeGenderCodeRepository;
 
     @Autowired
-    RoleRepository roleRepository;
+    private RoleRepository roleRepository;
 
     @Autowired
-    RelationshipRepository relationshipRepository;
+    private RelationshipRepository relationshipRepository;
 
+    @Autowired
+    private IdentifierSystemRepository identifierSystemRepository;
 
     @Override
     public List<LookupDto> getLocales() {
@@ -86,5 +91,13 @@ public class LookupServiceImpl implements LookupService {
                 .collect(toList());
     }
 
-
+    @Override
+    public List<IdentifierSystemDto> getIdentifierSystems(Optional<Boolean> systemGenerated) {
+        return systemGenerated
+                .map(sg -> identifierSystemRepository.findAllBySystemGenerated(sg))
+                .orElseGet(identifierSystemRepository::findAll)
+                .stream()
+                .map(identifierSystem -> modelMapper.map(identifierSystem, IdentifierSystemDto.class))
+                .collect(toList());
+    }
 }
