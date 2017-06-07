@@ -1,6 +1,8 @@
 package gov.samhsa.c2s.ums.service;
 
 import gov.samhsa.c2s.ums.config.EmailSenderProperties;
+import gov.samhsa.c2s.ums.domain.Demographics;
+import gov.samhsa.c2s.ums.domain.Locale;
 import gov.samhsa.c2s.ums.domain.RoleRepository;
 import gov.samhsa.c2s.ums.domain.Scope;
 import gov.samhsa.c2s.ums.domain.ScopeRepository;
@@ -111,13 +113,18 @@ public class UserActivationServiceImplTest {
         LocalDate localDate=LocalDate.now();
         Telecom telecom=mock(Telecom.class);
 
+        Telecom.System email=Telecom.System.EMAIL;
+
         Telecom telecom1=mock(Telecom.class);
         Telecom telecom2=mock(Telecom.class);
+
+        Locale locale=mock(Locale.class);
 
         List<Telecom> telecoms=new ArrayList<>();
         telecoms.add(telecom);
         telecoms.add(telecom1);
         telecoms.add(telecom2);
+        Demographics demographics=mock(Demographics.class);
 
         when(userRepository.getOne(userId)).thenReturn(user);
 
@@ -136,21 +143,25 @@ public class UserActivationServiceImplTest {
 
         when(modelMapper.map(user,UserActivationResponseDto.class)).thenReturn(response);
 
-        when(user.getBirthDay()).thenReturn(localDate);
+        when(user.getDemographics()).thenReturn(demographics);
+        when(demographics.getBirthDay()).thenReturn(localDate);
 
         when(userActivation.getVerificationCode()).thenReturn(verificationCode);
         when(userActivation.getEmailTokenExpirationAsInstant()).thenReturn(i);
 
-        when(telecom.getSystem()).thenReturn("email");
+        when(telecom.getSystem()).thenReturn(email);
 
         when(telecom.getValue()).thenReturn("email");
 
-        when(user.getTelecoms()).thenReturn(telecoms);
+
+        when(demographics.getTelecoms()).thenReturn(telecoms);
 
         AdministrativeGenderCode administrativeGenderCode=mock(AdministrativeGenderCode.class);
-        when(user.getAdministrativeGenderCode()).thenReturn(administrativeGenderCode);
+        when(demographics.getAdministrativeGenderCode()).thenReturn(administrativeGenderCode);
 
         when(administrativeGenderCode.getCode()).thenReturn("code");
+        when(user.getLocale()).thenReturn(locale);
+        when(locale.getCode()).thenReturn("code");
 
         //Act
 
@@ -213,7 +224,7 @@ public class UserActivationServiceImplTest {
         String userIdS=String.valueOf(userId);
         Instant expire=Instant.MAX;
         final String verificationCodeNullSafe="verificationCode";
-
+        Demographics demographics=mock(Demographics.class);
 
         UserActivation userActivation=mock(UserActivation.class);
 
@@ -227,7 +238,8 @@ public class UserActivationServiceImplTest {
         when(userActivation.getEmailTokenExpirationAsInstant()).thenReturn(expire);
         when(userActivation.getUser()).thenReturn(user);
         when(user.getId()).thenReturn(userId);
-        when(user.getBirthDay()).thenReturn(birthDate);
+        when(user.getDemographics()).thenReturn(demographics);
+        when(user.getDemographics().getBirthDay()).thenReturn(birthDate);
 
         VerificationResponseDto verificationResponseDto=new VerificationResponseDto(true,userIdS);
         VerificationResponseDto verificationResponseDto2=userActivationService.verify(userVerificationRequest);
@@ -280,19 +292,21 @@ public class UserActivationServiceImplTest {
         Telecom telecom2=mock(Telecom.class);
         telecoms.add(telecom);
         telecoms.add(telecom2);
-        String system="email";
+        Telecom.System system=Telecom.System.EMAIL;
         String value="value";
+       Demographics demographics=mock(Demographics.class) ;
 
         when(userRepository.findOne(userId)).thenReturn(user);
         when(userActivationRepository.findOneByUserId(userId)).thenReturn(Optional.ofNullable(userActivation));
         UserActivationResponseDto response=mock(UserActivationResponseDto.class);
         when(modelMapper.map(user, UserActivationResponseDto.class)).thenReturn(response);
 
-        when(user.getBirthDay()).thenReturn(birthday);
+        when(user.getDemographics()).thenReturn(demographics);
+        when(demographics.getBirthDay()).thenReturn(birthday);
         when(userActivation.getVerificationCode()).thenReturn(verificationCode);
         when(userActivation.getEmailTokenExpirationAsInstant()).thenReturn(tokenExpiration);
 
-        when(user.getTelecoms()).thenReturn(telecoms);
+        when(demographics.getTelecoms()).thenReturn(telecoms);
 
         when(telecom.getSystem()).thenReturn(system);
         when(telecom.getValue()).thenReturn(value);
