@@ -13,10 +13,8 @@ public interface LookupService {
     @Transactional(readOnly = true)
     List<LookupDto> getLocales();
 
-
     @Transactional(readOnly = true)
     List<LookupDto> getStateCodes();
-
 
     @Transactional(readOnly = true)
     List<LookupDto> getCountryCodes();
@@ -29,5 +27,4 @@ public interface LookupService {
 
     @Transactional(readOnly = true)
     List<IdentifierSystemDto> getIdentifierSystems(Optional<Boolean> systemGenerated);
-
 }
