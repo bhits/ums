@@ -18,6 +18,7 @@ public class UserScopeAssignment {
     @Id
     @GeneratedValue
     private Long id;
+
     @ManyToOne
     private UserActivation userActivation;
 

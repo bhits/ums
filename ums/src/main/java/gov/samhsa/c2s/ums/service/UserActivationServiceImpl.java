@@ -1,31 +1,11 @@
 package gov.samhsa.c2s.ums.service;
 
 import gov.samhsa.c2s.ums.config.EmailSenderProperties;
-import gov.samhsa.c2s.ums.domain.RoleRepository;
-import gov.samhsa.c2s.ums.domain.Scope;
-import gov.samhsa.c2s.ums.domain.ScopeRepository;
-import gov.samhsa.c2s.ums.domain.Telecom;
-import gov.samhsa.c2s.ums.domain.User;
-import gov.samhsa.c2s.ums.domain.UserActivation;
-import gov.samhsa.c2s.ums.domain.UserActivationRepository;
-import gov.samhsa.c2s.ums.domain.UserRepository;
-import gov.samhsa.c2s.ums.domain.UserScopeAssignment;
-import gov.samhsa.c2s.ums.domain.UserScopeAssignmentRepository;
+import gov.samhsa.c2s.ums.domain.*;
 import gov.samhsa.c2s.ums.infrastructure.EmailSender;
 import gov.samhsa.c2s.ums.infrastructure.ScimService;
-import gov.samhsa.c2s.ums.service.dto.ScopeAssignmentRequestDto;
-import gov.samhsa.c2s.ums.service.dto.ScopeAssignmentResponseDto;
-import gov.samhsa.c2s.ums.service.dto.UserActivationRequestDto;
-import gov.samhsa.c2s.ums.service.dto.UserActivationResponseDto;
-import gov.samhsa.c2s.ums.service.dto.UserVerificationRequestDto;
-import gov.samhsa.c2s.ums.service.dto.VerificationResponseDto;
-import gov.samhsa.c2s.ums.service.exception.EmailTokenExpiredException;
-import gov.samhsa.c2s.ums.service.exception.PasswordConfirmationFailedException;
-import gov.samhsa.c2s.ums.service.exception.ScopeDoesNotExistInDBException;
-import gov.samhsa.c2s.ums.service.exception.UserActivationCannotBeVerifiedException;
-import gov.samhsa.c2s.ums.service.exception.UserActivationNotFoundException;
-import gov.samhsa.c2s.ums.service.exception.UserIsAlreadyVerifiedException;
-import gov.samhsa.c2s.ums.service.exception.VerificationFailedException;
+import gov.samhsa.c2s.ums.service.dto.*;
+import gov.samhsa.c2s.ums.service.exception.*;
 import org.cloudfoundry.identity.uaa.scim.ScimUser;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,6 +18,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.Period;
 import java.util.Collections;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -96,62 +77,63 @@ public class UserActivationServiceImpl implements UserActivationService {
         final UserActivation saved = userActivationRepository.save(userActivation);
         // Prepare response for the patient user creation
         final UserActivationResponseDto response = modelMapper.map(user, UserActivationResponseDto.class);
-        response.setBirthDate(user.getBirthDay());
+        response.setBirthDate(user.getDemographics().getBirthDay());
         response.setVerificationCode(saved.getVerificationCode());
         response.setEmailTokenExpiration(saved.getEmailTokenExpirationAsInstant());
         response.setVerified(saved.isVerified());
-        response.setEmail(user.getTelecoms().stream().filter(telecom -> telecom.getSystem().equals("email")).map(Telecom::getValue).findFirst().get());
-        response.setGenderCode(user.getAdministrativeGenderCode().getCode());
+        response.setEmail(user.getDemographics().getTelecoms().stream().filter(telecom -> telecom.getSystem().equals(Telecom.System.EMAIL)).map(Telecom::getValue).findFirst().get());
+        response.setGenderCode(user.getDemographics().getAdministrativeGenderCode().getCode());
         // Send email with verification link
         emailSender.sendEmailWithVerificationLink(
                 xForwardedProto, xForwardedHost, xForwardedPort,
-                user.getTelecoms().stream().filter(telecom -> telecom.getSystem().equals("email")).map(Telecom::getValue).findFirst().get(),
+                user.getDemographics().getTelecoms().stream().filter(telecom -> telecom.getSystem().equals(Telecom.System.EMAIL)).map(Telecom::getValue).findFirst().get(),
                 saved.getEmailToken(),
-                getRecipientFullName(user));
+                getRecipientFullName(user), new Locale(user.getLocale().getCode()));
         return response;
     }
 
     @Override
     @Transactional(readOnly = true)
     public VerificationResponseDto verify(UserVerificationRequestDto userVerificationRequest) {
-            String emailToken=userVerificationRequest.getEmailToken();
-            Optional<String> verificationCode = Optional.ofNullable(userVerificationRequest.getVerificationCode());
-            Optional<LocalDate> birthDate =Optional.ofNullable(userVerificationRequest.getBirthDate());
+        String emailToken = userVerificationRequest.getEmailToken();
+        Optional<String> verificationCode = Optional.ofNullable(userVerificationRequest.getVerificationCode());
+        Optional<LocalDate> birthDate = Optional.ofNullable(userVerificationRequest.getBirthDate());
 
-            Assert.hasText(emailToken, "emailToken must have text");
-            final Instant now = Instant.now();
-            // Only emailToken is available
-            if (!verificationCode.isPresent() && !birthDate.isPresent()) {
-                final Optional<UserActivation> userActivationOptional = userActivationRepository.findOneByEmailToken(emailToken);
-                if (userActivationOptional.filter(uc -> uc.isVerified() == true).isPresent()) {
-                    throw new UserIsAlreadyVerifiedException();
-                }
-                final Boolean verified = userActivationRepository.findOneByEmailToken(emailToken)
-                        .map(UserActivation::getEmailTokenExpirationAsInstant)
-                        .map(expiration -> expiration.isAfter(now))
-                        .filter(Boolean.TRUE::equals)
-                        .orElseThrow(VerificationFailedException::new);
-                return new VerificationResponseDto(verified);
-            } else {
-                // All arguments must be available
-                final String verificationCodeNullSafe = verificationCode.filter(StringUtils::hasText).orElseThrow(VerificationFailedException::new);
-                final LocalDate birthDateNullSafe = birthDate.filter(Objects::nonNull).orElseThrow(VerificationFailedException::new);
-                // Assert user activation email token
-                assertEmailTokenNotExpired(userActivationRepository.findOneByEmailToken(emailToken).get());
-                User user = userActivationRepository.findOneByEmailToken(emailToken).get().getUser();
-                final Long userId = userActivationRepository
-                        .findOneByEmailTokenAndVerificationCode(emailToken, verificationCodeNullSafe)
-                        .filter(uc -> uc.getEmailTokenExpirationAsInstant().isAfter(now))
-                        .map(UserActivation::getUser)
-                        .map(User::getId)
-                        .orElseThrow(VerificationFailedException::new);
-                final boolean verified = Optional.of(user)
-                        .map(User::getBirthDay)
-                        .map(birthDateNullSafe::equals)
-                        .filter(Boolean.TRUE::equals)
-                        .orElseThrow(VerificationFailedException::new);
-                return new VerificationResponseDto(verified, userId.toString());
+        Assert.hasText(emailToken, "emailToken must have text");
+        final Instant now = Instant.now();
+        // Only emailToken is available
+        if (!verificationCode.isPresent() && !birthDate.isPresent()) {
+            final Optional<UserActivation> userActivationOptional = userActivationRepository.findOneByEmailToken(emailToken);
+            if (userActivationOptional.filter(uc -> uc.isVerified() == true).isPresent()) {
+                throw new UserIsAlreadyVerifiedException();
             }
+            final Boolean verified = userActivationRepository.findOneByEmailToken(emailToken)
+                    .map(UserActivation::getEmailTokenExpirationAsInstant)
+                    .map(expiration -> expiration.isAfter(now))
+                    .filter(Boolean.TRUE::equals)
+                    .orElseThrow(VerificationFailedException::new);
+            return new VerificationResponseDto(verified);
+        } else {
+            // All arguments must be available
+            final String verificationCodeNullSafe = verificationCode.filter(StringUtils::hasText).orElseThrow(VerificationFailedException::new);
+            final LocalDate birthDateNullSafe = birthDate.filter(Objects::nonNull).orElseThrow(VerificationFailedException::new);
+            // Assert user activation email token
+            assertEmailTokenNotExpired(userActivationRepository.findOneByEmailToken(emailToken).get());
+            User user = userActivationRepository.findOneByEmailToken(emailToken).get().getUser();
+            final Long userId = userActivationRepository
+                    .findOneByEmailTokenAndVerificationCode(emailToken, verificationCodeNullSafe)
+                    .filter(uc -> uc.getEmailTokenExpirationAsInstant().isAfter(now))
+                    .map(UserActivation::getUser)
+                    .map(User::getId)
+                    .orElseThrow(VerificationFailedException::new);
+            final boolean verified = Optional.of(user)
+                    .map(User::getDemographics)
+                    .map(Demographics::getBirthDay)
+                    .map(birthDateNullSafe::equals)
+                    .filter(Boolean.TRUE::equals)
+                    .orElseThrow(VerificationFailedException::new);
+            return new VerificationResponseDto(verified, userId.toString());
+        }
 
     }
 
@@ -161,10 +143,10 @@ public class UserActivationServiceImpl implements UserActivationService {
         final User user = userRepository.findOne(userId);
         final UserActivation userActivation = userActivationRepository.findOneByUserId(userId).orElseThrow(() -> new UserActivationNotFoundException("No user activation record found for user id: " + userId));
         final UserActivationResponseDto response = modelMapper.map(user, UserActivationResponseDto.class);
-        response.setBirthDate(user.getBirthDay());
+        response.setBirthDate(user.getDemographics().getBirthDay());
         response.setVerificationCode(userActivation.getVerificationCode());
         response.setEmailTokenExpiration(userActivation.getEmailTokenExpirationAsInstant());
-        response.setEmail(user.getTelecoms().stream().filter(telecom -> telecom.getSystem().equals("email")).map(Telecom::getValue).findFirst().get());
+        response.setEmail(user.getDemographics().getTelecoms().stream().filter(telecom -> telecom.getSystem().equals(Telecom.System.EMAIL)).map(Telecom::getValue).findFirst().get());
         response.setVerified(userActivation.isVerified());
         return response;
     }
@@ -189,14 +171,22 @@ public class UserActivationServiceImpl implements UserActivationService {
         userActivation.setVerified(true);
         userActivationRepository.save(userActivation);
         // Prepare response
-        final UserActivationResponseDto response = modelMapper.map(user, UserActivationResponseDto.class);
-        response.setBirthDate(user.getBirthDay());
-        response.setVerified(userActivation.isVerified());
+        final UserActivationResponseDto response = UserActivationResponseDto.builder()
+                .id(user.getId())
+                .firstName(user.getDemographics().getFirstName())
+                .lastName(user.getDemographics().getLastName())
+                .email(user.getDemographics().getTelecoms().stream().filter(telecom -> telecom.getSystem().equals(Telecom.System.EMAIL)).map(Telecom::getValue).findFirst().orElse(null))
+                .birthDate(user.getDemographics().getBirthDay())
+                .genderCode(user.getDemographics().getAdministrativeGenderCode().getCode())
+                .verified(userActivation.isVerified())
+                .verificationCode(userActivation.getVerificationCode())
+                .emailTokenExpiration(userActivation.getEmailTokenExpirationAsInstant())
+                .build();
         // Create user using SCIM
-        ScimUser scimUser = new ScimUser(null, userActivationRequest.getUsername(), user.getFirstName(), user.getLastName());
+        ScimUser scimUser = new ScimUser(null, userActivationRequest.getUsername(), user.getDemographics().getFirstName(), user.getDemographics().getLastName());
         scimUser.setPassword(userActivationRequest.getPassword());
         ScimUser.Email email = new ScimUser.Email();
-        email.setValue(user.getTelecoms().stream().filter(telecom -> telecom.getSystem().equals("email")).map(Telecom::getValue).findFirst().get());
+        email.setValue(user.getDemographics().getTelecoms().stream().filter(telecom -> telecom.getSystem().equals(Telecom.System.EMAIL)).map(Telecom::getValue).findFirst().get());
         scimUser.setEmails(Collections.singletonList(email));
         scimUser.setVerified(true);
         // Save SCIM user
@@ -204,14 +194,14 @@ public class UserActivationServiceImpl implements UserActivationService {
         final String userId = savedScimUser.getId();
         Assert.hasText(userId, "SCIM userId must have text");
         // Save userId in userActivation
-        user.setOauth2UserId(userId);
+        user.setUserAuthId(userId);
         userActivationRepository.save(userActivation);
         // Add user to groups
         scimService.addUserToGroups(userActivation);
         emailSender.sendEmailToConfirmVerification(
                 xForwardedProto, xForwardedHost, xForwardedPort,
-                user.getTelecoms().stream().filter(telecom -> telecom.getSystem().equals("email")).map(Telecom::getValue).findFirst().get(),
-                getRecipientFullName(user));
+                user.getDemographics().getTelecoms().stream().filter(telecom -> telecom.getSystem().equals(Telecom.System.EMAIL)).map(Telecom::getValue).findFirst().get(),
+                getRecipientFullName(user), new Locale(user.getLocale().getCode()));
         return response;
     }
 
@@ -235,14 +225,14 @@ public class UserActivationServiceImpl implements UserActivationService {
 
     private void assertBirthDateVerification(UserActivationRequestDto userActivationRequest, User user) {
         final LocalDate birthDayInRequest = userActivationRequest.getBirthDate();
-        final LocalDate birthDayInUser = LocalDate.from(user.getBirthDay());
+        final LocalDate birthDayInUser = LocalDate.from(user.getDemographics().getBirthDay());
         if (!birthDayInUser.equals(birthDayInRequest)) {
             throw new UserActivationCannotBeVerifiedException();
         }
     }
 
     private String getRecipientFullName(User user) {
-        return user.getFirstName() + " " + user.getLastName();
+        return user.getDemographics().getFirstName() + " " + user.getDemographics().getLastName();
     }
 
     public ScopeAssignmentResponseDto assignScopeToUser(ScopeAssignmentRequestDto scopeAssignmentRequestDto) {
@@ -270,5 +260,11 @@ public class UserActivationServiceImpl implements UserActivationService {
                     }
                 });
     }
+
+    @Override
+    public UsernameUsedDto checkUsername(String username) {
+        return scimService.checkUsername(username);
+    }
+
 
 }

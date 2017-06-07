@@ -1,81 +1,31 @@
 package gov.samhsa.c2s.ums.domain;
 
 
-import gov.samhsa.c2s.ums.domain.reference.AdministrativeGenderCode;
 import lombok.Data;
-import lombok.ToString;
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.NotAudited;
-import org.hibernate.envers.RelationTargetAuditMode;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
-import javax.persistence.OneToMany;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Past;
-import javax.validation.constraints.Pattern;
-import javax.validation.constraints.Size;
-import java.time.LocalDate;
-import java.util.List;
+import javax.persistence.OneToOne;
 import java.util.Set;
 
 @Entity
 @Data
+@Audited
 public class User {
     /**
      * The id.
      */
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue
     private Long id;
 
-    /**
-     * The first name.
-     */
-    @NotNull
-    @Size(min = 2, max = 30)
-    @Pattern(regexp = "^[a-zA-ZÀ-ÿ]+[-]?[a-zA-ZÀ-ÿ']*[a-zA-ZÀ-ÿ]$", message = "The First Name contains invalid characters. Please try again.")
-    private String firstName;
-
-    /**
-     * The last name.
-     */
-    @NotNull
-    @Size(min = 2, max = 30)
-    @Pattern(regexp = "^[a-zA-ZÀ-ÿ]+[-]?[a-zA-ZÀ-ÿ']*[a-zA-ZÀ-ÿ]$", message = "The Last Name contains invalid characters. Please try again.")
-    private String lastName;
-
-    /**
-     * The birth day.
-     */
-    @Past
-    private LocalDate birthDay;
-
-    /**
-     * The social security number.
-     */
-    @Pattern(regexp = "(\\d{3}-?\\d{2}-?\\d{4})*")
-    private String socialSecurityNumber;
-
-    private String oauth2UserId;
-
-    /**
-     * The telephone.
-     */
-    @OneToMany(mappedBy = "user", orphanRemoval = true)
-    @NotAudited
-    private List<Telecom> telecoms;
-    /**
-     * The administrative gender code.
-     */
-    @ManyToOne(cascade = CascadeType.ALL)
-    @Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
-    private AdministrativeGenderCode administrativeGenderCode;
+    private String userAuthId;
 
 
     @ManyToMany(cascade = CascadeType.ALL)
@@ -85,12 +35,11 @@ public class User {
      * The Locale.
      */
     @ManyToOne(cascade = CascadeType.ALL)
-    @Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
+    @NotAudited
     private Locale locale;
 
-    @ManyToOne
-    @Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
-    private Address address;
+    private boolean disabled = false;
 
-    private boolean isDisabled = false;
+    @OneToOne(cascade = CascadeType.ALL)
+    private Demographics demographics;
 }

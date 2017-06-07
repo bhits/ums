@@ -22,6 +22,8 @@ public class UserDto {
     @NotEmpty
     private String lastName;
 
+    private String middleName;
+
     @NotEmpty
     private String firstName;
 
@@ -34,12 +36,16 @@ public class UserDto {
 
     private String socialSecurityNumber;
 
-    private AddressDto address;
+    private List<AddressDto> addresses;
 
-    private List<TelecomDto> telecom;
+    private List<TelecomDto> telecoms;
 
-    private List<RoleDto> role;
+    private List<RoleDto> roles;
 
     private String locale;
+
+    private boolean disabled;
+
+    private String mrn;
 
 }

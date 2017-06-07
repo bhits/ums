@@ -44,7 +44,7 @@ public class UserActivation {
     @Transient
     private Instant emailTokenExpirationAsInstant;
 
-    private boolean isVerified;
+    private boolean verified;
 
 
     public Date getEmailTokenExpiration() {

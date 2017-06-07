@@ -1,4 +1,4 @@
-package gov.samhsa.c2s.ums.service.util;
+package gov.samhsa.c2s.ums.service.mapping;
 
 import gov.samhsa.c2s.ums.domain.Address;
 import gov.samhsa.c2s.ums.domain.reference.CountryCode;
@@ -12,12 +12,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component
-public class AdressDtoToAddressMap extends PropertyMap<AddressDto, Address> {
+public class AddressDtoToAddressMap extends PropertyMap<AddressDto, Address> {
 
     private final StateCodeConverter stateCodeConverter;
     private final CountryCodeConverter countryCodeConverter;
 
-    public AdressDtoToAddressMap(StateCodeConverter stateCodeConverter, CountryCodeConverter countryCodeConverter) {
+    public AddressDtoToAddressMap(StateCodeConverter stateCodeConverter, CountryCodeConverter countryCodeConverter) {
         this.stateCodeConverter = stateCodeConverter;
         this.countryCodeConverter = countryCodeConverter;
     }

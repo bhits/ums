@@ -55,13 +55,14 @@ c2s:
       c2s-ui-route: /c2s-ui
       c2s-ui-verification-relative-path: "/account/verification"
       c2s-ui-verification-email-token-arg-name: "emailToken"
+      c2s-ui-verification-user-preferred-locale-arg-name: "userPreferredLocale"
       brand: Consent2Share
       email-token-expiration-in-days: 7
     fhir:
       publish:
         enabled: false
         # configure fhir server base url
-        serverUrl: http://fhirtest.uhn.ca/baseDstu3
+        serverUrl: http://bhitsdevhie01/hapi-fhir-jpaserver/baseStu3
         clientSocketTimeoutInMs: 768000
 
 security:
@@ -82,3 +83,15 @@ spring:
   profiles: docker
   datasource:
     url: jdbc:mysql://${C2S_DB_HOST:ums-db.c2s.com}:${C2S_DB_PORT:3306}/ums?autoReconnect=true
+security:
+  oauth2:
+    client:
+      access-token-uri: http://uaa.c2s.com:8080/uaa/oauth/token
+c2s:
+  ums:
+    scim:
+      url: http://uaa.c2s.com:8080/uaa
+    fhir:
+      publish:
+        # configure fhir server base url
+        serverUrl: http://hapi-fhir.c2s.com:8080/hapi-fhir-jpaserver/baseStu3

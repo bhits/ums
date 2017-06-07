@@ -6,6 +6,7 @@ import gov.samhsa.c2s.ums.service.dto.ScopeAssignmentResponseDto;
 import gov.samhsa.c2s.ums.service.dto.UserActivationRequestDto;
 import gov.samhsa.c2s.ums.service.dto.UserActivationResponseDto;
 import gov.samhsa.c2s.ums.service.dto.UserVerificationRequestDto;
+import gov.samhsa.c2s.ums.service.dto.UsernameUsedDto;
 import gov.samhsa.c2s.ums.service.dto.VerificationResponseDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.Valid;
@@ -42,6 +44,11 @@ public class UserActivationRestController {
     @GetMapping(value = "/{userId}/activation")
     public UserActivationResponseDto getCurrentUserCreationInfo(@PathVariable Long userId) {
         return userActivationService.findUserActivationInfoByUserId(userId);
+    }
+
+    @GetMapping(value = "/activation")
+    public UsernameUsedDto checkDuplicateUsername(@RequestParam String username) {
+        return userActivationService.checkUsername(username);
     }
 
 

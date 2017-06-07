@@ -1,7 +1,10 @@
 package gov.samhsa.c2s.ums.infrastructure;
 
-public interface EmailSender {
-    void sendEmailWithVerificationLink(String xForwardedProto, String xForwardedHost, int xForwardedPort, String email, String emailToken, String recipientFullName);
+import java.util.Locale;
 
-    void sendEmailToConfirmVerification(String xForwardedProto, String xForwardedHost, int xForwardedPort, String email, String recipientFullName);
+public interface EmailSender {
+    void sendEmailWithVerificationLink(String xForwardedProto, String xForwardedHost, int xForwardedPort, String email,
+                                       String emailToken, String recipientFullName, Locale locale);
+
+    void sendEmailToConfirmVerification(String xForwardedProto, String xForwardedHost, int xForwardedPort, String email, String recipientFullName, Locale locale);
 }

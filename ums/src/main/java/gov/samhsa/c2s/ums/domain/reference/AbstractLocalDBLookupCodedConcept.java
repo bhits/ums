@@ -16,8 +16,7 @@ public abstract class AbstractLocalDBLookupCodedConcept {
      * The id.
      */
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO, generator = "idgener")
-    @Column(name = "id")
+    @GeneratedValue
     private Long id;
 
     /**

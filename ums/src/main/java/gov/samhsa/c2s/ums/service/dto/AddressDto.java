@@ -16,7 +16,9 @@ public class AddressDto {
     /**
      * The street address line.
      */
-    private String streetAddressLine;
+    private String line1;
+
+    private String line2;
 
     /**
      * The city.
@@ -38,4 +40,6 @@ public class AddressDto {
      * The country code.
      */
     private String countryCode;
+
+    private String use;
 }
