@@ -52,7 +52,7 @@ public class PatientServiceImpl implements PatientService {
 
         if (userAuthId.isPresent()) {
             //Validate if the given userAuthId has access to the given MRN/PatientID
-            final User user = userRepository.findOneByUserAuthIdAndDisabled(userAuthId.get(), false)
+            final User user = userRepository.findByUserAuthIdAndDisabled(userAuthId.get(), false)
                     .orElseThrow(() -> new UserNotFoundException("User Not Found!"));
             List<UserPatientRelationship> userPatientRelationshipList = userPatientRelationshipRepository.findAllByIdUserIdAndIdPatientId(user.getId(), patient.getId());
 
@@ -66,7 +66,7 @@ public class PatientServiceImpl implements PatientService {
 
 
     public List<PatientDto> getPatientByUserAuthId(String userAuthId) {
-        User user = userRepository.findOneByUserAuthIdAndDisabled(userAuthId, false).orElseThrow(() -> new UserNotFoundException("User Not Found!"));
+        User user = userRepository.findByUserAuthIdAndDisabled(userAuthId, false).orElseThrow(() -> new UserNotFoundException("User Not Found!"));
         List<UserPatientRelationship> userPatientRelationshipList = userPatientRelationshipRepository.findAllByIdUserId(user.getId());
         List<PatientDto> patientDtos = new ArrayList<>();
         userPatientRelationshipList.stream().forEach(userPatientRelationship -> {

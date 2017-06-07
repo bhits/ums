@@ -9,11 +9,11 @@ import java.util.Optional;
 
 public interface UserRepository extends JpaRepository<User, Long> {
 
-    Optional<User> findOneById(Long id);
+    Optional<User> findById(Long id);
 
-    Optional<User> findOneByIdAndDisabled(Long userId, boolean disabled);
+    Optional<User> findByIdAndDisabled(Long userId, boolean disabled);
 
-    Optional<User> findOneByUserAuthIdAndDisabled(String userAuthId, boolean disabled);
+    Optional<User> findByUserAuthIdAndDisabled(String userAuthId, boolean disabled);
 
     List<User> findAllByDemographicsIdentifiersValueAndDemographicsIdentifiersIdentifierSystemSystem(String value, String system);
 

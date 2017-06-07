@@ -185,7 +185,7 @@ public class UserServiceImpl implements UserService {
         //Check if user account has been activated
         assertUserAccountHasBeenActivated(userId);
         //Set isDisabled to true in the User table
-        User user = userRepository.findOneByIdAndDisabled(userId, false)
+        User user = userRepository.findByIdAndDisabled(userId, false)
                 .orElseThrow(() -> new UserNotFoundException("User Not Found!"));
         user.setDisabled(true);
         //
@@ -203,7 +203,7 @@ public class UserServiceImpl implements UserService {
         //Check if user account has been activated
         assertUserAccountHasBeenActivated(userId);
         //Set isDisabled to false in the User table
-        User user = userRepository.findOneByIdAndDisabled(userId, true)
+        User user = userRepository.findByIdAndDisabled(userId, true)
                 .orElseThrow(() -> new UserNotFoundException("User Not Found!"));
         user.setDisabled(false);
 
@@ -219,7 +219,7 @@ public class UserServiceImpl implements UserService {
     public void updateUser(Long userId, UserDto userDto) {
 
         /* Get User Entity from UserDto */
-        final User user = userRepository.findOneById(userId).orElseThrow(UserNotFoundException::new);
+        final User user = userRepository.findById(userId).orElseThrow(UserNotFoundException::new);
 
         user.setLocale(localeRepository.findByCode(userDto.getLocale()));
         user.setRoles(userDto.getRoles().stream().flatMap(roleDto -> roleRepository.findAllByCode(roleDto.getCode()).stream()).collect(Collectors.toSet()));
@@ -322,14 +322,14 @@ public class UserServiceImpl implements UserService {
     public void updateUserLocaleByUserAuthId(String userAuthId, String localeCode) {
 
         /* Get User Entity from UserDto */
-        User user = userRepository.findOneByUserAuthIdAndDisabled(userAuthId, false).orElseThrow(() -> new UserNotFoundException("User Not Found!"));
+        User user = userRepository.findByUserAuthIdAndDisabled(userAuthId, false).orElseThrow(() -> new UserNotFoundException("User Not Found!"));
         user.setLocale(localeRepository.findByCode(localeCode));
         user = userRepository.save(user);
     }
 
     @Override
     public AccessDecisionDto accessDecision(String userAuthId, String patientMrn) {
-        final User user = userRepository.findOneByUserAuthIdAndDisabled(userAuthId, false).orElseThrow(() -> new UserNotFoundException("User Not Found!"));
+        final User user = userRepository.findByUserAuthIdAndDisabled(userAuthId, false).orElseThrow(() -> new UserNotFoundException("User Not Found!"));
         final Patient patient = demographicsRepository.findOneByIdentifiersValueAndIdentifiersIdentifierSystemSystem(patientMrn, umsProperties.getMrn().getCodeSystem())
                 .map(Demographics::getPatient)
                 .orElseThrow(() -> new PatientNotFoundException("Patient Not Found!"));
@@ -343,13 +343,13 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserDto getUser(Long userId) {
-        final User user = userRepository.findOne(userId);
+        final User user = userRepository.findById(userId).orElseThrow(UserNotFoundException::new);
         return modelMapper.map(user, UserDto.class);
     }
 
     @Override
     public UserDto getUserByUserAuthId(String userAuthId) {
-        final User user = userRepository.findOneByUserAuthIdAndDisabled(userAuthId, false)
+        final User user = userRepository.findByUserAuthIdAndDisabled(userAuthId, false)
                 .orElseThrow(() -> new UserNotFoundException("User Not Found!"));
         return modelMapper.map(user, UserDto.class);
     }
@@ -494,7 +494,7 @@ public class UserServiceImpl implements UserService {
     }
 
     private void assertUserAccountHasBeenActivated(Long userId) {
-        userRepository.findOneById(userId)
+        userRepository.findById(userId)
                 .map(User::getUserAuthId)
                 .filter(StringUtils::hasText)
                 .orElseThrow(UserActivationNotFoundException::new);

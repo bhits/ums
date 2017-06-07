@@ -15,6 +15,9 @@ public class UserToUserDtoMap extends PropertyMap<User, UserDto> {
     @Autowired
     private UserToSsnConverter userToSsnConverter;
 
+    @Autowired
+    private IdentifierListToIdentifierDtoListConverter identifierListToIdentifierDtoListConverter;
+
     @Override
     protected void configure() {
         map().setId(source.getId());
@@ -29,6 +32,7 @@ public class UserToUserDtoMap extends PropertyMap<User, UserDto> {
         map().setLocale(source.getLocale().getCode());
         using(userToMrnConverter).map(source).setMrn(null);
         map().setRegistrationPurposeEmail(source.getDemographics().getPatient().getRegistrationPurposeEmail());
+        using(identifierListToIdentifierDtoListConverter).map(source.getDemographics().getIdentifiers()).setIdentifiers(null);
     }
 }
 
