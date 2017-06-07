@@ -36,7 +36,7 @@ public class MrnServiceImplTest {
 
         //Assert
         assertEquals(13,generatedMrn.length());
-        assertEquals("PREFIX.",generatedMrn.substring(0,7));
+        assertEquals("PREFIX-",generatedMrn.substring(0,7));
         assertTrue(generatedMrn.equals(generatedMrn.toUpperCase()));
     }
 
