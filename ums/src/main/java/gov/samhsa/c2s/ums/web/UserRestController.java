@@ -7,7 +7,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.Valid;
 import java.time.LocalDate;
@@ -19,12 +28,9 @@ import java.util.StringTokenizer;
 @RestController
 @RequestMapping("/users")
 public class UserRestController {
-    private final UserService userService;
 
     @Autowired
-    public UserRestController(UserService userService) {
-        this.userService = userService;
-    }
+    private UserService userService;
 
     /**
      * @param userDto User Dto Object
@@ -34,7 +40,6 @@ public class UserRestController {
     public void registerUser(@Valid @RequestBody UserDto userDto) {
         userService.registerUser(userDto);
     }
-
 
     /**
      * Enable User
@@ -46,7 +51,6 @@ public class UserRestController {
     public void enableUser(@PathVariable Long userId) {
         userService.enableUser(userId);
     }
-
 
     /**
      * Disable User
@@ -64,19 +68,16 @@ public class UserRestController {
      *
      * @param userAuthId
      */
-
     @PutMapping("/locale")
     @ResponseStatus(HttpStatus.OK)
-    public void updateUserLocaleByUserAuthId(@RequestParam String userAuthId,@RequestHeader("Accept-Language") Locale locale)
-    {
-        userService.updateUserLocaleByUserAuthId(userAuthId,locale.getLanguage());
+    public void updateUserLocaleByUserAuthId(@RequestParam String userAuthId, @RequestHeader("Accept-Language") Locale locale) {
+        userService.updateUserLocaleByUserAuthId(userAuthId, locale.getLanguage());
     }
 
     @GetMapping("/accessDecision")
     @ResponseStatus(HttpStatus.OK)
-    public AccessDecisionDto accessDecision(@RequestParam String userAuthId, @RequestParam String patientMRN)
-    {
-        return userService.accessDecision(userAuthId,patientMRN);
+    public AccessDecisionDto accessDecision(@RequestParam String userAuthId, @RequestParam String patientMRN) {
+        return userService.accessDecision(userAuthId, patientMRN);
     }
 
     /**
@@ -101,7 +102,6 @@ public class UserRestController {
     public UserDto getUser(@PathVariable Long userId) {
         return userService.getUser(userId);
     }
-
 
     /**
      * Find All Users
@@ -153,4 +153,8 @@ public class UserRestController {
         return userService.searchUsersByDemographic(firstName, lastName, birthDate, genderCode);
     }
 
+    @GetMapping("/search/identifier")
+    public List<UserDto> searchUsersByIdentifier(@RequestParam String value, @RequestParam String system) {
+        return userService.searchUsersByIdentifier(value, system);
+    }
 }

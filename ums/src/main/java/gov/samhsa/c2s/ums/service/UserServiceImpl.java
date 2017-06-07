@@ -381,6 +381,14 @@ public class UserServiceImpl implements UserService {
         }
     }
 
+    @Override
+    public List<UserDto> searchUsersByIdentifier(String value, String system) {
+        return userRepository.findAllByDemographicsIdentifiersValueAndDemographicsIdentifiersIdentifierSystemSystem(value, system)
+                .stream()
+                .map(user -> modelMapper.map(user, UserDto.class))
+                .collect(toList());
+    }
+
     public List<UserDto> searchUsersByFirstNameAndORLastName(StringTokenizer token) {
         Pageable pageRequest = new PageRequest(PAGE_NUMBER, umsProperties.getPagination().getDefaultSize());
         if (token.countTokens() == 1) {

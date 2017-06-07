@@ -38,6 +38,9 @@ public interface UserService {
     @Transactional(readOnly = true)
     List<UserDto> searchUsersByDemographic(String firstName, String lastName, LocalDate birthDate, String genderCode);
 
+    @Transactional(readOnly = true)
+    List<UserDto> searchUsersByIdentifier(String value, String system);
+
     @Transactional
     void updateUserLocale(Long userId, String localeCode);
 
