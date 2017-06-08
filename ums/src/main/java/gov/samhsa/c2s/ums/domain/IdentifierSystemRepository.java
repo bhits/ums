@@ -10,5 +10,9 @@ public interface IdentifierSystemRepository extends JpaRepository<IdentifierSyst
 
     Optional<IdentifierSystem> findBySystemAndSystemGeneratedIsFalse(String system);
 
+    boolean existsBySystemAndSystemGeneratedIsFalse(String system);
+
+    boolean existsBySystemAndSystemGeneratedIsTrue(String system);
+
     List<IdentifierSystem> findAllBySystemGenerated(boolean systemGenerated);
 }

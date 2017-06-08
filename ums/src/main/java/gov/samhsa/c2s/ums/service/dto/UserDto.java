@@ -55,5 +55,5 @@ public class UserDto {
     private String registrationPurposeEmail;
 
     @Valid
-    private List<IdentifierDto> identifiers;
+    private Optional<List<IdentifierDto>> identifiers;
 }

@@ -31,10 +31,9 @@ import gov.samhsa.c2s.ums.service.dto.IdentifierDto;
 import gov.samhsa.c2s.ums.service.dto.RelationDto;
 import gov.samhsa.c2s.ums.service.dto.TelecomDto;
 import gov.samhsa.c2s.ums.service.dto.UserDto;
-import gov.samhsa.c2s.ums.service.exception.IdentifierSystemNotFoundException;
+import gov.samhsa.c2s.ums.service.exception.InvalidIdentifierSystemException;
 import gov.samhsa.c2s.ums.service.exception.MissingEmailException;
 import gov.samhsa.c2s.ums.service.exception.PatientNotFoundException;
-import gov.samhsa.c2s.ums.service.exception.SsnSystemNotFoundException;
 import gov.samhsa.c2s.ums.service.exception.UserActivationNotFoundException;
 import gov.samhsa.c2s.ums.service.exception.UserNotFoundException;
 import gov.samhsa.c2s.ums.service.fhir.FhirPatientService;
@@ -54,10 +53,12 @@ import org.springframework.util.StringUtils;
 import javax.transaction.Transactional;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.StringTokenizer;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.toList;
 
@@ -125,21 +126,16 @@ public class UserServiceImpl implements UserService {
         final User user = modelMapper.map(userDto, User.class);
 
         // Identifiers
-        final List<Identifier> identifiers = userDto.getIdentifiers().stream()
+        final List<IdentifierDto> consolidatedIdentifierDtos = getConsolidatedIdentifierDtos(userDto);
+        // Find or create the identifiers and save them to identifierRepository
+        final List<Identifier> identifiers = consolidatedIdentifierDtos.stream()
                 .map(idDto -> identifierRepository
                         .findByValueAndIdentifierSystemSystem(idDto.getValue(), idDto.getSystem())
                         .orElseGet(() -> createIdentifier(idDto)))
                 .peek(identifierRepository::save)
                 .collect(toList());
+        // Assign these identifiers to the user
         user.getDemographics().setIdentifiers(identifiers);
-
-        // SSN
-        userDto.getSocialSecurityNumber().ifPresent(socialSecurityNumber -> {
-            final IdentifierSystem identifierSystem = identifierSystemRepository.findBySystem(umsProperties.getSsn().getCodeSystem()).orElseThrow(SsnSystemNotFoundException::new);
-            final Identifier ssnIdentifier = Identifier.of(socialSecurityNumber, identifierSystem);
-            identifierRepository.save(ssnIdentifier);
-            user.getDemographics().getIdentifiers().add(ssnIdentifier);
-        });
 
         // Add user contact details to Telecom Table
         user.getDemographics().setTelecoms(modelMapper.map(userDto.getTelecoms(), new TypeToken<List<Telecom>>() {
@@ -176,7 +172,6 @@ public class UserServiceImpl implements UserService {
                 fhirPatientService.publishFhirPatient(userDto);
             }
         }
-
     }
 
     @Override
@@ -232,42 +227,26 @@ public class UserServiceImpl implements UserService {
         user.getDemographics().getPatient().setRegistrationPurposeEmail(userDto.getRegistrationPurposeEmail());
 
         // Identifiers
+        final List<IdentifierDto> consolidatedIdentifierDtos = getConsolidatedIdentifierDtos(userDto);
+        // Find the non-system-generated identifiers that have different values in the request to remove them
         final List<Identifier> identifiersToRemove = user.getDemographics().getIdentifiers().stream()
                 .filter(id -> id.getIdentifierSystem().isSystemGenerated() == false)
-                .filter(id -> userDto.getIdentifiers().stream()
+                .filter(id -> consolidatedIdentifierDtos.stream()
                         .noneMatch(idDto -> deepEquals(id, idDto)))
                 .collect(toList());
+        // Remove the different non-system-generated identifiers from the user
         user.getDemographics().getIdentifiers().removeAll(identifiersToRemove);
-        final List<Identifier> identifiersToAdd = userDto.getIdentifiers().stream()
+        // Find the different and non-system-generated identifiers from the request
+        final List<Identifier> identifiersToAdd = consolidatedIdentifierDtos.stream()
                 .filter(idDto -> user.getDemographics().getIdentifiers().stream()
                         .noneMatch(id -> deepEquals(id, idDto)))
+                .filter(idDto -> identifierSystemRepository.existsBySystemAndSystemGeneratedIsFalse(idDto.getSystem()))
                 .map(idDto -> identifierRepository.findByValueAndIdentifierSystemSystem(idDto.getValue(), idDto.getSystem())
                         .orElseGet(() -> createIdentifier(idDto)))
                 .collect(toList());
+        // Save the different and non-system-generated identifiers and add them to the user
         identifierRepository.save(identifiersToAdd);
         user.getDemographics().getIdentifiers().addAll(identifiersToAdd);
-
-        // Update SSN
-        // Find new SSN value
-        final Optional<String> newSsnValue = userDto.getSocialSecurityNumber().filter(StringUtils::hasText).map(String::trim);
-        // Find old SSN identifier
-        final Optional<Identifier> oldSsnIdentifier = user.getDemographics().getIdentifiers().stream()
-                .filter(id -> umsProperties.getSsn().getCodeSystem().equals(id.getIdentifierSystem().getSystem()))
-                .findAny();
-        // Filter old SSN identifier if different
-        final Optional<Identifier> oldSsnIdentifierIfDifferent = oldSsnIdentifier.filter(oldId -> !newSsnValue.filter(ssnValue -> oldId.getValue().equals(ssnValue)).isPresent());
-        // Delete old SSN if different
-        oldSsnIdentifierIfDifferent.ifPresent(user.getDemographics().getIdentifiers()::remove);
-        oldSsnIdentifierIfDifferent.ifPresent(identifierRepository::delete);
-
-        // Update SSN with new value if different
-        newSsnValue.filter(ssn -> !oldSsnIdentifier.map(Identifier::getValue).filter(ssn::equals).isPresent())
-                .ifPresent(ssn -> {
-                    final IdentifierSystem ssnSystem = identifierSystemRepository.findBySystem(umsProperties.getSsn().getCodeSystem()).orElseThrow(SsnSystemNotFoundException::new);
-                    final Identifier ssnIdentifier = identifierRepository.findByValueAndIdentifierSystem(ssn, ssnSystem).orElseGet(() -> Identifier.of(ssn, ssnSystem));
-                    identifierRepository.save(ssnIdentifier);
-                    user.getDemographics().getIdentifiers().add(ssnIdentifier);
-                });
 
         user.getDemographics().setAdministrativeGenderCode(administrativeGenderCodeRepository.findByCode(userDto.getGenderCode()));
 
@@ -409,10 +388,36 @@ public class UserServiceImpl implements UserService {
         }
     }
 
+    private List<IdentifierDto> getConsolidatedIdentifierDtos(UserDto userDto) {
+        final boolean hasSsnInIdentifiers = userDto.getIdentifiers().orElseGet(Collections::emptyList).stream().anyMatch(identifierDto -> umsProperties.getSsn().getCodeSystem().equals(identifierDto.getSystem()));
+        return Stream.concat(
+                userDto.getIdentifiers().orElseGet(Collections::emptyList).stream(),
+                // Convert SSN property to IdentifierDto to combine with other identifiers
+                userDto.getSocialSecurityNumber()
+                        // ignore SSN property if SSN exists in identifiers list
+                        .filter(ssnValue -> !hasSsnInIdentifiers)
+                        .map(ssnValue -> IdentifierDto.of(ssnValue, umsProperties.getSsn().getCodeSystem()))
+                        .map(Stream::of)
+                        .orElseGet(Stream::empty))
+                .peek(this::assertIdentifierSystemIsNotSystemGenerated)
+                .collect(toList());
+    }
+
     private Identifier createIdentifier(IdentifierDto idDto) {
         return Identifier.of(idDto.getValue(), identifierSystemRepository
                 .findBySystemAndSystemGeneratedIsFalse(idDto.getSystem())
-                .orElseThrow(() -> new IdentifierSystemNotFoundException("Identifier System is not found or it can be only generated by the system")));
+                .orElseThrow(() -> new InvalidIdentifierSystemException("Identifier System '" + idDto.getSystem() + "' is not found or it can be only generated by the system")));
+    }
+
+    private void assertIdentifierSystemIsNotSystemGenerated(IdentifierDto identifierDto) {
+        if (identifierSystemRepository.existsBySystemAndSystemGeneratedIsTrue(identifierDto.getSystem())) {
+            final String errMsg = new StringBuilder()
+                    .append("Identifier System '")
+                    .append(identifierDto.getSystem())
+                    .append("' can only be generated by the system")
+                    .toString();
+            throw new InvalidIdentifierSystemException(errMsg);
+        }
     }
 
     private Patient createPatient(User user, String registrationPurposeEmail) {
