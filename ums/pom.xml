@@ -171,6 +171,7 @@
             <groupId>gov.samhsa.c2s</groupId>
             <artifactId>common-unit</artifactId>
             <version>${common-unit.version}</version>
+            <scope>test</scope>
         </dependency>
         <!-- HAPI FHIR JARS -->
     </dependencies>
