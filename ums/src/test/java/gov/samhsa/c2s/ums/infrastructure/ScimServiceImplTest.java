@@ -8,6 +8,8 @@ import gov.samhsa.c2s.ums.domain.UserScopeAssignmentRepository;
 import gov.samhsa.c2s.ums.infrastructure.dto.IdentifierDto;
 import gov.samhsa.c2s.ums.infrastructure.dto.SearchResultsWrapperWithId;
 import gov.samhsa.c2s.ums.infrastructure.exception.IdCannotBeFoundException;
+import gov.samhsa.c2s.ums.service.dto.UsernameUsedDto;
+import org.cloudfoundry.identity.uaa.resources.SearchResults;
 import org.cloudfoundry.identity.uaa.scim.ScimGroupMember;
 import org.cloudfoundry.identity.uaa.scim.ScimUser;
 import org.junit.Rule;
@@ -17,6 +19,8 @@ import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.web.client.RestOperations;
 
 import java.util.Arrays;
@@ -53,6 +57,7 @@ public class ScimServiceImplTest {
 
     @Test
     public void testSave(){
+        //Arrange
         ScimUser scimUser=new ScimUser();
         ScimUser scimUser1=new ScimUser();
         scimUser1.setId("id");
@@ -82,14 +87,12 @@ public class ScimServiceImplTest {
 
         //Assert
         assertEquals(id,groupId);
-
     }
 
     @Test
     public void testFindGroupIdByDisplayName_WhenIdCannotBeFound_ThrowsException() throws Exception{
+        //Arrange
         thrown.expect(IdCannotBeFoundException.class);
-
-        //arrange
         final String groupDisplayName="groupDisplayName";
         SearchResultsWrapperWithId searchResultsMock=mock(SearchResultsWrapperWithId.class);
         when(restTemplate.getForObject(groupsEndpoint + "?filter=displayName eq \"" + groupDisplayName + "\"&attributes=id", SearchResultsWrapperWithId.class)).thenReturn(searchResultsMock);
@@ -102,11 +105,11 @@ public class ScimServiceImplTest {
 
         //Assert
         assertNull(groupId);
-
     }
 
     @Test
     public void testFindUserIdByUserName(){
+        //Arrange
         final String username="username";
         final String id="id";
         final SearchResultsWrapperWithId searchResultsMock=mock(SearchResultsWrapperWithId.class);
@@ -125,7 +128,7 @@ public class ScimServiceImplTest {
     @Test
     public void testAddUserToGroup(){
         //Arrange
-        String groupId="groupId";
+        final String groupId="groupId";
         UserScopeAssignment userScopeAssignment=mock(UserScopeAssignment.class);
         Scope scope=mock(Scope.class);
         UserActivation userActivation=mock(UserActivation.class);
@@ -138,12 +141,45 @@ public class ScimServiceImplTest {
         when(restTemplate.postForObject(eq(groupsEndpoint + "/{groupId}/members"), argThat(matching((ScimGroupMember member)->member.getMemberId().equals(id))), eq(ScimGroupMember.class), eq(groupId))).thenReturn(scimGroupMemberResponse);
 
         //Act
-      final ScimGroupMember response= scimServiceImpl.addUserToGroup(userActivation,scope,groupId);
+        final ScimGroupMember response= scimServiceImpl.addUserToGroup(userActivation,scope,groupId);
 
-      //Assert
-      assertEquals(scimGroupMemberResponse,response);
+        //Assert
+        assertEquals(scimGroupMemberResponse,response);
+        verify(userActivation).getUser();
+        verify(user).getUserAuthId();
+    }
 
-      verify(userActivation).getUser();
-      verify(user).getUserAuthId();
+    @Test
+    public void testCheckUserName_Given_ThereIsNoSearchResult(){
+        //Arrange
+        final String username="username";
+        String filter="?filter=userName eq \""+username+"\"";
+        SearchResults<ScimUser> searchResults=mock(SearchResults.class);
+        when(restTemplate.getForObject(usersEndpoint+filter,SearchResults.class)).thenReturn(searchResults);
+
+        when(searchResults.getTotalResults()).thenReturn(0);
+
+        //Act
+        UsernameUsedDto checkUsername=scimServiceImpl.checkUsername(username);
+
+        //Assert
+        assertEquals(new UsernameUsedDto(false),checkUsername);
+    }
+
+    @Test
+    public void testCheckUserName_Given_ThereIsSearchResult(){
+        //Arrange
+        String username="username";
+        String filter="?filter=userName eq \""+username+"\"";
+        SearchResults<ScimUser> searchResults=mock(SearchResults.class);
+        when(restTemplate.getForObject(usersEndpoint+filter,SearchResults.class)).thenReturn(searchResults);
+        when(searchResults.getTotalResults()).thenReturn(1);
+
+        //Act
+        UsernameUsedDto checkUsername=scimServiceImpl.checkUsername(username);
+
+        //Assert
+        assertEquals(new UsernameUsedDto(true),checkUsername);
     }
 }
+
