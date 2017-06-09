@@ -57,7 +57,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @RunWith(MockitoJUnitRunner.class)
 public class UserRestControllerTest {
 
-    Long userId=20L;
+    Long userId = 20L;
 
     @Rule
     public ExpectedException thrown = ExpectedException.none();
@@ -66,31 +66,35 @@ public class UserRestControllerTest {
     private UserService userServiceMock;
 
     @Mock
+    StringTokenizer tokenizer;
+
+    @Mock
     private UserDto userDto;
 
     @InjectMocks
     private UserRestController sut;
 
     @BeforeClass
-    public static void before(){}
+    public static void before() {
+    }
 
     @AfterClass
-    public static void after(){}
+    public static void after() {
+    }
 
 
     @Test
-    public void testRegisterUser(){
-
+    public void testRegisterUser() {
         //Act
         sut.registerUser(userDto);
 
-        //Assert and verify
+        //Assert
         verify(userServiceMock).registerUser(userDto);
     }
 
     @Test
-    public void testEnableUser(){
-       //Act
+    public void testEnableUser() {
+        //Act
         sut.enableUser(userId);
 
         //Assert
@@ -98,7 +102,7 @@ public class UserRestControllerTest {
     }
 
     @Test
-    public void testDisableUser(){
+    public void testDisableUser() {
         //Act
         sut.disableUser(userId);
 
@@ -107,102 +111,105 @@ public class UserRestControllerTest {
     }
 
     @Test
-    public void testAccessDecision(){
-       String userAuthId="userAuthId";
-       String patientMrn="patientMrn";
+    public void testAccessDecision() {
+        //Arrange
+        String userAuthId = "userAuthId";
+        String patientMrn = "patientMrn";
 
-        AccessDecisionDto access=mock(AccessDecisionDto.class);
-        when(userServiceMock.accessDecision(userAuthId,patientMrn)).thenReturn(access);
-       //act
-        AccessDecisionDto accessDecision=sut.accessDecision(userAuthId,patientMrn);
-
-        //assert
-        assertEquals(access,accessDecision);
-    }
-
-
-    @Test
-    public void testUpdateUser(){
-        UserDto userDto=mock(UserDto.class);
+        AccessDecisionDto access = mock(AccessDecisionDto.class);
+        when(userServiceMock.accessDecision(userAuthId, patientMrn)).thenReturn(access);
 
         //Act
-        sut.updateUser(userId,userDto);
+        AccessDecisionDto accessDecision = sut.accessDecision(userAuthId, patientMrn);
 
         //Assert
-        verify(userServiceMock).updateUser(userId,userDto);
+        assertEquals(access, accessDecision);
+    }
+
+
+    @Test
+    public void testUpdateUser() {
+        //Arrange
+        UserDto userDto = mock(UserDto.class);
+
+        //Act
+        sut.updateUser(userId, userDto);
+
+        //Assert
+        verify(userServiceMock).updateUser(userId, userDto);
     }
 
     @Test
-    public void testGetUser(){
-        //Assert
-        UserDto user=mock(UserDto.class);
+    public void testGetUser() {
+        //Arrange
+        UserDto user = mock(UserDto.class);
         when(userServiceMock.getUser(userId)).thenReturn(user);
+
         //Act
-       UserDto userGot= sut.getUser(userId);
+        UserDto userGot = sut.getUser(userId);
 
         //Assert
-        assertEquals(user,userGot);
-
+        assertEquals(user, userGot);
     }
 
     @Test
-    public void testGetUserById(){
+    public void testGetUserById() {
         //Arrange
-        String userAuthId="OAuth2UserId";
-        UserDto userDto=mock(UserDto.class);
+        String userAuthId = "OAuth2UserId";
+        UserDto userDto = mock(UserDto.class);
         when(userServiceMock.getUserByUserAuthId(userAuthId)).thenReturn(userDto);
+
         //Act
-       UserDto userDto1=sut.getUserById(userAuthId);
+        UserDto userDto1 = sut.getUserById(userAuthId);
 
         //Assert
-        assertEquals(userDto,userDto1);
+        assertEquals(userDto, userDto1);
     }
 
     @Test
-    public void testGetAllUsers(){
+    public void testGetAllUsers() {
         //Arrange
-        Optional<Integer> page= Optional.of(1233);
-        Optional<Integer> size=Optional.of(234);
+        Optional<Integer> page = Optional.of(1233);
+        Optional<Integer> size = Optional.of(234);
 
         //Act
-        sut.getAllUsers(page,size);
+        sut.getAllUsers(page, size);
 
         //Assert
-        verify(userServiceMock).getAllUsers(page,size);
+        verify(userServiceMock).getAllUsers(page, size);
     }
 
     @Test
-    public void testSearchUsersByFirstNameAndOrLastName(){
+    public void testSearchUsersByFirstNameAndOrLastName() {
         //Arrange
-        String term="term";
-        List<UserDto> list=new ArrayList<>();
+        String term = "term";
+        List<UserDto> list = new ArrayList<>();
 
-        StringTokenizer tokenizer=new StringTokenizer(term," ");
         when(userServiceMock.searchUsersByFirstNameAndORLastName(tokenizer)).thenReturn(list);
 
         //Act
-        List<UserDto> list2=sut.searchUsersByFirstNameAndORLastName(term);
+        List<UserDto> list2 = sut.searchUsersByFirstNameAndORLastName(term);
 
         //Assert
-        assertEquals(list,list2);
-
+        assertEquals(list, list2);
     }
 
     @Test
-    public void testSearchUsersByDemographic(){
+    public void testSearchUsersByDemographic() {
         //Arrange
-        String firstName="firstName";
-        String lastName="lastName";
-        LocalDate birthDate=LocalDate.now();
-        String genderCode="genderCode";
+        String firstName = "firstName";
+        String lastName = "lastName";
+        LocalDate birthDate = LocalDate.now();
+        String genderCode = "genderCode";
+
+        List<UserDto> list = new ArrayList<>();
+        when(userServiceMock.searchUsersByDemographic(firstName, lastName, birthDate, genderCode)).thenReturn(list);
 
         //Act
-        sut.searchUsersByDemographic(firstName, lastName,birthDate,genderCode);
+        List<UserDto> list2 = sut.searchUsersByDemographic(firstName, lastName, birthDate, genderCode);
 
         //Assert
-        verify(userServiceMock).searchUsersByDemographic(firstName,lastName,birthDate,genderCode);
-
+        assertEquals(list, list2);
     }
-
 
 }
