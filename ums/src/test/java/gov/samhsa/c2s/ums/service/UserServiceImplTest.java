@@ -93,6 +93,9 @@ public class UserServiceImplTest {
     AddressRepository addressRepository;
 
     @Mock
+    LocaleRepository localeRepository;
+
+    @Mock
     UmsProperties umsProperties;
 
     @Mock
@@ -109,7 +112,7 @@ public class UserServiceImplTest {
 
 
     @Test
-    public void testDisableUser_WhenUserIsFoundById() {
+    public void testDisableUser_Given_UserIsFoundById() {
         //Arrange
         Long userId = 10L;
 
@@ -132,7 +135,7 @@ public class UserServiceImplTest {
     }
 
     @Test
-    public void testDisableUser_whenNoUserIsFoundById_throwsException() throws UserNotFoundException {
+    public void testDisableUser_Given_NoUserIsFoundById_Then_ThrowsException() throws UserNotFoundException {
         //Arrange
         thrown.expect(UserNotFoundException.class);
         thrown.expectMessage("User Not Found!");
@@ -155,7 +158,7 @@ public class UserServiceImplTest {
     }
 
     @Test
-    public void testEnableUser_whenUserIsFoundByIdAndIsDisabled() {
+    public void testEnableUser_Given_UserIsFoundByIdAndIsDisabled() {
         //Arrange
         Long userId = 10L;
 
@@ -177,7 +180,7 @@ public class UserServiceImplTest {
     }
 
     @Test
-    public void testEnableUser_whenUserIsNotFoundByIdOrNotDisabled() throws UserNotFoundException {
+    public void testEnableUser_Given_UserIsNotFoundByIdOrNotDisabled_Then_ThrowsException() throws UserNotFoundException {
         //Arrange
         thrown.expect(UserNotFoundException.class);
         thrown.expectMessage("User Not Found!");
@@ -201,9 +204,8 @@ public class UserServiceImplTest {
         verify(userRepository).save(user);
     }
 
-
     @Test
-    public void testGetUser_WhoCanBeFoundByIdAndIsNotDisabled() {
+    public void testGetUser_Given_UserCanBeFoundByIdAndIsNotDisabled() {
         //Arrange
         UserDto getUserResponseDto = mock(UserDto.class);
         Long userId = 10L;
@@ -238,6 +240,41 @@ public class UserServiceImplTest {
         assertEquals(getUserResponseDto, userServiceImpl.getUserByUserAuthId(oAuth2UserId));
     }
 
+    @Test
+    public void testUpdateUserLocale() {
+        //Arrange
+        Long userId = 30L;
+        String localeCode = "localCode";
+        User user = mock(User.class);
+        Locale locale = mock(Locale.class);
+
+        when(userRepository.findOne(userId)).thenReturn(user);
+        when(localeRepository.findByCode(localeCode)).thenReturn(locale);
+
+        //Act
+        userServiceImpl.updateUserLocale(userId, localeCode);
+
+        //Assert
+        verify(userRepository).save(user);
+    }
+
+    @Test
+    public void testUpdateUserLocaleByUserAuthId() {
+        //Arrange
+        String userAuthId = "userAuthId";
+        String localeCode = "localeCode";
+        Locale locale = mock(Locale.class);
+        User user = mock(User.class);
+
+        when(userRepository.findOneByUserAuthIdAndDisabled(userAuthId, false)).thenReturn(Optional.ofNullable(user));
+        when(localeRepository.findByCode(localeCode)).thenReturn(locale);
+
+        //Act
+        userServiceImpl.updateUserLocaleByUserAuthId(userAuthId, localeCode);
+
+        //Assert
+        verify(userRepository).save(user);
+    }
 
     @Test
     public void testAccessDecision() {
@@ -272,7 +309,7 @@ public class UserServiceImplTest {
 
 
     @Test
-    public void testSearchUsersByDemographic_whereThereIsUserOnTheUserList() {
+    public void testSearchUsersByDemographic_Given_ThereIsUserOnTheUserList() {
         //Arrange
         String firstName = "firstName";
         String lastName = "lastName";
@@ -321,7 +358,7 @@ public class UserServiceImplTest {
 
 
     @Test
-    public void testSearchUsersByDemographic_whenThereIsNoUserOnUserList_throwsException() throws UserNotFoundException {
+    public void testSearchUsersByDemographic_Given_ThereIsNoUserOnUserList_Then_ThrowsException() throws UserNotFoundException {
         //Arrange
         thrown.expect(UserNotFoundException.class);
         thrown.expectMessage("User Not Found!");
