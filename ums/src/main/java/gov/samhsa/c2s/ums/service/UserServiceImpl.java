@@ -158,7 +158,7 @@ public class UserServiceImpl implements UserService {
         if (userDto.getRoles().stream().anyMatch(roleDto -> roleDto.getCode().equalsIgnoreCase("patient"))) {
             // Assert that the patient has at least one email OR a registrationPurposeEmail
             final boolean patientHasEmail = user.getDemographics().getTelecoms().stream().map(Telecom::getSystem).anyMatch(Telecom.System.EMAIL::equals);
-            if (!patientHasEmail && !StringUtils.hasText(userDto.getRegistrationPurposeEmail())) {
+            if (!patientHasEmail && !userDto.getRegistrationPurposeEmail().filter(StringUtils::hasText).isPresent()) {
                 throw new MissingEmailException("At least one of personal email OR a registration purpose email is required");
             }
 
@@ -224,7 +224,8 @@ public class UserServiceImpl implements UserService {
         user.getDemographics().setBirthDay(userDto.getBirthDate());
 
         // Update registration purpose email
-        user.getDemographics().getPatient().setRegistrationPurposeEmail(userDto.getRegistrationPurposeEmail());
+        final String registrationPurposeEmail = userDto.getRegistrationPurposeEmail().filter(StringUtils::hasText).map(String::trim).orElse(null);
+        user.getDemographics().getPatient().setRegistrationPurposeEmail(registrationPurposeEmail);
 
         // Identifiers
         final List<IdentifierDto> consolidatedIdentifierDtos = getConsolidatedIdentifierDtos(userDto);
@@ -420,7 +421,7 @@ public class UserServiceImpl implements UserService {
         }
     }
 
-    private Patient createPatient(User user, String registrationPurposeEmail) {
+    private Patient createPatient(User user, Optional<String> registrationPurposeEmail) {
         //set the patient object
         Patient patient = new Patient();
         final List<IdentifierSystem> systems = identifierSystemRepository.findAllBySystemGenerated(true);
@@ -431,7 +432,10 @@ public class UserServiceImpl implements UserService {
         final Demographics demographics = user.getDemographics();
         demographics.getIdentifiers().addAll(identifiers);
         patient.setDemographics(demographics);
-        patient.setRegistrationPurposeEmail(registrationPurposeEmail);
+        registrationPurposeEmail
+                .filter(StringUtils::hasText)
+                .map(String::trim)
+                .ifPresent(patient::setRegistrationPurposeEmail);
         return patientRepository.save(patient);
     }
 

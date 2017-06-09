@@ -52,7 +52,7 @@ public class UserDto {
 
     private String mrn;
 
-    private String registrationPurposeEmail;
+    private Optional<String> registrationPurposeEmail;
 
     @Valid
     private Optional<List<IdentifierDto>> identifiers;
