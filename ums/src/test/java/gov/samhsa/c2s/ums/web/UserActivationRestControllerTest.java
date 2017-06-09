@@ -22,7 +22,7 @@ public class UserActivationRestControllerTest {
 
     public static final String xForwardProto = "X-Forwarded-Proto";
     public static final String xForwardHost = "X-Forwarded-Host";
-    public static final int xForwardPort= 233;
+    public static final int xForwardPort = 233;
 
     @Mock
     UserActivationService userActivationService;
@@ -31,77 +31,74 @@ public class UserActivationRestControllerTest {
     UserActivationRestController userActivationRestController;
 
     @Test
-    public void testInitiateUserActivation(){
+    public void testInitiateUserActivation() {
         //Arrange
-        long userId=30L;
-        UserActivationResponseDto userActivationResponseDto=mock(UserActivationResponseDto.class);
-        when(userActivationService.initiateUserActivation(userId,xForwardProto,xForwardHost,xForwardPort)).thenReturn(userActivationResponseDto);
+        long userId = 30L;
+        UserActivationResponseDto userActivationResponseDto = mock(UserActivationResponseDto.class);
+        when(userActivationService.initiateUserActivation(userId, xForwardProto, xForwardHost, xForwardPort)).thenReturn(userActivationResponseDto);
 
         //Act
-        UserActivationResponseDto userActivationResponseDto2=userActivationRestController.initiateUserActivation(userId,xForwardProto,xForwardHost,xForwardPort);
+        UserActivationResponseDto userActivationResponseDto2 = userActivationRestController.initiateUserActivation(userId, xForwardProto, xForwardHost, xForwardPort);
 
         //Assert
-        assertEquals(userActivationResponseDto,userActivationResponseDto2);
+        assertEquals(userActivationResponseDto, userActivationResponseDto2);
     }
 
     @Test
-    public void testGetCurrentUserCreationInfo(){
+    public void testGetCurrentUserCreationInfo() {
         //Arrange
-        long userId=30L;
-        UserActivationResponseDto userActivationResponseDto=mock(UserActivationResponseDto.class);
+        long userId = 30L;
+        UserActivationResponseDto userActivationResponseDto = mock(UserActivationResponseDto.class);
         when(userActivationService.findUserActivationInfoByUserId(userId)).thenReturn(userActivationResponseDto);
 
         //Act
-        UserActivationResponseDto userActivationResponseDto2=userActivationRestController.getCurrentUserCreationInfo(userId);
+        UserActivationResponseDto userActivationResponseDto2 = userActivationRestController.getCurrentUserCreationInfo(userId);
 
         //Assert
-        assertEquals(userActivationResponseDto,userActivationResponseDto2);
+        assertEquals(userActivationResponseDto, userActivationResponseDto2);
     }
 
-
     @Test
-    public void testActivateUser(){
+    public void testActivateUser() {
         //Arrange
-        UserActivationRequestDto userActivationRequestDto=mock(UserActivationRequestDto.class);
-        UserActivationResponseDto userActivationResponseDto=mock(UserActivationResponseDto.class);
-        when(userActivationService.activateUser(userActivationRequestDto,xForwardProto,xForwardHost,xForwardPort)).thenReturn(userActivationResponseDto);
+        UserActivationRequestDto userActivationRequestDto = mock(UserActivationRequestDto.class);
+        UserActivationResponseDto userActivationResponseDto = mock(UserActivationResponseDto.class);
+        when(userActivationService.activateUser(userActivationRequestDto, xForwardProto, xForwardHost, xForwardPort)).thenReturn(userActivationResponseDto);
 
         //Act
-        UserActivationResponseDto userActivationResponseDto2=userActivationRestController.activateUser(userActivationRequestDto,xForwardProto,xForwardHost,xForwardPort);
+        UserActivationResponseDto userActivationResponseDto2 = userActivationRestController.activateUser(userActivationRequestDto, xForwardProto, xForwardHost, xForwardPort);
 
 
         //Assert
-        assertEquals(userActivationResponseDto,userActivationResponseDto2);
+        assertEquals(userActivationResponseDto, userActivationResponseDto2);
     }
 
     @Test
-    public void testVerify(){
+    public void testVerify() {
         //Arrange
-        VerificationResponseDto verificationResponseDto=mock(VerificationResponseDto.class);
-        UserVerificationRequestDto userVerificationRequestDto=mock(UserVerificationRequestDto.class);
+        VerificationResponseDto verificationResponseDto = mock(VerificationResponseDto.class);
+        UserVerificationRequestDto userVerificationRequestDto = mock(UserVerificationRequestDto.class);
         when(userActivationService.verify(userVerificationRequestDto)).thenReturn(verificationResponseDto);
 
         //Act
-        VerificationResponseDto verificationResponseDto2=userActivationRestController.verify(userVerificationRequestDto);
+        VerificationResponseDto verificationResponseDto2 = userActivationRestController.verify(userVerificationRequestDto);
 
         //Assert
-        assertEquals(verificationResponseDto,verificationResponseDto2);
+        assertEquals(verificationResponseDto, verificationResponseDto2);
     }
 
     @Test
-    public void testAssignScope(){
+    public void testAssignScope() {
         //Arrange
-        ScopeAssignmentRequestDto scopeAssignmentRequestDto=mock(ScopeAssignmentRequestDto.class);
-        ScopeAssignmentResponseDto scopeAssignmentResponseDto=mock(ScopeAssignmentResponseDto.class);
+        ScopeAssignmentRequestDto scopeAssignmentRequestDto = mock(ScopeAssignmentRequestDto.class);
+        ScopeAssignmentResponseDto scopeAssignmentResponseDto = mock(ScopeAssignmentResponseDto.class);
         when(userActivationService.assignScopeToUser(scopeAssignmentRequestDto)).thenReturn(scopeAssignmentResponseDto);
 
         //Act
-        ScopeAssignmentResponseDto scopeAssignmentResponseDto2=userActivationRestController.assignScope(scopeAssignmentRequestDto);
+        ScopeAssignmentResponseDto scopeAssignmentResponseDto2 = userActivationRestController.assignScope(scopeAssignmentRequestDto);
 
         //Assert
-        assertEquals(scopeAssignmentResponseDto,scopeAssignmentResponseDto2);
-
-
+        assertEquals(scopeAssignmentResponseDto, scopeAssignmentResponseDto2);
     }
 
 }
