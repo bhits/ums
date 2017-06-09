@@ -36,7 +36,6 @@ public class Telecom {
     @GeneratedValue
     private Long id;
 
-
     /**
      * The code.
      */
@@ -51,25 +50,23 @@ public class Telecom {
     @Size(max = 30)
     private String value;
 
-
     @Column(name = "`use`")
     @Enumerated(EnumType.STRING)
     private Use use = Use.HOME;
 
-
     @ManyToOne
     private Demographics demographics;
 
-
     public enum Use {
+        // IMPORTANT: The order of these values matter. When sorted, HOME will come before WORK.
+        // This order is currently being used when selecting an email address to send the activation email
         HOME,
         WORK
     }
 
     public enum System {
+        // IMPORTANT: The order of these values matter. When sorted, PHONE will come before EMAIL.
         PHONE,
         EMAIL
     }
-
-
 }
