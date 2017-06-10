@@ -31,7 +31,6 @@ public class MrnConfig {
         identifierSystem.setSystem(codeSystem);
         identifierSystem.setDisplay(mrn.getDisplayName());
         identifierSystem.setOid(mrn.getCodeSystemOID());
-        identifierSystem.setSystemGenerated(true);
         identifierSystemRepository.save(identifierSystem);
         logger.info("MRN configuration in database is updated");
     }

@@ -46,6 +46,11 @@ c2s:
       prefix: C2S-DEV
       length: 6
       update-in-database-on-startup: true
+    required-identifier-systems-by-role:
+      patient:
+        -
+          system: ${c2s.ums.mrn.codeSystem}
+          algorithm: MRN
     Pagination:
       defaultSize: 10
       maxSize: 100

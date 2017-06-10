@@ -20,5 +20,4 @@ public class IdentifierSystem {
     private String system;
     private String display;
     private String oid;
-    private boolean systemGenerated;
 }

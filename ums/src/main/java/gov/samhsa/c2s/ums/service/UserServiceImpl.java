@@ -12,6 +12,7 @@ import gov.samhsa.c2s.ums.domain.IdentifierSystemRepository;
 import gov.samhsa.c2s.ums.domain.LocaleRepository;
 import gov.samhsa.c2s.ums.domain.Patient;
 import gov.samhsa.c2s.ums.domain.PatientRepository;
+import gov.samhsa.c2s.ums.domain.Role;
 import gov.samhsa.c2s.ums.domain.RoleRepository;
 import gov.samhsa.c2s.ums.domain.Telecom;
 import gov.samhsa.c2s.ums.domain.TelecomRepository;
@@ -48,19 +49,22 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import javax.transaction.Transactional;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.StringTokenizer;
-import java.util.stream.Collectors;
+import java.util.UUID;
 import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
 
 
 @Service
@@ -126,14 +130,23 @@ public class UserServiceImpl implements UserService {
         final User user = modelMapper.map(userDto, User.class);
 
         // Identifiers
-        final List<IdentifierDto> consolidatedIdentifierDtos = getConsolidatedIdentifierDtos(userDto);
+        final Set<UmsProperties.RequiredIdentifierSystem> allRequiredIdentifierSystems = getAllRequiredIdentifierSystems(user);
+        final Set<UmsProperties.RequiredIdentifierSystem> systemGeneratedIdentifierSystems = getRequiredAndSystemGeneratedIdentifierSystems(allRequiredIdentifierSystems);
+        final List<IdentifierDto> consolidatedIdentifierDtos = getConsolidatedIdentifierDtos(userDto, systemGeneratedIdentifierSystems);
         // Find or create the identifiers and save them to identifierRepository
-        final List<Identifier> identifiers = consolidatedIdentifierDtos.stream()
+        final Stream<Identifier> nonSystemGeneratedIdentifiers = consolidatedIdentifierDtos.stream()
                 .map(idDto -> identifierRepository
                         .findByValueAndIdentifierSystemSystem(idDto.getValue(), idDto.getSystem())
-                        .orElseGet(() -> createIdentifier(idDto)))
-                .peek(identifierRepository::save)
-                .collect(toList());
+                        .orElseGet(() -> createIdentifier(idDto, systemGeneratedIdentifierSystems)));
+        final Stream<Identifier> systemGeneratedIdentifiers = systemGeneratedIdentifierSystems.stream()
+                .map(requiredIdentifierSystem -> {
+                    final IdentifierSystem identifierSystem = identifierSystemRepository.findBySystem(requiredIdentifierSystem.getSystem()).orElseThrow(InvalidIdentifierSystemException::new);
+                    final String identifierValue = generateIdentifier(requiredIdentifierSystem.getAlgorithm());
+                    return Identifier.of(identifierValue, identifierSystem);
+                });
+        final List<Identifier> identifiers = Stream.concat(systemGeneratedIdentifiers, nonSystemGeneratedIdentifiers).collect(toList());
+        assertAllRequiredIdentifiersExist(identifiers, allRequiredIdentifierSystems);
+        identifierRepository.save(identifiers);
         // Assign these identifiers to the user
         user.getDemographics().setIdentifiers(identifiers);
 
@@ -194,6 +207,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
     public void enableUser(Long userId) {
         //Check if user account has been activated
         assertUserAccountHasBeenActivated(userId);
@@ -211,13 +225,14 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
     public void updateUser(Long userId, UserDto userDto) {
 
         /* Get User Entity from UserDto */
         final User user = userRepository.findById(userId).orElseThrow(UserNotFoundException::new);
 
         user.setLocale(localeRepository.findByCode(userDto.getLocale()));
-        user.setRoles(userDto.getRoles().stream().flatMap(roleDto -> roleRepository.findAllByCode(roleDto.getCode()).stream()).collect(Collectors.toSet()));
+        user.setRoles(userDto.getRoles().stream().flatMap(roleDto -> roleRepository.findAllByCode(roleDto.getCode()).stream()).collect(toSet()));
         user.getDemographics().setMiddleName(userDto.getMiddleName());
         user.getDemographics().setFirstName(userDto.getFirstName());
         user.getDemographics().setLastName(userDto.getLastName());
@@ -228,10 +243,15 @@ public class UserServiceImpl implements UserService {
         user.getDemographics().getPatient().setRegistrationPurposeEmail(registrationPurposeEmail);
 
         // Identifiers
-        final List<IdentifierDto> consolidatedIdentifierDtos = getConsolidatedIdentifierDtos(userDto);
+        // Find system generated identifier systems based on the user roles
+        final Set<UmsProperties.RequiredIdentifierSystem> allRequiredIdentifierSystems = getAllRequiredIdentifierSystems(user);
+        final Set<UmsProperties.RequiredIdentifierSystem> systemGeneratedIdentifierSystems = getRequiredAndSystemGeneratedIdentifierSystems(allRequiredIdentifierSystems);
+        final List<IdentifierDto> consolidatedIdentifierDtos = getConsolidatedIdentifierDtos(userDto, systemGeneratedIdentifierSystems);
         // Find the non-system-generated identifiers that have different values in the request to remove them
         final List<Identifier> identifiersToRemove = user.getDemographics().getIdentifiers().stream()
-                .filter(id -> id.getIdentifierSystem().isSystemGenerated() == false)
+                .filter(id -> systemGeneratedIdentifierSystems.stream()
+                        .map(UmsProperties.RequiredIdentifierSystem::getSystem)
+                        .noneMatch(id.getIdentifierSystem().getSystem()::equals))
                 .filter(id -> consolidatedIdentifierDtos.stream()
                         .noneMatch(idDto -> deepEquals(id, idDto)))
                 .collect(toList());
@@ -241,13 +261,16 @@ public class UserServiceImpl implements UserService {
         final List<Identifier> identifiersToAdd = consolidatedIdentifierDtos.stream()
                 .filter(idDto -> user.getDemographics().getIdentifiers().stream()
                         .noneMatch(id -> deepEquals(id, idDto)))
-                .filter(idDto -> identifierSystemRepository.existsBySystemAndSystemGeneratedIsFalse(idDto.getSystem()))
+                .filter(idDto -> systemGeneratedIdentifierSystems.stream()
+                        .map(UmsProperties.RequiredIdentifierSystem::getSystem)
+                        .noneMatch(system -> system.equals(idDto.getSystem())))
                 .map(idDto -> identifierRepository.findByValueAndIdentifierSystemSystem(idDto.getValue(), idDto.getSystem())
-                        .orElseGet(() -> createIdentifier(idDto)))
+                        .orElseGet(() -> createIdentifier(idDto, systemGeneratedIdentifierSystems)))
                 .collect(toList());
         // Save the different and non-system-generated identifiers and add them to the user
         identifierRepository.save(identifiersToAdd);
         user.getDemographics().getIdentifiers().addAll(identifiersToAdd);
+        assertAllRequiredIdentifiersExist(user.getDemographics().getIdentifiers(), allRequiredIdentifierSystems);
 
         user.getDemographics().setAdministrativeGenderCode(administrativeGenderCodeRepository.findByCode(userDto.getGenderCode()));
 
@@ -290,6 +313,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
     public void updateUserLocale(Long userId, String localeCode) {
 
         /* Get User Entity from UserDto */
@@ -299,6 +323,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
     public void updateUserLocaleByUserAuthId(String userAuthId, String localeCode) {
 
         /* Get User Entity from UserDto */
@@ -308,6 +333,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public AccessDecisionDto accessDecision(String userAuthId, String patientMrn) {
         final User user = userRepository.findByUserAuthIdAndDisabled(userAuthId, false).orElseThrow(() -> new UserNotFoundException("User Not Found!"));
         final Patient patient = demographicsRepository.findOneByIdentifiersValueAndIdentifiersIdentifierSystemSystem(patientMrn, umsProperties.getMrn().getCodeSystem())
@@ -322,12 +348,14 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public UserDto getUser(Long userId) {
         final User user = userRepository.findById(userId).orElseThrow(UserNotFoundException::new);
         return modelMapper.map(user, UserDto.class);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public UserDto getUserByUserAuthId(String userAuthId) {
         final User user = userRepository.findByUserAuthIdAndDisabled(userAuthId, false)
                 .orElseThrow(() -> new UserNotFoundException("User Not Found!"));
@@ -335,6 +363,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<UserDto> getAllUsers(Optional<Integer> page, Optional<Integer> size) {
         final PageRequest pageRequest = new PageRequest(page.filter(p -> p >= 0).orElse(0),
                 size.filter(s -> s > 0 && s <= umsProperties.getPagination().getMaxSize())
@@ -346,6 +375,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<UserDto> searchUsersByDemographic(String firstName,
                                                   String lastName,
                                                   LocalDate birthDate,
@@ -362,6 +392,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<UserDto> searchUsersByIdentifier(String value, String system) {
         return userRepository.findAllByDemographicsIdentifiersValueAndDemographicsIdentifiersIdentifierSystemSystem(value, system)
                 .stream()
@@ -369,6 +400,8 @@ public class UserServiceImpl implements UserService {
                 .collect(toList());
     }
 
+    @Override
+    @Transactional(readOnly = true)
     public List<UserDto> searchUsersByFirstNameAndORLastName(StringTokenizer token) {
         Pageable pageRequest = new PageRequest(PAGE_NUMBER, umsProperties.getPagination().getDefaultSize());
         if (token.countTokens() == 1) {
@@ -389,7 +422,23 @@ public class UserServiceImpl implements UserService {
         }
     }
 
-    private List<IdentifierDto> getConsolidatedIdentifierDtos(UserDto userDto) {
+    private Set<UmsProperties.RequiredIdentifierSystem> getRequiredAndSystemGeneratedIdentifierSystems(Set<UmsProperties.RequiredIdentifierSystem> allRequiredIdentifierSystems) {
+        return allRequiredIdentifierSystems.stream()
+                .filter(requiredIdentifierSystem -> !requiredIdentifierSystem.getAlgorithm().equals(UmsProperties.Algorithm.NONE))
+                .collect(toSet());
+    }
+
+    private Set<UmsProperties.RequiredIdentifierSystem> getAllRequiredIdentifierSystems(User user) {
+        return umsProperties.getRequiredIdentifierSystemsByRole().entrySet().stream()
+                .filter(entry -> user.getRoles().stream()
+                        .map(Role::getCode)
+                        .anyMatch(roleCode -> roleCode.equals(entry.getKey())))
+                .map(Map.Entry::getValue)
+                .flatMap(List::stream)
+                .collect(toSet());
+    }
+
+    private List<IdentifierDto> getConsolidatedIdentifierDtos(UserDto userDto, Set<UmsProperties.RequiredIdentifierSystem> systemGeneratedIdentifierSystems) {
         final boolean hasSsnInIdentifiers = userDto.getIdentifiers().orElseGet(Collections::emptyList).stream().anyMatch(identifierDto -> umsProperties.getSsn().getCodeSystem().equals(identifierDto.getSystem()));
         return Stream.concat(
                 userDto.getIdentifiers().orElseGet(Collections::emptyList).stream(),
@@ -400,18 +449,23 @@ public class UserServiceImpl implements UserService {
                         .map(ssnValue -> IdentifierDto.of(ssnValue, umsProperties.getSsn().getCodeSystem()))
                         .map(Stream::of)
                         .orElseGet(Stream::empty))
-                .peek(this::assertIdentifierSystemIsNotSystemGenerated)
+                .peek(idDto -> assertIdentifierSystemIsNotSystemGenerated(idDto, systemGeneratedIdentifierSystems))
                 .collect(toList());
     }
 
-    private Identifier createIdentifier(IdentifierDto idDto) {
+    private Identifier createIdentifier(IdentifierDto idDto, Set<UmsProperties.RequiredIdentifierSystem> systemGeneratedIdentifierSystems) {
         return Identifier.of(idDto.getValue(), identifierSystemRepository
-                .findBySystemAndSystemGeneratedIsFalse(idDto.getSystem())
+                .findBySystem(idDto.getSystem())
+                .filter(identifierSystem -> systemGeneratedIdentifierSystems.stream()
+                        .map(UmsProperties.RequiredIdentifierSystem::getSystem)
+                        .noneMatch(identifierSystem.getSystem()::equals))
                 .orElseThrow(() -> new InvalidIdentifierSystemException("Identifier System '" + idDto.getSystem() + "' is not found or it can be only generated by the system")));
     }
 
-    private void assertIdentifierSystemIsNotSystemGenerated(IdentifierDto identifierDto) {
-        if (identifierSystemRepository.existsBySystemAndSystemGeneratedIsTrue(identifierDto.getSystem())) {
+    private void assertIdentifierSystemIsNotSystemGenerated(IdentifierDto identifierDto, Set<UmsProperties.RequiredIdentifierSystem> systemGeneratedIdentifierSystems) {
+        if (systemGeneratedIdentifierSystems.stream()
+                .map(UmsProperties.RequiredIdentifierSystem::getSystem)
+                .anyMatch(identifierDto.getSystem()::equals)) {
             final String errMsg = new StringBuilder()
                     .append("Identifier System '")
                     .append(identifierDto.getSystem())
@@ -424,13 +478,7 @@ public class UserServiceImpl implements UserService {
     private Patient createPatient(User user, Optional<String> registrationPurposeEmail) {
         //set the patient object
         Patient patient = new Patient();
-        final List<IdentifierSystem> systems = identifierSystemRepository.findAllBySystemGenerated(true);
-        final List<Identifier> identifiers = systems.stream()
-                .map(system -> Identifier.builder().identifierSystem(system).value(mrnService.generateMrn()).build())
-                .collect(toList());
-        identifierRepository.save(identifiers);
         final Demographics demographics = user.getDemographics();
-        demographics.getIdentifiers().addAll(identifiers);
         patient.setDemographics(demographics);
         registrationPurposeEmail
                 .filter(StringUtils::hasText)
@@ -507,5 +555,30 @@ public class UserServiceImpl implements UserService {
                 .map(User::getUserAuthId)
                 .filter(StringUtils::hasText)
                 .orElseThrow(UserActivationNotFoundException::new);
+    }
+
+    private void assertAllRequiredIdentifiersExist(List<Identifier> identifiers, Set<UmsProperties.RequiredIdentifierSystem> allRequiredIdentifierSystems) {
+        final Set<String> missingRequiredIdentifiersSystems = allRequiredIdentifierSystems.stream()
+                .map(UmsProperties.RequiredIdentifierSystem::getSystem)
+                .filter(system -> identifiers.stream()
+                        .map(Identifier::getIdentifierSystem)
+                        .map(IdentifierSystem::getSystem)
+                        .noneMatch(system::equals))
+                .collect(toSet());
+        if (missingRequiredIdentifiersSystems.size() > 0) {
+            throw new InvalidIdentifierSystemException("Missing identifiers for the required identifier systems: " + missingRequiredIdentifiersSystems.toString());
+        }
+    }
+
+    private String generateIdentifier(UmsProperties.Algorithm algorithm) {
+        switch (algorithm) {
+            case MRN:
+                return mrnService.generateMrn();
+            case UUID:
+                return UUID.randomUUID().toString();
+            case NONE:
+            default:
+                throw new InvalidIdentifierSystemException("This identifier system is not configured with an algorithm, the identifier cannot be generated");
+        }
     }
 }

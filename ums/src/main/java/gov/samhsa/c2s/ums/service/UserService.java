@@ -45,7 +45,7 @@ public interface UserService {
     void updateUserLocale(Long userId, String localeCode);
 
     @Transactional
-    void updateUserLocaleByUserAuthId(String userAuthId,String localeCode);
+    void updateUserLocaleByUserAuthId(String userAuthId, String localeCode);
 
     @Transactional(readOnly = true)
     AccessDecisionDto accessDecision(String userAuthId, String patientMRN);
