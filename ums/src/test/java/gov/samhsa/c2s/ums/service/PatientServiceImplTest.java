@@ -50,94 +50,95 @@ public class PatientServiceImplTest {
     PatientServiceImpl patientService;
 
     @Test
-    public void testGetPatientByPatientId(){
-        String patientId="patientId";
-        Patient patient=mock(Patient.class);
-        Optional<String> userAuthId= Optional.of("userId");
-        Long id=30L;
-        Long pId=20L;
-        PatientDto patientDto=mock(PatientDto.class);
+    public void testGetPatientByPatientId() {
+        //Arrange
+        String patientId = "patientId";
+        Patient patient = mock(Patient.class);
+        Optional<String> userAuthId = Optional.of("userId");
+        Long id = 30L;
+        Long pId = 20L;
+        PatientDto patientDto = mock(PatientDto.class);
 
         when(patientRepository.findOneByMrn(patientId)).thenReturn(Optional.ofNullable(patient));
 
-        User user=mock(User.class);
-        when(userRepository.findOneByUserAuthIdAndDisabled(userAuthId.get(),false)).thenReturn(Optional.ofNullable(user));
+        User user = mock(User.class);
+        when(userRepository.findOneByUserAuthIdAndDisabled(userAuthId.get(), false)).thenReturn(Optional.ofNullable(user));
 
-        UserPatientRelationship userPatientRelationship1= mock(UserPatientRelationship.class);
-        UserPatientRelationship userPatientRelationship2=mock(UserPatientRelationship.class);
+        UserPatientRelationship userPatientRelationship1 = mock(UserPatientRelationship.class);
+        UserPatientRelationship userPatientRelationship2 = mock(UserPatientRelationship.class);
 
-        List<UserPatientRelationship> userPatientRelationships=new ArrayList<>();
+        List<UserPatientRelationship> userPatientRelationships = new ArrayList<>();
         userPatientRelationships.add(userPatientRelationship1);
         userPatientRelationships.add(userPatientRelationship2);
 
         when(user.getId()).thenReturn(id);
         when(patient.getId()).thenReturn(pId);
-        when(userPatientRelationshipRepository.findAllByIdUserIdAndIdPatientId(id,pId)).thenReturn(userPatientRelationships);
+        when(userPatientRelationshipRepository.findAllByIdUserIdAndIdPatientId(id, pId)).thenReturn(userPatientRelationships);
 
-        when(modelMapper.map(patient,PatientDto.class)).thenReturn(patientDto);
+        when(modelMapper.map(patient, PatientDto.class)).thenReturn(patientDto);
 
         //Act
-        PatientDto patientDto1=patientService.getPatientByPatientId(patientId,userAuthId);
+        PatientDto patientDto1 = patientService.getPatientByPatientId(patientId, userAuthId);
 
         //Assert
-        assertEquals(patientDto,patientDto1);
+        assertEquals(patientDto, patientDto1);
     }
 
     @Test
-    public void getPatientByUserAuthId(){
-        //arrange
-        String userAuthId="userAuthId";
-        User user=mock(User.class);
-        Long userId=30L;
+    public void getPatientByUserAuthId() {
+        //Arrange
+        String userAuthId = "userAuthId";
+        User user = mock(User.class);
+        Long userId = 30L;
 
-        UserPatientRelationship userPatientRelationship1=mock(UserPatientRelationship.class);
-        UserPatientRelationship userPatientRelationship2=mock(UserPatientRelationship.class);
-        List<UserPatientRelationship> userPatientRelationships=new ArrayList<>();
+        UserPatientRelationship userPatientRelationship1 = mock(UserPatientRelationship.class);
+        UserPatientRelationship userPatientRelationship2 = mock(UserPatientRelationship.class);
+        List<UserPatientRelationship> userPatientRelationships = new ArrayList<>();
         userPatientRelationships.add(userPatientRelationship1);
         userPatientRelationships.add(userPatientRelationship2);
 
-        when(userRepository.findOneByUserAuthIdAndDisabled(userAuthId,false)).thenReturn(Optional.ofNullable(user));
+        when(userRepository.findOneByUserAuthIdAndDisabled(userAuthId, false)).thenReturn(Optional.ofNullable(user));
 
         when(user.getId()).thenReturn(userId);
         when(userPatientRelationshipRepository.findAllByIdUserId(userId)).thenReturn(userPatientRelationships);
 
-        PatientDto patientDto1=mock(PatientDto.class);
-        PatientDto patientDto2=mock(PatientDto.class);
-        List<PatientDto> patientDtos=new ArrayList<>();
+        PatientDto patientDto1 = mock(PatientDto.class);
+        PatientDto patientDto2 = mock(PatientDto.class);
+        List<PatientDto> patientDtos = new ArrayList<>();
 
 
-        UserPatientRelationshipId userPatientRelationshipId1=mock(UserPatientRelationshipId.class);
-        UserPatientRelationshipId userPatientRelationshipId2=mock(UserPatientRelationshipId.class);
+        UserPatientRelationshipId userPatientRelationshipId1 = mock(UserPatientRelationshipId.class);
+        UserPatientRelationshipId userPatientRelationshipId2 = mock(UserPatientRelationshipId.class);
 
         when(userPatientRelationship1.getId()).thenReturn(userPatientRelationshipId1);
         when(userPatientRelationship2.getId()).thenReturn(userPatientRelationshipId2);
 
-        Patient patient1= mock(Patient.class);
-        Patient patient2=mock(Patient.class);
+        Patient patient1 = mock(Patient.class);
+        Patient patient2 = mock(Patient.class);
         when(userPatientRelationshipId1.getPatient()).thenReturn(patient1);
         when(userPatientRelationshipId2.getPatient()).thenReturn(patient2);
 
-        when(modelMapper.map(patient1,PatientDto.class)).thenReturn(patientDto1);
-        when(modelMapper.map(patient2,PatientDto.class)).thenReturn(patientDto2);
+        when(modelMapper.map(patient1, PatientDto.class)).thenReturn(patientDto1);
+        when(modelMapper.map(patient2, PatientDto.class)).thenReturn(patientDto2);
 
-        Relationship relationship1=mock(Relationship.class);
-        Relationship relationship2=mock(Relationship.class);
+        Relationship relationship1 = mock(Relationship.class);
+        Relationship relationship2 = mock(Relationship.class);
 
         when(userPatientRelationshipId1.getRelationship()).thenReturn(relationship1);
         when(userPatientRelationshipId2.getRelationship()).thenReturn(relationship2);
 
-        RelationshipRoleId relationshipRoleId1=mock(RelationshipRoleId.class);
-        RelationshipRoleId relationshipRoleId2=mock(RelationshipRoleId.class);
+        RelationshipRoleId relationshipRoleId1 = mock(RelationshipRoleId.class);
+        RelationshipRoleId relationshipRoleId2 = mock(RelationshipRoleId.class);
         when(relationship1.getId()).thenReturn(relationshipRoleId1);
         when(relationship2.getId()).thenReturn(relationshipRoleId2);
 
-        Role role1=mock(Role.class);
-        Role role2=mock(Role.class);
+        Role role1 = mock(Role.class);
+        Role role2 = mock(Role.class);
         when(relationshipRoleId1.getRole()).thenReturn(role1);
         when(relationshipRoleId2.getRole()).thenReturn(role2);
 
-        String code1="code1";
-        String code2="code2";
+        String code1 = "code1";
+        String code2 = "code2";
         when(role1.getCode()).thenReturn(code1);
         when(role2.getCode()).thenReturn(code2);
 
@@ -146,9 +147,9 @@ public class PatientServiceImplTest {
         patientDtos.add(patientDto2);
 
         //Act
-        List<PatientDto> list=patientService.getPatientByUserAuthId(userAuthId);
+        List<PatientDto> list = patientService.getPatientByUserAuthId(userAuthId);
 
         //Assert
-        assertEquals(patientDtos,list);
+        assertEquals(patientDtos, list);
     }
 }
