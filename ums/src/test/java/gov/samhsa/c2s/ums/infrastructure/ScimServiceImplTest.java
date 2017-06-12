@@ -38,15 +38,14 @@ import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
 public class ScimServiceImplTest {
-
     @Rule
     public ExpectedException thrown = ExpectedException.none();
 
-    private String scimBaseUrl="scimBaseUrl";
+    private String scimBaseUrl = "scimBaseUrl";
 
-    private String usersEndpoint=scimBaseUrl+"/Users";;
+    private String usersEndpoint = scimBaseUrl + "/Users";
 
-    private String groupsEndpoint=scimBaseUrl+"/Groups";
+    private String groupsEndpoint = scimBaseUrl + "/Groups";
 
     @Mock
     private UserScopeAssignmentRepository userScopeAssignmentRepository;
@@ -55,198 +54,198 @@ public class ScimServiceImplTest {
     private RestOperations restTemplate;
 
     @InjectMocks
-    ScimServiceImpl scimServiceImpl=new ScimServiceImpl(scimBaseUrl);
+    ScimServiceImpl scimServiceImpl = new ScimServiceImpl(scimBaseUrl);
 
     @Test
-    public void testSave(){
+    public void testSave() {
         //Arrange
-        ScimUser scimUser=new ScimUser();
-        ScimUser scimUser1=new ScimUser();
+        ScimUser scimUser = new ScimUser();
+        ScimUser scimUser1 = new ScimUser();
         scimUser1.setId("id");
 
-        when(restTemplate.postForObject(usersEndpoint,scimUser,ScimUser.class)).thenReturn(scimUser1);
+        when(restTemplate.postForObject(usersEndpoint, scimUser, ScimUser.class)).thenReturn(scimUser1);
 
         //Act
-        ScimUser save=scimServiceImpl.save(scimUser);
+        ScimUser save = scimServiceImpl.save(scimUser);
 
         //assert
-        assertEquals(scimUser1,save);
+        assertEquals(scimUser1, save);
     }
 
     @Test
-    public void testFindGroupIdByDisplayName(){
+    public void testFindGroupIdByDisplayName() {
         //Arrange
-        final String id="id";
-        final String groupDisplayName="groupDisplayName";
-        SearchResultsWrapperWithId searchResultsMock=mock(SearchResultsWrapperWithId.class);
+        final String id = "id";
+        final String groupDisplayName = "groupDisplayName";
+        SearchResultsWrapperWithId searchResultsMock = mock(SearchResultsWrapperWithId.class);
         when(restTemplate.getForObject(groupsEndpoint + "?filter=displayName eq \"" + groupDisplayName + "\"&attributes=id", SearchResultsWrapperWithId.class)).thenReturn(searchResultsMock);
-        IdentifierDto identifierDto=mock(IdentifierDto.class);
+        IdentifierDto identifierDto = mock(IdentifierDto.class);
         when(searchResultsMock.getResources()).thenReturn(Arrays.asList(identifierDto));
         when(identifierDto.getId()).thenReturn(id);
 
         //Act
-       String groupId= scimServiceImpl.findGroupIdByDisplayName(groupDisplayName);
+        String groupId = scimServiceImpl.findGroupIdByDisplayName(groupDisplayName);
 
         //Assert
-        assertEquals(id,groupId);
+        assertEquals(id, groupId);
     }
 
     @Test
-    public void testFindGroupIdByDisplayName_WhenIdCannotBeFound_ThrowsException() throws Exception{
+    public void testFindGroupIdByDisplayName_WhenIdCannotBeFound_ThrowsException() throws Exception {
         //Arrange
         thrown.expect(IdCannotBeFoundException.class);
-        final String groupDisplayName="groupDisplayName";
-        SearchResultsWrapperWithId searchResultsMock=mock(SearchResultsWrapperWithId.class);
+        final String groupDisplayName = "groupDisplayName";
+        SearchResultsWrapperWithId searchResultsMock = mock(SearchResultsWrapperWithId.class);
         when(restTemplate.getForObject(groupsEndpoint + "?filter=displayName eq \"" + groupDisplayName + "\"&attributes=id", SearchResultsWrapperWithId.class)).thenReturn(searchResultsMock);
-        IdentifierDto identifierDto=mock(IdentifierDto.class);
+        IdentifierDto identifierDto = mock(IdentifierDto.class);
         when(searchResultsMock.getResources()).thenReturn(Arrays.asList(identifierDto));
         when(identifierDto.getId()).thenReturn(null);
 
         //Act
-        String groupId= scimServiceImpl.findGroupIdByDisplayName(groupDisplayName);
+        String groupId = scimServiceImpl.findGroupIdByDisplayName(groupDisplayName);
 
         //Assert
         assertNull(groupId);
     }
 
     @Test
-    public void testFindUserIdByUserName(){
+    public void testFindUserIdByUserName() {
         //Arrange
-        final String username="username";
-        final String id="id";
-        final SearchResultsWrapperWithId searchResultsMock=mock(SearchResultsWrapperWithId.class);
+        final String username = "username";
+        final String id = "id";
+        final SearchResultsWrapperWithId searchResultsMock = mock(SearchResultsWrapperWithId.class);
         when(restTemplate.getForObject(usersEndpoint + "?filter=userName eq \"" + username + "\"&attributes=id", SearchResultsWrapperWithId.class)).thenReturn(searchResultsMock);
-        IdentifierDto identifierDto=mock(IdentifierDto.class);
+        IdentifierDto identifierDto = mock(IdentifierDto.class);
         when(searchResultsMock.getResources()).thenReturn(Arrays.asList(identifierDto));
         when(identifierDto.getId()).thenReturn(id);
 
         //Act
-        String userId=scimServiceImpl.findUserIdByUserName(username);
+        String userId = scimServiceImpl.findUserIdByUserName(username);
 
         //Assert
-        assertEquals(id,userId);
+        assertEquals(id, userId);
     }
 
     @Test
-    public void testAddUserToGroup(){
+    public void testAddUserToGroup() {
         //Arrange
-        final String groupId="groupId";
-        UserScopeAssignment userScopeAssignment=mock(UserScopeAssignment.class);
-        Scope scope=mock(Scope.class);
-        UserActivation userActivation=mock(UserActivation.class);
-        ScimGroupMember scimGroupMemberResponse=mock(ScimGroupMember.class);
-        User user=mock(User.class);
-        final String id="id";
+        final String groupId = "groupId";
+        UserScopeAssignment userScopeAssignment = mock(UserScopeAssignment.class);
+        Scope scope = mock(Scope.class);
+        UserActivation userActivation = mock(UserActivation.class);
+        ScimGroupMember scimGroupMemberResponse = mock(ScimGroupMember.class);
+        User user = mock(User.class);
+        final String id = "id";
         when(userActivation.getUser()).thenReturn(user);
         when(user.getUserAuthId()).thenReturn(id);
 
-        when(restTemplate.postForObject(eq(groupsEndpoint + "/{groupId}/members"), argThat(matching((ScimGroupMember member)->member.getMemberId().equals(id))), eq(ScimGroupMember.class), eq(groupId))).thenReturn(scimGroupMemberResponse);
+        when(restTemplate.postForObject(eq(groupsEndpoint + "/{groupId}/members"), argThat(matching((ScimGroupMember member) -> member.getMemberId().equals(id))), eq(ScimGroupMember.class), eq(groupId))).thenReturn(scimGroupMemberResponse);
 
         //Act
-        final ScimGroupMember response= scimServiceImpl.addUserToGroup(userActivation,scope,groupId);
+        final ScimGroupMember response = scimServiceImpl.addUserToGroup(userActivation, scope, groupId);
 
         //Assert
-        assertEquals(scimGroupMemberResponse,response);
+        assertEquals(scimGroupMemberResponse, response);
         verify(userActivation).getUser();
         verify(user).getUserAuthId();
     }
 
     @Test
-    public void testCheckUserName_Given_ThereIsNoSearchResult(){
+    public void testCheckUserName_Given_ThereIsNoSearchResult() {
         //Arrange
-        final String username="username";
-        String filter="?filter=userName eq \""+username+"\"";
-        SearchResults<ScimUser> searchResults=mock(SearchResults.class);
-        when(restTemplate.getForObject(usersEndpoint+filter,SearchResults.class)).thenReturn(searchResults);
+        final String username = "username";
+        String filter = "?filter=userName eq \"" + username + "\"";
+        SearchResults<ScimUser> searchResults = mock(SearchResults.class);
+        when(restTemplate.getForObject(usersEndpoint + filter, SearchResults.class)).thenReturn(searchResults);
 
         when(searchResults.getTotalResults()).thenReturn(0);
 
         //Act
-        UsernameUsedDto checkUsername=scimServiceImpl.checkUsername(username);
+        UsernameUsedDto checkUsername = scimServiceImpl.checkUsername(username);
 
         //Assert
-        assertEquals(new UsernameUsedDto(false),checkUsername);
+        assertEquals(new UsernameUsedDto(false), checkUsername);
     }
 
     @Test
-    public void testInactivateUser(){
+    public void testInactivateUser() {
         //Arrange
-        String userId="userId";
-        ScimUser scimUser=new ScimUser();
+        String userId = "userId";
+        ScimUser scimUser = new ScimUser();
         scimUser.setVersion(1);
-        when(restTemplate.getForObject(usersEndpoint+"/{userId}", ScimUser.class,userId)).thenReturn(scimUser);
+        when(restTemplate.getForObject(usersEndpoint + "/{userId}", ScimUser.class, userId)).thenReturn(scimUser);
 
         //Act
         scimServiceImpl.inactivateUser(userId);
 
         //Assert
-        verify(restTemplate).put(anyString(),any(HttpEntity.class));
+        verify(restTemplate).put(anyString(), any(HttpEntity.class));
     }
 
     @Test
-    public void testActivateUser(){
+    public void testActivateUser() {
         //Arrange
-        String userId="userId";
-        ScimUser scimUser=new ScimUser();
+        String userId = "userId";
+        ScimUser scimUser = new ScimUser();
         scimUser.setVersion(1);
-        when(restTemplate.getForObject(usersEndpoint+"/{userId}", ScimUser.class,userId)).thenReturn(scimUser);
+        when(restTemplate.getForObject(usersEndpoint + "/{userId}", ScimUser.class, userId)).thenReturn(scimUser);
 
         //Act
         scimServiceImpl.activateUser(userId);
 
         //Assert
-        verify(restTemplate).put(anyString(),any(HttpEntity.class));
+        verify(restTemplate).put(anyString(), any(HttpEntity.class));
     }
 
     @Test
-    public void testUpdateUserWithNewGroup(){
+    public void testUpdateUserWithNewGroup() {
         //Arrange
-        UserActivation userActivation=mock(UserActivation.class);
-        ScimGroupMember scimGroupMemberResponse=mock(ScimGroupMember.class);
-        String userAuthId="userAuthId";
-        User user=mock(User.class);
-        Scope scope=mock(Scope.class);
-        String groupDisplayName="scopeName";
-        String id="id";
+        UserActivation userActivation = mock(UserActivation.class);
+        ScimGroupMember scimGroupMemberResponse = mock(ScimGroupMember.class);
+        String userAuthId = "userAuthId";
+        User user = mock(User.class);
+        Scope scope = mock(Scope.class);
+        String groupDisplayName = "scopeName";
+        String id = "id";
 
         when(userActivation.getUser()).thenReturn(user);
         when(user.getUserAuthId()).thenReturn(userAuthId);
         when(scope.getScopeName()).thenReturn(groupDisplayName);
 
-        SearchResultsWrapperWithId searchResultsMock=mock(SearchResultsWrapperWithId.class);
+        SearchResultsWrapperWithId searchResultsMock = mock(SearchResultsWrapperWithId.class);
         when(restTemplate.getForObject(groupsEndpoint + "?filter=displayName eq \"" + groupDisplayName + "\"&attributes=id", SearchResultsWrapperWithId.class))
                 .thenReturn(searchResultsMock);
-        IdentifierDto identifierDto=mock(IdentifierDto.class);
+        IdentifierDto identifierDto = mock(IdentifierDto.class);
         when(searchResultsMock.getResources()).thenReturn(Arrays.asList(identifierDto));
         when(identifierDto.getId()).thenReturn(id);
 
         when(restTemplate.postForObject(eq(groupsEndpoint + "/{groupId}/members"),
-                argThat(matching((ScimGroupMember member)->member.getMemberId().equals(userAuthId))) ,
+                argThat(matching((ScimGroupMember member) -> member.getMemberId().equals(userAuthId))),
                 eq(ScimGroupMember.class),
                 eq(id)))
                 .thenReturn(scimGroupMemberResponse);
 
         //Act
-        scimServiceImpl.updateUserWithNewGroup(userActivation,scope);
+        scimServiceImpl.updateUserWithNewGroup(userActivation, scope);
 
         //Assert
         verify(restTemplate).getForObject(groupsEndpoint + "?filter=displayName eq \"" + groupDisplayName + "\"&attributes=id", SearchResultsWrapperWithId.class);
     }
 
     @Test
-    public void testCheckUserName_Given_ThereIsSearchResult(){
+    public void testCheckUserName_Given_ThereIsSearchResult() {
         //Arrange
-        String username="username";
-        String filter="?filter=userName eq \""+username+"\"";
-        SearchResults<ScimUser> searchResults=mock(SearchResults.class);
-        when(restTemplate.getForObject(usersEndpoint+filter,SearchResults.class)).thenReturn(searchResults);
+        String username = "username";
+        String filter = "?filter=userName eq \"" + username + "\"";
+        SearchResults<ScimUser> searchResults = mock(SearchResults.class);
+        when(restTemplate.getForObject(usersEndpoint + filter, SearchResults.class)).thenReturn(searchResults);
         when(searchResults.getTotalResults()).thenReturn(1);
 
         //Act
-        UsernameUsedDto checkUsername=scimServiceImpl.checkUsername(username);
+        UsernameUsedDto checkUsername = scimServiceImpl.checkUsername(username);
 
         //Assert
-        assertEquals(new UsernameUsedDto(true),checkUsername);
+        assertEquals(new UsernameUsedDto(true), checkUsername);
     }
 }
 
