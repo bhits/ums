@@ -32,6 +32,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
@@ -58,9 +59,6 @@ import static org.mockito.Mockito.when;
 public class UserServiceImplTest {
     @Rule
     public ExpectedException thrown = ExpectedException.none();
-
-    private long userId = 34L;
-    private long patientId = 30L;
 
     @Mock
     Patient patient;
@@ -110,7 +108,6 @@ public class UserServiceImplTest {
     @InjectMocks
     UserServiceImpl userServiceImpl;
 
-
     @Test
     public void testDisableUser_Given_UserIsFoundById() {
         //Arrange
@@ -123,7 +120,6 @@ public class UserServiceImplTest {
         when(user.getUserAuthId()).thenReturn(id);
 
         when(userRepository.findOneByIdAndDisabled(userId, false)).thenReturn(Optional.ofNullable(user));
-
         when(userRepository.save(user)).thenReturn(user);
 
         //Act
@@ -131,7 +127,6 @@ public class UserServiceImplTest {
 
         //Assert
         verify(userRepository).save(user);
-
     }
 
     @Test
@@ -223,7 +218,6 @@ public class UserServiceImplTest {
         assertEquals(getUserResponseDto, getUserResponseDto1);
     }
 
-
     @Test
     public void testGetUserByUserAuthId() {
         //Arrange
@@ -299,14 +293,12 @@ public class UserServiceImplTest {
         when(patient.getId()).thenReturn(patientId);
         when(userPatientRelationshipRepository.findAllByIdUserIdAndIdPatientId(userId, patientId)).thenReturn(userPatientRelationships);
 
-
         //Act
         AccessDecisionDto accessDecisionDto = userServiceImpl.accessDecision(userAuthId, patientMrn);
 
         //Assert
         assertEquals(new AccessDecisionDto(true), accessDecisionDto);
     }
-
 
     @Test
     public void testSearchUsersByDemographic_Given_ThereIsUserOnTheUserList() {
@@ -315,7 +307,6 @@ public class UserServiceImplTest {
         String lastName = "lastName";
         LocalDate birthDate = LocalDate.now();
         String genderCode = "genderCode";
-
 
         Demographics demographics1 = mock(Demographics.class);
         Demographics demographics2 = mock(Demographics.class);
@@ -326,7 +317,6 @@ public class UserServiceImplTest {
         List<Demographics> demographicsList = new ArrayList<>();
         demographicsList.add(demographics1);
         demographicsList.add(demographics2);
-
 
         List<UserDto> getUserResponseDtos = new ArrayList<>();
 
@@ -345,7 +335,6 @@ public class UserServiceImplTest {
         when(modelMapper.map(user1, UserDto.class)).thenReturn(getUserResponseDto1);
         when(modelMapper.map(user2, UserDto.class)).thenReturn(getUserResponseDto2);
 
-
         getUserResponseDtos.add(getUserResponseDto1);
         getUserResponseDtos.add(getUserResponseDto2);
 
@@ -355,7 +344,6 @@ public class UserServiceImplTest {
         //Assert
         assertEquals(getUserResponseDtos, getUserResponseDtoList);
     }
-
 
     @Test
     public void testSearchUsersByDemographic_Given_ThereIsNoUserOnUserList_Then_ThrowsException() throws UserNotFoundException {
