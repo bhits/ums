@@ -14,7 +14,7 @@ import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
 public class MrnServiceImplTest {
-
+    //TODO:Test of generateRandomMrn should be done according to where the generateRandomMrn is moved(domain of ums).
     @Mock
     UmsProperties umsProperties;
 
@@ -57,4 +57,5 @@ public class MrnServiceImplTest {
         assertEquals(6, generatedMrn.length());
         assertTrue(generatedMrn.equals(generatedMrn.toUpperCase()));
     }
+
 }
