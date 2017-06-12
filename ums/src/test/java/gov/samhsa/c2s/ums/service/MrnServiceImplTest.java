@@ -22,39 +22,39 @@ public class MrnServiceImplTest {
     MrnServiceImpl mrnServiceImpl;
 
     @Test
-    public void testGenerateMrn_whenThereIsaPrefixInMrn(){
+    public void testGenerateMrn_Given_ThereIsaPrefixInMrn() {
         //Arrange
-        UmsProperties.Mrn mrn=mock(UmsProperties.Mrn.class);
-        String prefix="prefix";
-        int length=6;
+        UmsProperties.Mrn mrn = mock(UmsProperties.Mrn.class);
+        String prefix = "prefix";
+        int length = 6;
         when(umsProperties.getMrn()).thenReturn(mrn);
         when(mrn.getPrefix()).thenReturn(prefix);
         when(mrn.getLength()).thenReturn(length);
 
         //Act
-        String generatedMrn=mrnServiceImpl.generateMrn();
+        String generatedMrn = mrnServiceImpl.generateMrn();
 
         //Assert
-        assertEquals(13,generatedMrn.length());
-        assertEquals("PREFIX-",generatedMrn.substring(0,7));
+        assertEquals(13, generatedMrn.length());
+        assertEquals("PREFIX-", generatedMrn.substring(0, 7));
         assertTrue(generatedMrn.equals(generatedMrn.toUpperCase()));
     }
 
     @Test
-    public void testGenerateMrn_whenThereIsNoPrefixInMrn(){
+    public void testGenerateMrn_Given_ThereIsNoPrefixInMrn() {
         //Arrange
-        UmsProperties.Mrn mrn=mock(UmsProperties.Mrn.class);
-        String prefix=null;
-        int length=6;
+        UmsProperties.Mrn mrn = mock(UmsProperties.Mrn.class);
+        String prefix = null;
+        int length = 6;
         when(umsProperties.getMrn()).thenReturn(mrn);
         when(mrn.getPrefix()).thenReturn(prefix);
         when(mrn.getLength()).thenReturn(length);
 
         //Act
-        String generatedMrn=mrnServiceImpl.generateMrn();
+        String generatedMrn = mrnServiceImpl.generateMrn();
 
         //Assert
-        assertEquals(6,generatedMrn.length());
+        assertEquals(6, generatedMrn.length());
         assertTrue(generatedMrn.equals(generatedMrn.toUpperCase()));
     }
 }
