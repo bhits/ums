@@ -28,6 +28,8 @@ import java.util.Arrays;
 import static gov.samhsa.c2s.common.unit.matcher.ArgumentMatchers.matching;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.argThat;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
@@ -164,6 +166,71 @@ public class ScimServiceImplTest {
 
         //Assert
         assertEquals(new UsernameUsedDto(false),checkUsername);
+    }
+
+    @Test
+    public void testInactivateUser(){
+        //Arrange
+        String userId="userId";
+        ScimUser scimUser=new ScimUser();
+        scimUser.setVersion(1);
+        when(restTemplate.getForObject(usersEndpoint+"/{userId}", ScimUser.class,userId)).thenReturn(scimUser);
+
+        //Act
+        scimServiceImpl.inactivateUser(userId);
+
+        //Assert
+        verify(restTemplate).put(anyString(),any(HttpEntity.class));
+    }
+
+    @Test
+    public void testActivateUser(){
+        //Arrange
+        String userId="userId";
+        ScimUser scimUser=new ScimUser();
+        scimUser.setVersion(1);
+        when(restTemplate.getForObject(usersEndpoint+"/{userId}", ScimUser.class,userId)).thenReturn(scimUser);
+
+        //Act
+        scimServiceImpl.activateUser(userId);
+
+        //Assert
+        verify(restTemplate).put(anyString(),any(HttpEntity.class));
+    }
+
+    @Test
+    public void testUpdateUserWithNewGroup(){
+        //Arrange
+        UserActivation userActivation=mock(UserActivation.class);
+        ScimGroupMember scimGroupMemberResponse=mock(ScimGroupMember.class);
+        String userAuthId="userAuthId";
+        User user=mock(User.class);
+        Scope scope=mock(Scope.class);
+        String groupDisplayName="scopeName";
+        String id="id";
+
+        when(userActivation.getUser()).thenReturn(user);
+        when(user.getUserAuthId()).thenReturn(userAuthId);
+        when(scope.getScopeName()).thenReturn(groupDisplayName);
+
+        SearchResultsWrapperWithId searchResultsMock=mock(SearchResultsWrapperWithId.class);
+        when(restTemplate.getForObject(groupsEndpoint + "?filter=displayName eq \"" + groupDisplayName + "\"&attributes=id", SearchResultsWrapperWithId.class))
+                .thenReturn(searchResultsMock);
+        IdentifierDto identifierDto=mock(IdentifierDto.class);
+        when(searchResultsMock.getResources()).thenReturn(Arrays.asList(identifierDto));
+        when(identifierDto.getId()).thenReturn(id);
+
+        when(restTemplate.postForObject(eq(groupsEndpoint + "/{groupId}/members"),
+                argThat(matching((ScimGroupMember member)->member.getMemberId().equals(userAuthId))) ,
+                eq(ScimGroupMember.class),
+                eq(id)))
+                .thenReturn(scimGroupMemberResponse);
+
+        //Act
+        scimServiceImpl.updateUserWithNewGroup(userActivation,scope);
+
+        //Assert
+        verify(restTemplate).getForObject(groupsEndpoint + "?filter=displayName eq \"" + groupDisplayName + "\"&attributes=id", SearchResultsWrapperWithId.class);
     }
 
     @Test
