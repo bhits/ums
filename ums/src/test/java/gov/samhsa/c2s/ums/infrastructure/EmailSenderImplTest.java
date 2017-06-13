@@ -68,45 +68,45 @@ public class EmailSenderImplTest {
     EmailSenderImpl emailSenderImpl;
 
     @Test
-    public void testSendEmailWithVerificationLink(){
+    public void testSendEmailWithVerificationLink() {
         //Arrange
-        String xForwardedProto="xForwardedProto";
-        String xForwardedHost="xForwardedHost";
-        int xForwardedPort=234;
-        String email="email";
-        String emailToken="emailToken";
-        String recipientFullName="recipientFullName";
-        String emailTokenArgName="emailTokenArgName";
-        String localeArgName="localArgName";
-        String htmlContent="htmlContent";
+        String xForwardedProto = "xForwardedProto";
+        String xForwardedHost = "xForwardedHost";
+        int xForwardedPort = 234;
+        String email = "email";
+        String emailToken = "emailToken";
+        String recipientFullName = "recipientFullName";
+        String emailTokenArgName = "emailTokenArgName";
+        String localeArgName = "localArgName";
+        String htmlContent = "htmlContent";
 
-        Locale locale=new Locale("English");
+        Locale locale = new Locale("English");
 
         when(emailSenderProperties.getC2sUiVerificationEmailTokenArgName()).thenReturn(emailTokenArgName);
         when(emailSenderProperties.getC2sUiVerificationUserPreferredLocaleArgName()).thenReturn(localeArgName);
 
-        when(messageSource.getMessage(PROP_EMAIL_VERIFICATION_BODY_HEADER,null,locale)).thenReturn("verificationBody");
-        when(messageSource.getMessage(PROP_EMAIL_VERIFICATION_GREETING,null,locale)).thenReturn("verificationGreeting");
-        when(messageSource.getMessage(PROP_EMAIL_VERIFICATION_MESSAGE,null,locale)).thenReturn("emailVerificationMessage");
-        when(messageSource.getMessage(PROP_EMAIL_VERIFICATION_CREATE_LOGIN_LINK,null,locale)).thenReturn("createLoginLink");
-        when(messageSource.getMessage(PROP_EMAIL_VERIFICATION_SIGN_OFF,null,locale)).thenReturn("emailVerificationSignOff");
+        when(messageSource.getMessage(PROP_EMAIL_VERIFICATION_BODY_HEADER, null, locale)).thenReturn("verificationBody");
+        when(messageSource.getMessage(PROP_EMAIL_VERIFICATION_GREETING, null, locale)).thenReturn("verificationGreeting");
+        when(messageSource.getMessage(PROP_EMAIL_VERIFICATION_MESSAGE, null, locale)).thenReturn("emailVerificationMessage");
+        when(messageSource.getMessage(PROP_EMAIL_VERIFICATION_CREATE_LOGIN_LINK, null, locale)).thenReturn("createLoginLink");
+        when(messageSource.getMessage(PROP_EMAIL_VERIFICATION_SIGN_OFF, null, locale)).thenReturn("emailVerificationSignOff");
 
         when(emailSenderProperties.getBrand()).thenReturn("brand");
         when(emailSenderProperties.getC2sUiRoute()).thenReturn("C2SUiRoute");
         when(emailSenderProperties.getC2sUiVerificationRelativePath()).thenReturn("relation");
 
-        MimeMessage mimeMessage=mock(MimeMessage.class);
+        MimeMessage mimeMessage = mock(MimeMessage.class);
         when(javaMailSender.createMimeMessage()).thenReturn(mimeMessage);
-        when(messageSource.getMessage(PROP_EMAIL_VERIFICATION_LINK_SUBJECT,null,locale)).thenReturn("verificationLink");
-        when(messageSource.getMessage(PROP_EMAIL_FROM_ADDRESS,null,locale)).thenReturn("fromAddress");
-        when(messageSource.getMessage(PROP_EMAIL_FROM_PERSONAL,null,locale)).thenReturn("personal");
+        when(messageSource.getMessage(PROP_EMAIL_VERIFICATION_LINK_SUBJECT, null, locale)).thenReturn("verificationLink");
+        when(messageSource.getMessage(PROP_EMAIL_FROM_ADDRESS, null, locale)).thenReturn("fromAddress");
+        when(messageSource.getMessage(PROP_EMAIL_FROM_PERSONAL, null, locale)).thenReturn("personal");
 
         templateEngine = PowerMockito.mock(TemplateEngine.class);
         PowerMockito.doReturn(htmlContent).when(templateEngine).process(eq(TEMPLATE_VERIFICATION_LINK_EMAIL), any(Context.class));
         ReflectionTestUtils.setField(emailSenderImpl, "templateEngine", templateEngine);
 
         //Act
-        emailSenderImpl.sendEmailWithVerificationLink(xForwardedProto,xForwardedHost,xForwardedPort,email,emailToken,recipientFullName,locale);
+        emailSenderImpl.sendEmailWithVerificationLink(xForwardedProto, xForwardedHost, xForwardedPort, email, emailToken, recipientFullName, locale);
 
         //Assert
         verify(javaMailSender).createMimeMessage();
@@ -114,45 +114,43 @@ public class EmailSenderImplTest {
     }
 
     @Test
-    public void testSendEmailToConfirmVerification(){
+    public void testSendEmailToConfirmVerification() {
         //Arrange
-        String xForwardedProto="xForwardedProto";
-        String xForwardedHost="xForwardedHost";
-        int xForwardedPort=234;
-        String email="email";
-        String emailToken="emailToken";
-        String recipientFullName="recipientFullName";
-        String emailTokenArgName="emailTokenArgName";
-        String localeArgName="localArgName";
-        String htmlContent="htmlContent";
+        String xForwardedProto = "xForwardedProto";
+        String xForwardedHost = "xForwardedHost";
+        int xForwardedPort = 234;
+        String email = "email";
+        String recipientFullName = "recipientFullName";
+        String htmlContent = "htmlContent";
 
-        Locale locale=new Locale("English");
+        Locale locale = new Locale("English");
         when(emailSenderProperties.getC2sUiRoute()).thenReturn("C2sUiRoute");
 
-        when(messageSource.getMessage(PROP_EMAIL_CONFIRM_VERIFICATION_BODY_HEADER,null,locale)).thenReturn("verificationBody");
-        when(messageSource.getMessage(PROP_EMAIL_CONFIRM_VERIFICATION_GREETING,null,locale)).thenReturn("verificationGreeting");
-        when(messageSource.getMessage(PROP_EMAIL_CONFIRM_VERIFICATION_MESSAGE1,null,locale)).thenReturn("emailVerificationMessage1");
-        when(messageSource.getMessage(PROP_EMAIL_CONFIRM_VERIFICATION_MESSAGE2,null,locale)).thenReturn("emailVerificationMessage2");
-        when(messageSource.getMessage(PROP_EMAIL_CONFIRM_VERIFICATION_LOGIN_LINK,null,locale)).thenReturn("createLoginLink");
-        when(messageSource.getMessage(PROP_EMAIL_CONFIRM_VERIFICATION_SIGN_OFF,null,locale)).thenReturn("emailVerificationSignOff");
+        when(messageSource.getMessage(PROP_EMAIL_CONFIRM_VERIFICATION_BODY_HEADER, null, locale)).thenReturn("verificationBody");
+        when(messageSource.getMessage(PROP_EMAIL_CONFIRM_VERIFICATION_GREETING, null, locale)).thenReturn("verificationGreeting");
+        when(messageSource.getMessage(PROP_EMAIL_CONFIRM_VERIFICATION_MESSAGE1, null, locale)).thenReturn("emailVerificationMessage1");
+        when(messageSource.getMessage(PROP_EMAIL_CONFIRM_VERIFICATION_MESSAGE2, null, locale)).thenReturn("emailVerificationMessage2");
+        when(messageSource.getMessage(PROP_EMAIL_CONFIRM_VERIFICATION_LOGIN_LINK, null, locale)).thenReturn("createLoginLink");
+        when(messageSource.getMessage(PROP_EMAIL_CONFIRM_VERIFICATION_SIGN_OFF, null, locale)).thenReturn("emailVerificationSignOff");
 
         when(emailSenderProperties.getBrand()).thenReturn("brand");
 
-        MimeMessage mimeMessage=mock(MimeMessage.class);
+        MimeMessage mimeMessage = mock(MimeMessage.class);
         when(javaMailSender.createMimeMessage()).thenReturn(mimeMessage);
-        when(messageSource.getMessage(PROP_EMAIL_CONFIRM_VERIFICATION_SUBJECT,null,locale)).thenReturn("verificationLink");
-        when(messageSource.getMessage(PROP_EMAIL_FROM_ADDRESS,null,locale)).thenReturn("fromAddress");
-        when(messageSource.getMessage(PROP_EMAIL_FROM_PERSONAL,null,locale)).thenReturn("personal");
+        when(messageSource.getMessage(PROP_EMAIL_CONFIRM_VERIFICATION_SUBJECT, null, locale)).thenReturn("verificationLink");
+        when(messageSource.getMessage(PROP_EMAIL_FROM_ADDRESS, null, locale)).thenReturn("fromAddress");
+        when(messageSource.getMessage(PROP_EMAIL_FROM_PERSONAL, null, locale)).thenReturn("personal");
 
         templateEngine = PowerMockito.mock(TemplateEngine.class);
         PowerMockito.doReturn(htmlContent).when(templateEngine).process(eq(TEMPLATE_CONFIRM_VERIFICATION_EMAIL), any(Context.class));
         ReflectionTestUtils.setField(emailSenderImpl, "templateEngine", templateEngine);
 
         //Act
-        emailSenderImpl.sendEmailToConfirmVerification(xForwardedProto,xForwardedHost,xForwardedPort,email,recipientFullName,locale);
+        emailSenderImpl.sendEmailToConfirmVerification(xForwardedProto, xForwardedHost, xForwardedPort, email, recipientFullName, locale);
 
         //Assert
         verify(javaMailSender).createMimeMessage();
         verify(javaMailSender).send(mimeMessage);
     }
+
 }
