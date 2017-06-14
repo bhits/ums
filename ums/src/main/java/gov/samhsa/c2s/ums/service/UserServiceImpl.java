@@ -248,7 +248,11 @@ public class UserServiceImpl implements UserService {
         final Set<UmsProperties.RequiredIdentifierSystem> systemGeneratedIdentifierSystems = getRequiredAndSystemGeneratedIdentifierSystems(allRequiredIdentifierSystems);
         final List<IdentifierDto> consolidatedIdentifierDtos = getConsolidatedIdentifierDtos(userDto, systemGeneratedIdentifierSystems);
         // Find the non-system-generated identifiers that have different values in the request to remove them
-        final List<Identifier> identifiersToRemove = user.getDemographics().getIdentifiers().stream()
+        final List<Identifier> identifiersToRemove = Optional.of(user)
+                .map(User::getDemographics)
+                .map(Demographics::getIdentifiers)
+                .orElseGet(Collections::emptyList)
+                .stream()
                 .filter(id -> systemGeneratedIdentifierSystems.stream()
                         .map(UmsProperties.RequiredIdentifierSystem::getSystem)
                         .noneMatch(id.getIdentifierSystem().getSystem()::equals))
@@ -256,10 +260,16 @@ public class UserServiceImpl implements UserService {
                         .noneMatch(idDto -> deepEquals(id, idDto)))
                 .collect(toList());
         // Remove the different non-system-generated identifiers from the user
-        user.getDemographics().getIdentifiers().removeAll(identifiersToRemove);
+        Optional.of(user)
+                .map(User::getDemographics)
+                .map(Demographics::getIdentifiers)
+                .ifPresent(identifiers -> identifiers.removeAll(identifiersToRemove));
         // Find the different and non-system-generated identifiers from the request
         final List<Identifier> identifiersToAdd = consolidatedIdentifierDtos.stream()
-                .filter(idDto -> user.getDemographics().getIdentifiers().stream()
+                .filter(idDto -> Optional.of(user)
+                        .map(User::getDemographics)
+                        .map(Demographics::getIdentifiers)
+                        .orElseGet(Collections::emptyList).stream()
                         .noneMatch(id -> deepEquals(id, idDto)))
                 .filter(idDto -> systemGeneratedIdentifierSystems.stream()
                         .map(UmsProperties.RequiredIdentifierSystem::getSystem)

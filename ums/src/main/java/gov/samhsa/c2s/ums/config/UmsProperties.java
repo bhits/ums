@@ -56,10 +56,14 @@ public class UmsProperties {
         private int length;
 
         private boolean updateInDatabaseOnStartup = true;
+
+        private boolean reassignable = false;
     }
 
     @Data
     public static class Ssn extends Identifier {
+        private boolean updateInDatabaseOnStartup = true;
+        private boolean reassignable = false;
     }
 
     @Data

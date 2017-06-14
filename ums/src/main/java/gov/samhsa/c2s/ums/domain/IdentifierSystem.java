@@ -8,6 +8,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Index;
 import javax.persistence.Table;
+import javax.validation.constraints.NotNull;
 
 @Entity
 @Audited
@@ -20,4 +21,6 @@ public class IdentifierSystem {
     private String system;
     private String display;
     private String oid;
+    @NotNull
+    private Boolean reassignable = Boolean.FALSE;
 }
