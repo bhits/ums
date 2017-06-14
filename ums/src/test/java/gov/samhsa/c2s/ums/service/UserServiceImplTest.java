@@ -51,6 +51,7 @@ import java.util.StringTokenizer;
 import static junit.framework.TestCase.assertNotNull;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -104,9 +105,101 @@ public class UserServiceImplTest {
     @Mock
     DemographicsRepository demographicsRepository;
 
+    @Mock
+    FhirPatientService fhirPatientService;
 
     @InjectMocks
     UserServiceImpl userServiceImpl;
+
+    @Test
+    public void testRegisterUser() {
+        //Arrange
+        final String mrn = "mrn";
+        Long userId = 30L;
+        Long patientId = 20L;
+        User user = mock(User.class);
+        UserDto userDto = mock(UserDto.class);
+        Demographics demographics = mock(Demographics.class);
+
+        when(modelMapper.map(userDto, User.class)).thenReturn(user);
+        when(user.getDemographics()).thenReturn(demographics);
+
+        TelecomDto telecomDto1 = mock(TelecomDto.class);
+        TelecomDto telecomDto2 = mock(TelecomDto.class);
+        List<TelecomDto> telecomDtos = new ArrayList<>();
+        telecomDtos.add(telecomDto1);
+        telecomDtos.add(telecomDto2);
+
+        Telecom telecom1 = mock(Telecom.class);
+        Telecom telecom2 = mock(Telecom.class);
+        List<Telecom> telecoms = new ArrayList<>();
+        telecoms.add(telecom1);
+        telecoms.add(telecom2);
+
+        AddressDto addressDto1 = mock(AddressDto.class);
+        AddressDto addressDto2 = mock(AddressDto.class);
+
+        List<AddressDto> addressDtos = new ArrayList<>();
+        addressDtos.add(addressDto1);
+        addressDtos.add(addressDto2);
+
+        Address address1 = mock(Address.class);
+        Address address2 = mock(Address.class);
+
+        List<Address> addresses = new ArrayList<>();
+        addresses.add(address1);
+        addresses.add(address2);
+
+        when(userDto.getTelecoms()).thenReturn(telecomDtos);
+        when(modelMapper.map(telecomDtos, new TypeToken<List<Telecom>>() {
+        }.getType())).thenReturn(telecoms);
+
+        when(demographics.getTelecoms()).thenReturn(telecoms);
+
+        when(userDto.getAddresses()).thenReturn(addressDtos);
+        when(modelMapper.map(addressDtos, new TypeToken<List<Address>>() {
+        }.getType())).thenReturn(addresses);
+
+        when(demographics.getAddresses()).thenReturn(addresses);
+
+        when(userRepository.save(user)).thenReturn(user);
+
+        RoleDto roleDto1 = mock(RoleDto.class);
+        List<RoleDto> roleDtos = new ArrayList<>();
+        roleDtos.add(roleDto1);
+
+        when(userDto.getRoles()).thenReturn(roleDtos);
+        when(roleDto1.getCode()).thenReturn("patient");
+
+        Patient patient = new Patient();
+
+        when(mrnService.generateMrn()).thenReturn(mrn);
+        patient.setMrn(mrn);
+        patient.setDemographics(demographics);
+        patient.setId(patientId);
+        when(patientRepository.save(any(Patient.class))).thenReturn(patient);
+
+        RelationDto relationDto = mock(RelationDto.class);
+        UserPatientRelationship userPatientRelationship = mock(UserPatientRelationship.class);
+        when(user.getId()).thenReturn(userId);
+
+        when(modelMapper.map(relationDto, UserPatientRelationship.class)).thenReturn(userPatientRelationship);
+
+        UmsProperties.Fhir fhir = mock(UmsProperties.Fhir.class);
+        UmsProperties.Fhir.Publish publish = mock(UmsProperties.Fhir.Publish.class);
+
+        when(umsProperties.getFhir()).thenReturn(fhir);
+        when(fhir.getPublish()).thenReturn(publish);
+        when(publish.isEnabled()).thenReturn(true);
+
+        //Act
+        userServiceImpl.registerUser(userDto);
+
+        //Assert
+        verify(userRepository).save(user);
+        verify(userDto).setMrn(mrn);
+        verify(fhirPatientService).publishFhirPatient(userDto);
+    }
 
     @Test
     public void testDisableUser_Given_UserIsFoundById() {
