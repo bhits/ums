@@ -54,9 +54,6 @@ c2s:
         -
           system: ${c2s.ums.mrn.codeSystem}
           algorithm: MRN
-      provider:
-        -
-          system: http://hl7.org/fhir/sid/us-npi
     Pagination:
       defaultSize: 10
       maxSize: 100
