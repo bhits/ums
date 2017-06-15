@@ -12,7 +12,11 @@ import gov.samhsa.c2s.ums.domain.UserRepository;
 import gov.samhsa.c2s.ums.domain.valueobject.RelationshipRoleId;
 import gov.samhsa.c2s.ums.domain.valueobject.UserPatientRelationshipId;
 import gov.samhsa.c2s.ums.service.dto.PatientDto;
+import gov.samhsa.c2s.ums.service.exception.PatientNotFoundException;
+import gov.samhsa.c2s.ums.service.exception.UserNotFoundException;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -24,12 +28,15 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 
 @RunWith(MockitoJUnitRunner.class)
 public class PatientServiceImplTest {
+    @Rule
+    public ExpectedException thrown = ExpectedException.none();
 
     @Mock
     PatientRepository patientRepository;
@@ -85,7 +92,54 @@ public class PatientServiceImplTest {
     }
 
     @Test
-    public void getPatientByUserAuthId() {
+    public void testGetPatientByPatientId_Given_NoUserIsFoundFromUserAuthId_Then_ThrowsUserNotFoundException(){
+        //Arrange
+        thrown.expect(UserNotFoundException.class);
+        thrown.expectMessage("User Not Found!");
+        String patientId = "patientId";
+        Patient patient = mock(Patient.class);
+        Optional<String> userAuthId = Optional.of("userId");
+        User user=null;
+        when(patientRepository.findOneByMrn(patientId)).thenReturn(Optional.ofNullable(patient));
+
+        when(userRepository.findOneByUserAuthIdAndDisabled(userAuthId.get(), false)).thenReturn(Optional.empty());
+
+        //Act
+        PatientDto patientDto=patientService.getPatientByPatientId(patientId,userAuthId);
+
+        //Assert
+        assertNull(patientDto);
+    }
+
+    @Test
+    public void testGetPatientByPatientId_Given_ThereIsNoUserPatientRelationship_Then_ThrowsPatientNotFoundException(){
+        //Arrange
+        thrown.expect(PatientNotFoundException.class);
+        thrown.expectMessage("Patient Not Found!");
+        String patientId = "patientId";
+        Patient patient = mock(Patient.class);
+        Optional<String> userAuthId = Optional.of("userId");
+        Long id = 30L;
+        Long pId = 20L;
+
+        when(patientRepository.findOneByMrn(patientId)).thenReturn(Optional.ofNullable(patient));
+
+        User user = mock(User.class);
+        when(userRepository.findOneByUserAuthIdAndDisabled(userAuthId.get(), false)).thenReturn(Optional.ofNullable(user));
+
+        when(user.getId()).thenReturn(id);
+        when(patient.getId()).thenReturn(pId);
+        when(userPatientRelationshipRepository.findAllByIdUserIdAndIdPatientId(id, pId)).thenReturn(null);
+
+        //Act
+        PatientDto patientDto=patientService.getPatientByPatientId(patientId,userAuthId);
+
+        //Assert
+        assertNull(patientDto);
+    }
+
+    @Test
+    public void testGetPatientByUserAuthId() {
         //Arrange
         String userAuthId = "userAuthId";
         User user = mock(User.class);
