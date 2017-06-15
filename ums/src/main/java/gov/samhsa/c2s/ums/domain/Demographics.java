@@ -49,11 +49,11 @@ public class Demographics {
      * The first name.
      */
     @NotNull
-    @Size(min = 2, max = 30)
+    @Size(min = 2, max = 100)
     @Pattern(regexp = "^[a-zA-ZÀ-ÿ]+[-]?[a-zA-ZÀ-ÿ']*[a-zA-ZÀ-ÿ]$", message = "The First Name contains invalid characters. Please try again.")
     private String firstName;
 
-    @Size(min = 2, max = 30)
+    @Size(min = 2, max = 100)
     @Pattern(regexp = "^[a-zA-ZÀ-ÿ]+[-]?[a-zA-ZÀ-ÿ']*[a-zA-ZÀ-ÿ]$", message = "The Middle Name contains invalid characters. Please try again.")
     private String middleName;
 
@@ -61,7 +61,7 @@ public class Demographics {
      * The last name.
      */
     @NotNull
-    @Size(min = 2, max = 30)
+    @Size(min = 2, max = 100)
     @Pattern(regexp = "^[a-zA-ZÀ-ÿ]+[-]?[a-zA-ZÀ-ÿ']*[a-zA-ZÀ-ÿ]$", message = "The Last Name contains invalid characters. Please try again.")
     private String lastName;
 
