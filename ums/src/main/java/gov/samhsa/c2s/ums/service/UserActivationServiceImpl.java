@@ -1,11 +1,36 @@
 package gov.samhsa.c2s.ums.service;
 
 import gov.samhsa.c2s.ums.config.EmailSenderProperties;
-import gov.samhsa.c2s.ums.domain.*;
+import gov.samhsa.c2s.ums.domain.Demographics;
+import gov.samhsa.c2s.ums.domain.Patient;
+import gov.samhsa.c2s.ums.domain.RoleRepository;
+import gov.samhsa.c2s.ums.domain.Scope;
+import gov.samhsa.c2s.ums.domain.ScopeRepository;
+import gov.samhsa.c2s.ums.domain.Telecom;
+import gov.samhsa.c2s.ums.domain.User;
+import gov.samhsa.c2s.ums.domain.UserActivation;
+import gov.samhsa.c2s.ums.domain.UserActivationRepository;
+import gov.samhsa.c2s.ums.domain.UserRepository;
+import gov.samhsa.c2s.ums.domain.UserScopeAssignment;
+import gov.samhsa.c2s.ums.domain.UserScopeAssignmentRepository;
 import gov.samhsa.c2s.ums.infrastructure.EmailSender;
 import gov.samhsa.c2s.ums.infrastructure.ScimService;
-import gov.samhsa.c2s.ums.service.dto.*;
-import gov.samhsa.c2s.ums.service.exception.*;
+import gov.samhsa.c2s.ums.service.dto.ScopeAssignmentRequestDto;
+import gov.samhsa.c2s.ums.service.dto.ScopeAssignmentResponseDto;
+import gov.samhsa.c2s.ums.service.dto.UserActivationRequestDto;
+import gov.samhsa.c2s.ums.service.dto.UserActivationResponseDto;
+import gov.samhsa.c2s.ums.service.dto.UserVerificationRequestDto;
+import gov.samhsa.c2s.ums.service.dto.UsernameUsedDto;
+import gov.samhsa.c2s.ums.service.dto.VerificationResponseDto;
+import gov.samhsa.c2s.ums.service.exception.EmailNotFoundException;
+import gov.samhsa.c2s.ums.service.exception.EmailTokenExpiredException;
+import gov.samhsa.c2s.ums.service.exception.PasswordConfirmationFailedException;
+import gov.samhsa.c2s.ums.service.exception.ScopeDoesNotExistInDBException;
+import gov.samhsa.c2s.ums.service.exception.UserActivationCannotBeVerifiedException;
+import gov.samhsa.c2s.ums.service.exception.UserActivationNotFoundException;
+import gov.samhsa.c2s.ums.service.exception.UserIsAlreadyVerifiedException;
+import gov.samhsa.c2s.ums.service.exception.UserNotFoundException;
+import gov.samhsa.c2s.ums.service.exception.VerificationFailedException;
 import org.cloudfoundry.identity.uaa.scim.ScimUser;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,9 +43,12 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.Period;
 import java.util.Collections;
+import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
+
+import static java.util.Comparator.comparing;
 
 @Service
 public class UserActivationServiceImpl implements UserActivationService {
@@ -61,7 +89,7 @@ public class UserActivationServiceImpl implements UserActivationService {
     @Override
     public UserActivationResponseDto initiateUserActivation(Long userId, String xForwardedProto, String xForwardedHost, int xForwardedPort) {
         // Find user
-        final User user = userRepository.getOne(userId);
+        final User user = userRepository.findById(userId).orElseThrow(UserNotFoundException::new);
 
         String emailToken = emailTokenGenerator.generateEmailToken();
         final Instant emailTokenExpirationDate = Instant.now().plus(Period.ofDays(emailSenderProperties.getEmailTokenExpirationInDays()));
@@ -84,9 +112,26 @@ public class UserActivationServiceImpl implements UserActivationService {
         response.setEmail(user.getDemographics().getTelecoms().stream().filter(telecom -> telecom.getSystem().equals(Telecom.System.EMAIL)).map(Telecom::getValue).findFirst().get());
         response.setGenderCode(user.getDemographics().getAdministrativeGenderCode().getCode());
         // Send email with verification link
+        final String email = Optional.of(user)
+                // Try to find registrationPurposeEmail first
+                .map(User::getDemographics)
+                .map(Demographics::getPatient)
+                .map(Patient::getRegistrationPurposeEmail)
+                // If registrationPurposeEmail does not exist, first look for HOME, then WORK emails
+                .orElseGet(() -> Optional.of(user)
+                        .map(User::getDemographics)
+                        .map(Demographics::getTelecoms)
+                        .map(List::stream)
+                        // HOME email is preferred against WORK email
+                        .map(telecomStream -> telecomStream.sorted(comparing(Telecom::getUse)))
+                        .flatMap(telecomStream -> telecomStream
+                                .filter(telecom -> telecom.getSystem().equals(Telecom.System.EMAIL))
+                                .map(Telecom::getValue).findFirst())
+                        // Throw exception if no email address can be found
+                        .orElseThrow(EmailNotFoundException::new));
         emailSender.sendEmailWithVerificationLink(
                 xForwardedProto, xForwardedHost, xForwardedPort,
-                user.getDemographics().getTelecoms().stream().filter(telecom -> telecom.getSystem().equals(Telecom.System.EMAIL)).map(Telecom::getValue).findFirst().get(),
+                email,
                 saved.getEmailToken(),
                 getRecipientFullName(user), new Locale(user.getLocale().getCode()));
         return response;
@@ -134,7 +179,6 @@ public class UserActivationServiceImpl implements UserActivationService {
                     .orElseThrow(VerificationFailedException::new);
             return new VerificationResponseDto(verified, userId.toString());
         }
-
     }
 
     @Override

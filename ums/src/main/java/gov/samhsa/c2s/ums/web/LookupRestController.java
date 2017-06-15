@@ -1,17 +1,19 @@
 package gov.samhsa.c2s.ums.web;
 
 import gov.samhsa.c2s.ums.service.LookupService;
+import gov.samhsa.c2s.ums.service.dto.IdentifierSystemDto;
 import gov.samhsa.c2s.ums.service.dto.LookupDto;
 import gov.samhsa.c2s.ums.service.dto.RoleDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 public class LookupRestController {
-
 
     @Autowired
     private LookupService lookupService;
@@ -41,5 +43,8 @@ public class LookupRestController {
         return lookupService.getRoles();
     }
 
-
+    @GetMapping("/identifierSystems")
+    public List<IdentifierSystemDto> getIdentifierSystems(@RequestParam Optional<Boolean> systemGenerated) {
+        return lookupService.getIdentifierSystems(systemGenerated);
+    }
 }

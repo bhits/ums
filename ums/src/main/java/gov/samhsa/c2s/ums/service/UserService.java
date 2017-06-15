@@ -38,11 +38,14 @@ public interface UserService {
     @Transactional(readOnly = true)
     List<UserDto> searchUsersByDemographic(String firstName, String lastName, LocalDate birthDate, String genderCode);
 
+    @Transactional(readOnly = true)
+    List<UserDto> searchUsersByIdentifier(String value, String system);
+
     @Transactional
     void updateUserLocale(Long userId, String localeCode);
 
     @Transactional
-    void updateUserLocaleByUserAuthId(String userAuthId,String localeCode);
+    void updateUserLocaleByUserAuthId(String userAuthId, String localeCode);
 
     @Transactional(readOnly = true)
     AccessDecisionDto accessDecision(String userAuthId, String patientMRN);

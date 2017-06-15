@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 public interface DemographicsRepository extends JpaRepository<Demographics, Long> {
 
@@ -17,6 +18,7 @@ public interface DemographicsRepository extends JpaRepository<Demographics, Long
     List<Demographics> findAllByFirstNameLikesAndLastNameLikes(String token1, String token2, Pageable pageRequest);
 
     List<Demographics> findAllByFirstNameAndLastNameAndBirthDayAndAdministrativeGenderCode(String firstName, String lastName, LocalDate birthDate,
-                                                                                              AdministrativeGenderCode administrativeGenderCode);
+                                                                                           AdministrativeGenderCode administrativeGenderCode);
 
+    Optional<Demographics> findOneByIdentifiersValueAndIdentifiersIdentifierSystemSystem(String value, String system);
 }
