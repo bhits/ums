@@ -47,7 +47,7 @@ public class Telecom {
      * The telecom use code.
      */
     @NotNull
-    @Size(max = 30)
+    @Size(max = 150)
     private String value;
 
     @Column(name = "`use`")
