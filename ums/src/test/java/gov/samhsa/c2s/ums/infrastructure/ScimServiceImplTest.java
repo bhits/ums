@@ -66,10 +66,10 @@ public class ScimServiceImplTest {
         when(restTemplate.postForObject(usersEndpoint, scimUser, ScimUser.class)).thenReturn(scimUser1);
 
         //Act
-        ScimUser save = scimServiceImpl.save(scimUser);
+        ScimUser scimUser2 = scimServiceImpl.save(scimUser);
 
         //assert
-        assertEquals(scimUser1, save);
+        assertEquals(scimUser1, scimUser2);
     }
 
     @Test
@@ -91,7 +91,7 @@ public class ScimServiceImplTest {
     }
 
     @Test
-    public void testFindGroupIdByDisplayName_WhenIdCannotBeFound_ThrowsException() throws Exception {
+    public void testFindGroupIdByDisplayName_Given_IdCannotBeFound_Then_ThrowsException() throws Exception {
         //Arrange
         thrown.expect(IdCannotBeFoundException.class);
         final String groupDisplayName = "groupDisplayName";
@@ -146,25 +146,6 @@ public class ScimServiceImplTest {
 
         //Assert
         assertEquals(scimGroupMemberResponse, response);
-        verify(userActivation).getUser();
-        verify(user).getUserAuthId();
-    }
-
-    @Test
-    public void testCheckUserName_Given_ThereIsNoSearchResult() {
-        //Arrange
-        final String username = "username";
-        String filter = "?filter=userName eq \"" + username + "\"";
-        SearchResults<ScimUser> searchResults = mock(SearchResults.class);
-        when(restTemplate.getForObject(usersEndpoint + filter, SearchResults.class)).thenReturn(searchResults);
-
-        when(searchResults.getTotalResults()).thenReturn(0);
-
-        //Act
-        UsernameUsedDto checkUsername = scimServiceImpl.checkUsername(username);
-
-        //Assert
-        assertEquals(new UsernameUsedDto(false), checkUsername);
     }
 
     @Test
@@ -179,7 +160,7 @@ public class ScimServiceImplTest {
         scimServiceImpl.inactivateUser(userId);
 
         //Assert
-        verify(restTemplate).put(anyString(), any(HttpEntity.class));
+        verify(restTemplate).put(eq(usersEndpoint+"/"+userId), any(HttpEntity.class));
     }
 
     @Test
@@ -187,14 +168,14 @@ public class ScimServiceImplTest {
         //Arrange
         String userId = "userId";
         ScimUser scimUser = new ScimUser();
-        scimUser.setVersion(1);
         when(restTemplate.getForObject(usersEndpoint + "/{userId}", ScimUser.class, userId)).thenReturn(scimUser);
+        scimUser.setVersion(1);
 
         //Act
         scimServiceImpl.activateUser(userId);
 
         //Assert
-        verify(restTemplate).put(anyString(), any(HttpEntity.class));
+        verify(restTemplate).put(eq(usersEndpoint+"/"+userId), any(HttpEntity.class));
     }
 
     @Test
@@ -233,6 +214,23 @@ public class ScimServiceImplTest {
     }
 
     @Test
+    public void testCheckUserName_Given_ThereIsNoSearchResult() {
+        //Arrange
+        final String username = "username";
+        String filter = "?filter=userName eq \"" + username + "\"";
+        SearchResults<ScimUser> searchResults = mock(SearchResults.class);
+        when(restTemplate.getForObject(usersEndpoint + filter, SearchResults.class)).thenReturn(searchResults);
+
+        when(searchResults.getTotalResults()).thenReturn(0);
+
+        //Act
+        UsernameUsedDto checkUsername = scimServiceImpl.checkUsername(username);
+
+        //Assert
+        assertEquals(new UsernameUsedDto(false), checkUsername);
+    }
+
+    @Test
     public void testCheckUserName_Given_ThereIsSearchResult() {
         //Arrange
         String username = "username";
@@ -247,5 +245,6 @@ public class ScimServiceImplTest {
         //Assert
         assertEquals(new UsernameUsedDto(true), checkUsername);
     }
+
 }
 
