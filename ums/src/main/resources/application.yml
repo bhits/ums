@@ -39,7 +39,9 @@ c2s:
       codeSystem: http://hl7.org/fhir/sid/us-ssn
       codeSystemOID: urn:oid:2.16.840.1.113883.4.1
       displayName: SSN
+      # if 'reassignable' is true, the identifiers from this system can be assigned to more than one person
       reassignable: false
+      # if 'update-in-database-on-startup' is true, this system will be inserted/updated using 'c2s.ums.ssn.codeSystem' value as the key
       update-in-database-on-startup: true
     mrn:
       codeSystem: https://bhits.github.io/consent2share
@@ -47,12 +49,17 @@ c2s:
       displayName: MRN
       prefix: C2S-DEV
       length: 6
+      # if 'reassignable' is true, the identifiers from this system can be assigned to more than one person
       reassignable: false
+      # if 'update-in-database-on-startup' is true, this system will be inserted/updated using 'c2s.ums.mrn.codeSystem' value as the key
       update-in-database-on-startup: true
     required-identifier-systems-by-role:
+      # the list of required identifiers for the 'patient' role. other roles can be added following the similar structure. the roles should be specified by the 'role code' value.
       patient:
+        # multiple identifier systems can be provided here as a list
         -
           system: ${c2s.ums.mrn.codeSystem}
+          # if the algorithm is different than 'NONE', the system will generate this identifier and it cannot be manually set
           algorithm: MRN
     Pagination:
       defaultSize: 10
