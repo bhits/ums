@@ -56,9 +56,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @RunWith(MockitoJUnitRunner.class)
 public class UserRestControllerTest {
-
-    Long userId = 20L;
-
     @Rule
     public ExpectedException thrown = ExpectedException.none();
 
@@ -67,9 +64,6 @@ public class UserRestControllerTest {
 
     @Mock
     StringTokenizer tokenizer;
-
-    @Mock
-    private UserDto userDto;
 
     @InjectMocks
     private UserRestController sut;
@@ -85,6 +79,9 @@ public class UserRestControllerTest {
 
     @Test
     public void testRegisterUser() {
+        //Arrange
+        UserDto userDto=mock(UserDto.class);
+
         //Act
         sut.registerUser(userDto);
 
@@ -94,6 +91,9 @@ public class UserRestControllerTest {
 
     @Test
     public void testEnableUser() {
+        //Arrange
+        Long userId = 20L;
+
         //Act
         sut.enableUser(userId);
 
@@ -103,6 +103,8 @@ public class UserRestControllerTest {
 
     @Test
     public void testDisableUser() {
+        //Arrange
+        Long userId = 20L;
         //Act
         sut.disableUser(userId);
 
@@ -130,6 +132,7 @@ public class UserRestControllerTest {
     @Test
     public void testUpdateUser() {
         //Arrange
+        Long userId = 20L;
         UserDto userDto = mock(UserDto.class);
 
         //Act
@@ -142,6 +145,7 @@ public class UserRestControllerTest {
     @Test
     public void testGetUser() {
         //Arrange
+        Long userId = 20L;
         UserDto user = mock(UserDto.class);
         when(userServiceMock.getUser(userId)).thenReturn(user);
 
@@ -171,12 +175,15 @@ public class UserRestControllerTest {
         //Arrange
         Optional<Integer> page = Optional.of(1233);
         Optional<Integer> size = Optional.of(234);
+        Page<UserDto> page1= mock(Page.class);
+
+        when(userServiceMock.getAllUsers(page,size)).thenReturn(page1);
 
         //Act
-        sut.getAllUsers(page, size);
+        Page<UserDto> page2=sut.getAllUsers(page, size);
 
         //Assert
-        verify(userServiceMock).getAllUsers(page, size);
+        assertEquals(page1,page2);
     }
 
     @Test
