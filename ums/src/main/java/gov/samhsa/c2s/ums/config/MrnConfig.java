@@ -23,7 +23,7 @@ public class MrnConfig {
     private IdentifierSystemRepository identifierSystemRepository;
 
     @PostConstruct
-    public void initMrn() {
+    public void initMrnIdentifierSystem() {
         logger.info("Updating MRN configuration in database");
         final UmsProperties.Mrn mrn = umsProperties.getMrn();
         final String codeSystem = mrn.getCodeSystem();

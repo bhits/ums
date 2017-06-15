@@ -23,7 +23,7 @@ public class SsnConfig {
     private IdentifierSystemRepository identifierSystemRepository;
 
     @PostConstruct
-    public void initMrn() {
+    public void initSsnIdentifierSystem() {
         logger.info("Updating SSN configuration in database");
         final UmsProperties.Ssn ssn = umsProperties.getSsn();
         final String codeSystem = ssn.getCodeSystem();
