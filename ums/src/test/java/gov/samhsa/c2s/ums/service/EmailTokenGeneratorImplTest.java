@@ -47,26 +47,4 @@ public class EmailTokenGeneratorImplTest {
         //Assert
         assertEquals(token, generatedEmailToken);
     }
-
-    @Test
-    public void testGenerateEmailToken_Given_UniqueTokenIsNotGenerated_Then_ThrowsException() throws Exception {
-        //Arrange
-        thrown.expect(UniqueValueGeneratorException.class);
-        String token1 = "token";
-        String token2 = "token2";
-        UserActivation userActivation1 = mock(UserActivation.class);
-        UserActivation userActivation2 = mock(UserActivation.class);
-        when(tokenGenerator.generateToken()).thenReturn(token1).thenReturn(token1).thenReturn(token2);
-        when(userActivationRepository.findOneByEmailToken(token1)).thenReturn(java.util.Optional.of(userActivation1));
-        when(userActivationRepository.findOneByEmailToken(token2)).thenReturn(Optional.ofNullable(userActivation2));
-
-        //Act
-        String generatedEmailToken = emailTokenGeneratorImpl.generateEmailToken();
-
-        //Assert
-        assertNull(generatedEmailToken);
-        verify(tokenGenerator, times(3)).generateToken();
-        verify(userActivationRepository, times(2)).findOneByEmailToken(token1);
-        verify(userActivationRepository, times(1)).findOneByEmailToken(token2);
-    }
 }
