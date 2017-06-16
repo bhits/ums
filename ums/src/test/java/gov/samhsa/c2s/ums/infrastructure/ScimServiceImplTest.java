@@ -68,7 +68,7 @@ public class ScimServiceImplTest {
         //Act
         ScimUser scimUser2 = scimServiceImpl.save(scimUser);
 
-        //assert
+        //Assert
         assertEquals(scimUser1, scimUser2);
     }
 
@@ -102,10 +102,10 @@ public class ScimServiceImplTest {
         when(identifierDto.getId()).thenReturn(null);
 
         //Act
-        String groupId = scimServiceImpl.findGroupIdByDisplayName(groupDisplayName);
+        scimServiceImpl.findGroupIdByDisplayName(groupDisplayName);
 
-        //Assert
-        assertNull(groupId);
+        //Arrange
+        //ExpectedException annotated by @rule is thrown.
     }
 
     @Test
