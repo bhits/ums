@@ -2,7 +2,9 @@ package gov.samhsa.c2s.ums.infrastructure;
 
 import gov.samhsa.c2s.ums.config.EmailSenderProperties;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -13,6 +15,7 @@ import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.util.Assert;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 import org.powermock.modules.junit4.PowerMockRunner;
@@ -33,6 +36,9 @@ import static org.mockito.Mockito.when;
 @RunWith(PowerMockRunner.class)
 @PrepareForTest(TemplateEngine.class)
 public class EmailSenderImplTest {
+    @Rule
+    public ExpectedException thrown = ExpectedException.none();
+
     private static final String TEMPLATE_VERIFICATION_LINK_EMAIL = "verification-link-email";
     private static final String PROP_EMAIL_VERIFICATION_LINK_SUBJECT = "email.verificationLink.subject";
 
@@ -109,8 +115,92 @@ public class EmailSenderImplTest {
         emailSenderImpl.sendEmailWithVerificationLink(xForwardedProto, xForwardedHost, xForwardedPort, email, emailToken, recipientFullName, locale);
 
         //Assert
-        verify(javaMailSender).createMimeMessage();
+        verify(templateEngine).process(eq(TEMPLATE_VERIFICATION_LINK_EMAIL), any(Context.class));
         verify(javaMailSender).send(mimeMessage);
+    }
+
+    @Test
+    public void testSendEmailWithVerificationLink_Given_ThereIsNoTextInEmailTokens_Then_GivesMessageAndThrowsIllegalArgumentException(){
+        //Arrange
+        thrown.expect(IllegalArgumentException.class);
+        thrown.expectMessage("emailToken must have text");
+        String xForwardedProto = "xForwardedProto";
+        String xForwardedHost = "xForwardedHost";
+        int xForwardedPort = 234;
+        String email ="email";
+        String emailToken = " ";
+        String recipientFullName = "receipientFullName";
+
+        Locale locale = new Locale("English");
+
+        //Act
+        emailSenderImpl.sendEmailWithVerificationLink(xForwardedProto, xForwardedHost, xForwardedPort, email, emailToken, recipientFullName, locale);
+
+        //Assert
+        ////ExpectedException annotated by @rule is thrown.
+    }
+
+    @Test
+    public void testSendEmailWithVerificationLink_Given_ThereIsNoTextInLanguage_Then_GivesMessageAndThrowsIllegalArgumentException(){
+        //Arrange
+        thrown.expect(IllegalArgumentException.class);
+        thrown.expectMessage("defaultLocale must have text");
+        String xForwardedProto = "xForwardedProto";
+        String xForwardedHost = "xForwardedHost";
+        int xForwardedPort = 234;
+        String email ="email";
+        String emailToken = "emailToken";
+        String recipientFullName = "receipientFullName";
+
+        Locale locale = new Locale(" ");
+
+        //Act
+        emailSenderImpl.sendEmailWithVerificationLink(xForwardedProto, xForwardedHost, xForwardedPort, email, emailToken, recipientFullName, locale);
+
+        //Assert
+        ////ExpectedException annotated by @rule is thrown.
+    }
+
+    @Test
+    public void testSendEmailWithVerificationLink_Given_ThereIsNoTextInEmail_Then_GivesMessageAndThrowsIllegalArgumentException(){
+        //Arrange
+        thrown.expect(IllegalArgumentException.class);
+        thrown.expectMessage("email must have text");
+        String xForwardedProto = "xForwardedProto";
+        String xForwardedHost = "xForwardedHost";
+        int xForwardedPort = 234;
+        String email =" ";
+        String emailToken = "emailToken";
+        String recipientFullName = "receipientFullName";
+
+        Locale locale = new Locale("English");
+
+        //Act
+        emailSenderImpl.sendEmailWithVerificationLink(xForwardedProto, xForwardedHost, xForwardedPort, email, emailToken, recipientFullName, locale);
+
+        //Assert
+        ////ExpectedException annotated by @rule is thrown.
+    }
+
+    @Test
+    public void testSendEmailWithVerificationLink_Given_ThereIsNoTextInReceipientFullName_Then_GivesMessageAndThrowsIllegalArgumentException(){
+        //Arrange
+        thrown.expect(IllegalArgumentException.class);
+        thrown.expectMessage("recipientFullName must have text");
+        String xForwardedProto = "xForwardedProto";
+        String xForwardedHost = "xForwardedHost";
+        int xForwardedPort = 234;
+        String email ="email";
+        String emailToken = "emailToken";
+        String recipientFullName = " ";
+
+        Locale locale = new Locale("English");
+
+        //Act
+        emailSenderImpl.sendEmailWithVerificationLink(xForwardedProto, xForwardedHost, xForwardedPort, email, emailToken, recipientFullName, locale);
+
+        //Assert
+        ////ExpectedException annotated by @rule is thrown.
     }
 
     @Test
@@ -149,8 +239,48 @@ public class EmailSenderImplTest {
         emailSenderImpl.sendEmailToConfirmVerification(xForwardedProto, xForwardedHost, xForwardedPort, email, recipientFullName, locale);
 
         //Assert
-        verify(javaMailSender).createMimeMessage();
+        verify(templateEngine).process(eq(TEMPLATE_CONFIRM_VERIFICATION_EMAIL), any(Context.class));
         verify(javaMailSender).send(mimeMessage);
+    }
+
+    @Test
+    public void testSendEmailToConfirmVerification_Given_ThereIsNoTextInEmail_Then_GivesMessageAndThrowsIllegalMessage(){
+        //Arrange
+        thrown.expect(IllegalArgumentException.class);
+        thrown.expectMessage("email must have text");
+        String xForwardedProto = "xForwardedProto";
+        String xForwardedHost = "xForwardedHost";
+        int xForwardedPort = 234;
+        String email = " ";
+        String recipientFullName = "recipientFullName";
+
+        Locale locale = new Locale("English");
+
+        //Act
+        emailSenderImpl.sendEmailToConfirmVerification(xForwardedProto, xForwardedHost, xForwardedPort, email, recipientFullName, locale);
+
+        //Assert
+        ////ExpectedException annotated by @rule is thrown.
+    }
+
+    @Test
+    public void testSendEmailToConfirmVerification_Given_ThereIsNoTextInRecipientFullName_Then_GivesMessageAndThrowsIllegalMessage(){
+        //Arrange
+        thrown.expect(IllegalArgumentException.class);
+        thrown.expectMessage("recipientFullName must have text");
+        String xForwardedProto = "xForwardedProto";
+        String xForwardedHost = "xForwardedHost";
+        int xForwardedPort = 234;
+        String email = "email";
+        String recipientFullName = " ";
+
+        Locale locale = new Locale("English");
+
+        //Act
+        emailSenderImpl.sendEmailToConfirmVerification(xForwardedProto, xForwardedHost, xForwardedPort, email, recipientFullName, locale);
+
+        //Assert
+        ////ExpectedException annotated by @rule is thrown.
     }
 
 }
