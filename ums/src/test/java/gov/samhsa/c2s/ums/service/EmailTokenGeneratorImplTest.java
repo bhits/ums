@@ -35,7 +35,7 @@ public class EmailTokenGeneratorImplTest {
     EmailTokenGeneratorImpl emailTokenGeneratorImpl;
 
     @Test
-    public void testGenerateEmailToken_Given_TheUniqueTokenIsGenerated() {
+    public void testGenerateEmailToken_TheUniqueTokenIsGenerated() {
         //Arrange
         String token = "token";
         when(tokenGenerator.generateToken()).thenReturn(token);
