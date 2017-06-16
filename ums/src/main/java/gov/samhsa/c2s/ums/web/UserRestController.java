@@ -124,6 +124,7 @@ public class UserRestController {
         else return null;
     }
 
+    //TODO:Based on Tao's comment:Code need be refractor to put StringTokenizer in the service class
     /**
      * Find All Users that match the First Name and/or the Last Name.
      *
