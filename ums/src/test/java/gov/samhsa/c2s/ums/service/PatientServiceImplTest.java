@@ -99,16 +99,15 @@ public class PatientServiceImplTest {
         String patientId = "patientId";
         Patient patient = mock(Patient.class);
         Optional<String> userAuthId = Optional.of("userId");
-        User user=null;
         when(patientRepository.findOneByMrn(patientId)).thenReturn(Optional.ofNullable(patient));
 
         when(userRepository.findOneByUserAuthIdAndDisabled(userAuthId.get(), false)).thenReturn(Optional.empty());
 
         //Act
-        PatientDto patientDto=patientService.getPatientByPatientId(patientId,userAuthId);
+        patientService.getPatientByPatientId(patientId,userAuthId);
 
         //Assert
-        assertNull(patientDto);
+        //ExpectedException annotated by @rule is thrown.;
     }
 
     @Test
@@ -132,10 +131,10 @@ public class PatientServiceImplTest {
         when(userPatientRelationshipRepository.findAllByIdUserIdAndIdPatientId(id, pId)).thenReturn(null);
 
         //Act
-        PatientDto patientDto=patientService.getPatientByPatientId(patientId,userAuthId);
+        patientService.getPatientByPatientId(patientId,userAuthId);
 
         //Assert
-        assertNull(patientDto);
+        //ExpectedException annotated by @rule is thrown.;
     }
 
     @Test

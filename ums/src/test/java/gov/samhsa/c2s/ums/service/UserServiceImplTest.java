@@ -223,7 +223,7 @@ public class UserServiceImplTest {
     }
 
     @Test
-    public void testDisableUser_Given_NoUserIsFoundById_Then_ThrowsException() throws UserNotFoundException {
+    public void testDisableUser_Given_NoUserIsFoundById_Then_ThrowsException(){
         //Arrange
         thrown.expect(UserNotFoundException.class);
         thrown.expectMessage("User Not Found!");
@@ -242,7 +242,7 @@ public class UserServiceImplTest {
         userServiceImpl.disableUser(userId);
 
         //Assert
-        verify(userRepository).save(user);
+        //ExpectedException annotated by @rule is thrown;
     }
 
     @Test
@@ -268,7 +268,7 @@ public class UserServiceImplTest {
     }
 
     @Test
-    public void testEnableUser_Given_UserIsNotFoundByIdOrNotDisabled_Then_ThrowsException() throws UserNotFoundException {
+    public void testEnableUser_Given_UserIsNotFoundByIdOrNotDisabled_Then_ThrowsException(){
         //Arrange
         thrown.expect(UserNotFoundException.class);
         thrown.expectMessage("User Not Found!");
@@ -289,7 +289,7 @@ public class UserServiceImplTest {
         userServiceImpl.enableUser(userId);
 
         //Assert
-        verify(userRepository).save(user);
+        //ExpectedException annotated by @rule is thrown.
     }
 
     @Test
@@ -323,8 +323,11 @@ public class UserServiceImplTest {
 
         when(modelMapper.map(user, UserDto.class)).thenReturn(getUserResponseDto);
 
-        //Act and Assert
-        assertEquals(getUserResponseDto, userServiceImpl.getUserByUserAuthId(oAuth2UserId));
+        //Act
+        UserDto userDto=userServiceImpl.getUserByUserAuthId(oAuth2UserId);
+
+        //Assert
+        assertEquals(getUserResponseDto, userDto);
     }
 
     @Test
@@ -439,7 +442,7 @@ public class UserServiceImplTest {
     }
 
     @Test
-    public void testSearchUsersByDemographic_Given_ThereIsNoUserOnUserList_Then_ThrowsException() throws UserNotFoundException {
+    public void testSearchUsersByDemographic_Given_ThereIsNoUserOnUserList_Then_ThrowsException(){
         //Arrange
         thrown.expect(UserNotFoundException.class);
         thrown.expectMessage("User Not Found!");
@@ -457,10 +460,10 @@ public class UserServiceImplTest {
                 .thenReturn(demographicsList);
 
         //Act
-        List<UserDto> list = userServiceImpl.searchUsersByDemographic(firstName, lastName, birthDate, genderCode);
+        userServiceImpl.searchUsersByDemographic(firstName, lastName, birthDate, genderCode);
 
         //Assert
-        assertNull(list);
+        //ExpectedException annotated by @rule is thrown.
     }
 
 }

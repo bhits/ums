@@ -68,7 +68,6 @@ public class UserActivationRestControllerTest {
         //Act
         UserActivationResponseDto userActivationResponseDto2 = userActivationRestController.activateUser(userActivationRequestDto, xForwardProto, xForwardHost, xForwardPort);
 
-
         //Assert
         assertEquals(userActivationResponseDto, userActivationResponseDto2);
     }

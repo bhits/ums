@@ -181,11 +181,12 @@ public class UserActivationServiceImplTest {
         when(userActivation.isVerified()).thenReturn(true);
 
         //Act
-        UserActivationResponseDto userActivationResponseDto = userActivationService.initiateUserActivation(userId, xForwardedProto, xForwardedHost, xForwardedPort);
+        userActivationService.initiateUserActivation(userId, xForwardedProto, xForwardedHost, xForwardedPort);
 
         //Assert
-        assertNull(userActivationResponseDto);
+        //ExpectedException annotated by @rule is thrown.
     }
+
 
     @Test
     public void testVerify_Given_VerificationcodeAndBirthDateIsPresent() {
@@ -302,7 +303,7 @@ public class UserActivationServiceImplTest {
         UserActivationResponseDto userActivationResponseDto = userActivationService.findUserActivationInfoByUserId(userId);
 
         //Assert
-        assertNull(userActivationResponseDto);
+        //ExpectedException annotated by @rule is thrown.
     }
 
     @Test
