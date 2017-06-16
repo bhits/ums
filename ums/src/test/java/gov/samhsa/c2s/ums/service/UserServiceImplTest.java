@@ -112,96 +112,6 @@ public class UserServiceImplTest {
     UserServiceImpl userServiceImpl;
 
     @Test
-    public void testRegisterUser() {
-        //Arrange
-        final String mrn = "mrn";
-        Long userId = 30L;
-        Long patientId = 20L;
-        User user = mock(User.class);
-        UserDto userDto = mock(UserDto.class);
-        Demographics demographics = mock(Demographics.class);
-
-        when(modelMapper.map(userDto, User.class)).thenReturn(user);
-        when(user.getDemographics()).thenReturn(demographics);
-
-        TelecomDto telecomDto1 = mock(TelecomDto.class);
-        TelecomDto telecomDto2 = mock(TelecomDto.class);
-        List<TelecomDto> telecomDtos = new ArrayList<>();
-        telecomDtos.add(telecomDto1);
-        telecomDtos.add(telecomDto2);
-
-        Telecom telecom1 = mock(Telecom.class);
-        Telecom telecom2 = mock(Telecom.class);
-        List<Telecom> telecoms = new ArrayList<>();
-        telecoms.add(telecom1);
-        telecoms.add(telecom2);
-
-        AddressDto addressDto1 = mock(AddressDto.class);
-        AddressDto addressDto2 = mock(AddressDto.class);
-
-        List<AddressDto> addressDtos = new ArrayList<>();
-        addressDtos.add(addressDto1);
-        addressDtos.add(addressDto2);
-
-        Address address1 = mock(Address.class);
-        Address address2 = mock(Address.class);
-
-        List<Address> addresses = new ArrayList<>();
-        addresses.add(address1);
-        addresses.add(address2);
-
-        when(userDto.getTelecoms()).thenReturn(telecomDtos);
-        when(modelMapper.map(telecomDtos, new TypeToken<List<Telecom>>() {
-        }.getType())).thenReturn(telecoms);
-
-        when(demographics.getTelecoms()).thenReturn(telecoms);
-
-        when(userDto.getAddresses()).thenReturn(addressDtos);
-        when(modelMapper.map(addressDtos, new TypeToken<List<Address>>() {
-        }.getType())).thenReturn(addresses);
-
-        when(demographics.getAddresses()).thenReturn(addresses);
-
-        when(userRepository.save(user)).thenReturn(user);
-
-        RoleDto roleDto1 = mock(RoleDto.class);
-        List<RoleDto> roleDtos = new ArrayList<>();
-        roleDtos.add(roleDto1);
-
-        when(userDto.getRoles()).thenReturn(roleDtos);
-        when(roleDto1.getCode()).thenReturn("patient");
-
-        Patient patient = new Patient();
-
-        when(mrnService.generateMrn()).thenReturn(mrn);
-        patient.setMrn(mrn);
-        patient.setDemographics(demographics);
-        patient.setId(patientId);
-        when(patientRepository.save(any(Patient.class))).thenReturn(patient);
-
-        RelationDto relationDto = mock(RelationDto.class);
-        UserPatientRelationship userPatientRelationship = mock(UserPatientRelationship.class);
-        when(user.getId()).thenReturn(userId);
-
-        when(modelMapper.map(relationDto, UserPatientRelationship.class)).thenReturn(userPatientRelationship);
-
-        UmsProperties.Fhir fhir = mock(UmsProperties.Fhir.class);
-        UmsProperties.Fhir.Publish publish = mock(UmsProperties.Fhir.Publish.class);
-
-        when(umsProperties.getFhir()).thenReturn(fhir);
-        when(fhir.getPublish()).thenReturn(publish);
-        when(publish.isEnabled()).thenReturn(true);
-
-        //Act
-        userServiceImpl.registerUser(userDto);
-
-        //Assert
-        verify(userRepository).save(user);
-        verify(userDto).setMrn(mrn);
-        verify(fhirPatientService).publishFhirPatient(userDto);
-    }
-
-    @Test
     public void testDisableUser_Given_UserIsFoundById() {
         //Arrange
         Long userId = 10L;
@@ -209,10 +119,10 @@ public class UserServiceImplTest {
         User user = mock(User.class);
         String id = "id";
 
-        when(userRepository.findOne(userId)).thenReturn(user);
+        when(userRepository.findById(userId)).thenReturn(Optional.ofNullable(user));
         when(user.getUserAuthId()).thenReturn(id);
 
-        when(userRepository.findOneByIdAndDisabled(userId, false)).thenReturn(Optional.ofNullable(user));
+        when(userRepository.findByIdAndDisabled(userId, false)).thenReturn(Optional.ofNullable(user));
         when(userRepository.save(user)).thenReturn(user);
 
         //Act
@@ -233,10 +143,10 @@ public class UserServiceImplTest {
         User user = mock(User.class);
         String id = "id";
 
-        when(userRepository.findOne(userId)).thenReturn(user);
+        when(userRepository.findById(userId)).thenReturn(Optional.ofNullable(user));
         when(user.getUserAuthId()).thenReturn(id);
 
-        when(userRepository.findOneByIdAndDisabled(userId, false)).thenReturn(Optional.empty());
+        when(userRepository.findByIdAndDisabled(userId, false)).thenReturn(Optional.empty());
 
         //Act
         userServiceImpl.disableUser(userId);
@@ -253,10 +163,10 @@ public class UserServiceImplTest {
         User user = mock(User.class);
         String id = "id";
 
-        when(userRepository.findOne(userId)).thenReturn(user);
+        when(userRepository.findById(userId)).thenReturn(Optional.ofNullable(user));
         when(user.getUserAuthId()).thenReturn(id);
 
-        when(userRepository.findOneByIdAndDisabled(userId, true)).thenReturn(Optional.ofNullable(user));
+        when(userRepository.findByIdAndDisabled(userId, true)).thenReturn(Optional.ofNullable(user));
 
         when(userRepository.save(user)).thenReturn(user);
 
@@ -277,11 +187,10 @@ public class UserServiceImplTest {
         User user = mock(User.class);
         String id = "id";
 
-        when(userRepository.findOne(userId)).thenReturn(user);
+        when(userRepository.findById(userId)).thenReturn(Optional.ofNullable(user));
         when(user.getUserAuthId()).thenReturn(id);
 
-
-        when(userRepository.findOneByIdAndDisabled(userId, true)).thenReturn(Optional.empty());
+        when(userRepository.findByIdAndDisabled(userId, true)).thenReturn(Optional.empty());
 
         when(userRepository.save(user)).thenReturn(user);
 
@@ -300,7 +209,7 @@ public class UserServiceImplTest {
 
         User user = mock(User.class);
 
-        when(userRepository.findOne(userId)).thenReturn(user);
+        when(userRepository.findById(userId)).thenReturn(Optional.ofNullable(user));
 
         when(modelMapper.map(user, UserDto.class)).thenReturn(getUserResponseDto);
 
@@ -319,7 +228,7 @@ public class UserServiceImplTest {
 
         User user = mock(User.class);
 
-        when(userRepository.findOneByUserAuthIdAndDisabled(oAuth2UserId, false)).thenReturn(Optional.ofNullable(user));
+        when(userRepository.findByUserAuthIdAndDisabled(oAuth2UserId, false)).thenReturn(Optional.ofNullable(user));
 
         when(modelMapper.map(user, UserDto.class)).thenReturn(getUserResponseDto);
 
@@ -356,7 +265,7 @@ public class UserServiceImplTest {
         Locale locale = mock(Locale.class);
         User user = mock(User.class);
 
-        when(userRepository.findOneByUserAuthIdAndDisabled(userAuthId, false)).thenReturn(Optional.ofNullable(user));
+        when(userRepository.findByUserAuthIdAndDisabled(userAuthId, false)).thenReturn(Optional.ofNullable(user));
         when(localeRepository.findByCode(localeCode)).thenReturn(locale);
 
         //Act
@@ -375,10 +284,16 @@ public class UserServiceImplTest {
         Long patientId = 20l;
         User user = mock(User.class);
         Patient patient = mock(Patient.class);
+        UmsProperties.Mrn mrn=mock(UmsProperties.Mrn.class);
+        String codeSystem="code";
+        Demographics demographics=mock(Demographics.class);
 
-        when(userRepository.findOneByUserAuthIdAndDisabled(userAuthId, false)).thenReturn(Optional.ofNullable(user));
-        when(patientRepository.findOneByMrn(patientMrn)).thenReturn(Optional.ofNullable(patient));
+        when(userRepository.findByUserAuthIdAndDisabled(userAuthId, false)).thenReturn(Optional.ofNullable(user));
+        when(umsProperties.getMrn()).thenReturn(mrn);
+        when(mrn.getCodeSystem()).thenReturn(codeSystem);
+        when(demographicsRepository.findOneByIdentifiersValueAndIdentifiersIdentifierSystemSystem(patientMrn,codeSystem)).thenReturn(Optional.ofNullable(demographics));
 
+        when(demographics.getPatient()).thenReturn(patient);
         UserPatientRelationship userPatientRelationship1 = mock(UserPatientRelationship.class);
         UserPatientRelationship userPatientRelationship2 = mock(UserPatientRelationship.class);
         List<UserPatientRelationship> userPatientRelationships = new ArrayList<>();
