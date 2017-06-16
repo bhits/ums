@@ -3,6 +3,7 @@ package gov.samhsa.c2s.ums.service;
 import gov.samhsa.c2s.ums.config.EmailSenderProperties;
 import gov.samhsa.c2s.ums.domain.Demographics;
 import gov.samhsa.c2s.ums.domain.Locale;
+import gov.samhsa.c2s.ums.domain.Patient;
 import gov.samhsa.c2s.ums.domain.RoleRepository;
 import gov.samhsa.c2s.ums.domain.Scope;
 import gov.samhsa.c2s.ums.domain.ScopeRepository;
@@ -124,7 +125,7 @@ public class UserActivationServiceImplTest {
         telecoms.add(telecom2);
         Demographics demographics = mock(Demographics.class);
 
-        when(userRepository.getOne(userId)).thenReturn(user);
+        when(userRepository.findById(userId)).thenReturn(Optional.ofNullable(user));
 
         UserActivation userActivation = mock(UserActivation.class);
 
@@ -132,7 +133,7 @@ public class UserActivationServiceImplTest {
         when(emailSenderProperties.getEmailTokenExpirationInDays()).thenReturn(7);
 
         when(userActivationRepository.findOneByUserId(userId)).thenReturn(Optional.ofNullable(userActivation));
-        when(userActivation.isVerified()).thenReturn(false);
+        when(userActivation.isVerified()).thenReturn(false).thenReturn(true);
 
         when(tokenGenerator.generateToken(7)).thenReturn("3234");
         when(userActivationRepository.save(userActivation)).thenReturn(userActivation);
@@ -145,7 +146,7 @@ public class UserActivationServiceImplTest {
         when(userActivation.getVerificationCode()).thenReturn(verificationCode);
         when(userActivation.getEmailTokenExpirationAsInstant()).thenReturn(i);
 
-        when(telecom.getSystem()).thenReturn(email);
+        when(telecom.getSystem()).thenReturn(Telecom.System.EMAIL);
         when(telecom.getValue()).thenReturn("email");
         when(demographics.getTelecoms()).thenReturn(telecoms);
 
@@ -153,6 +154,15 @@ public class UserActivationServiceImplTest {
         when(demographics.getAdministrativeGenderCode()).thenReturn(administrativeGenderCode);
 
         when(administrativeGenderCode.getCode()).thenReturn("code");
+        Patient patient=mock(Patient.class);
+        String purposeEmail="puroposeEmail";
+        when(demographics.getPatient()).thenReturn(patient);
+        when(patient.getRegistrationPurposeEmail()).thenReturn(purposeEmail);
+
+        when(userActivation.getEmailToken()).thenReturn("token");
+
+        when(demographics.getFirstName()).thenReturn("firstName");
+        when(demographics.getLastName()).thenReturn("lastName");
         when(user.getLocale()).thenReturn(locale);
         when(locale.getCode()).thenReturn("code");
 
@@ -164,13 +174,13 @@ public class UserActivationServiceImplTest {
     }
 
     @Test
-    public void testInitiateUserActivation_Given_UserIsAlreadyVerified_Then_ThrowsException() throws Exception {
+    public void testInitiateUserActivation_Given_UserIsAlreadyVerified_Then_ThrowsException(){
         //Arrange
         thrown.expect(UserIsAlreadyVerifiedException.class);
         String emailToken = "token";
         User user = mock(User.class);
 
-        when(userRepository.getOne(userId)).thenReturn(user);
+        when(userRepository.findById(userId)).thenReturn(Optional.ofNullable(user));
 
         UserActivation userActivation = mock(UserActivation.class);
 
@@ -292,7 +302,7 @@ public class UserActivationServiceImplTest {
     }
 
     @Test
-    public void testFindUserActivationInfByUserId_Given_UserActivationRecordNotFound_Then_ThrowsUserActivationNotFoundException() throws Exception {
+    public void testFindUserActivationInfByUserId_Given_UserActivationRecordNotFound_Then_ThrowsUserActivationNotFoundException(){
         //Arrange
         thrown.expect(UserActivationNotFoundException.class);
         thrown.expectMessage("No user activation record found for user id: " + userId);
