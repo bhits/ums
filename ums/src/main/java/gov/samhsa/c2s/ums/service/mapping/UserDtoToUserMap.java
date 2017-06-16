@@ -37,7 +37,6 @@ public class UserDtoToUserMap extends PropertyMap<UserDto, User> {
         map().getDemographics().setMiddleName(source.getMiddleName());
         map().getDemographics().setLastName(source.getLastName());
         map().getDemographics().setBirthDay(source.getBirthDate());
-        map().getDemographics().setSocialSecurityNumber(source.getSocialSecurityNumber());
         using(genderConverter).map(source).getDemographics().setAdministrativeGenderCode(null);
         skip().getDemographics().setAddresses(null);
         using(roleConverter).map(source).setRoles(null);

@@ -1,20 +1,24 @@
 package gov.samhsa.c2s.ums.service.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.NotEmpty;
 
+import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Past;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class UserDto {
 
     private Long id;
@@ -34,7 +38,7 @@ public class UserDto {
     @NotEmpty
     private String genderCode;
 
-    private String socialSecurityNumber;
+    private Optional<String> socialSecurityNumber;
 
     private List<AddressDto> addresses;
 
@@ -48,4 +52,8 @@ public class UserDto {
 
     private String mrn;
 
+    private Optional<String> registrationPurposeEmail;
+
+    @Valid
+    private Optional<List<IdentifierDto>> identifiers;
 }

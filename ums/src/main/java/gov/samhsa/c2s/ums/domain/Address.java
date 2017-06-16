@@ -7,6 +7,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.NotAudited;
 
@@ -29,6 +30,7 @@ import javax.validation.constraints.Size;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
+@ToString(exclude = "demographics")
 public class Address {
     /**
      * The id.
@@ -72,20 +74,15 @@ public class Address {
     @NotAudited
     private CountryCode countryCode;
 
-    @Column(name="`use`")
+    @Column(name = "`use`")
     @Enumerated(EnumType.STRING)
-    private Use use =Use.HOME;
-
-
-    public enum Use{
-        HOME,
-        WORK
-    }
-
+    private Use use = Use.HOME;
     @ManyToOne
     @NotAudited
     private Demographics demographics;
 
-
-
+    public enum Use {
+        HOME,
+        WORK
+    }
 }
