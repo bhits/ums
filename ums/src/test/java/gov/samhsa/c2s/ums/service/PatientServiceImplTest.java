@@ -1,5 +1,8 @@
 package gov.samhsa.c2s.ums.service;
 
+import gov.samhsa.c2s.ums.config.UmsProperties;
+import gov.samhsa.c2s.ums.domain.Demographics;
+import gov.samhsa.c2s.ums.domain.DemographicsRepository;
 import gov.samhsa.c2s.ums.domain.Patient;
 import gov.samhsa.c2s.ums.domain.PatientRepository;
 import gov.samhsa.c2s.ums.domain.Relationship;
@@ -42,6 +45,9 @@ public class PatientServiceImplTest {
     PatientRepository patientRepository;
 
     @Mock
+    DemographicsRepository demographicsRepository;
+
+    @Mock
     ModelMapper modelMapper;
 
     @Mock
@@ -52,6 +58,9 @@ public class PatientServiceImplTest {
 
     @Mock
     RelationshipRepository relationshipRepository;
+
+    @Mock
+    UmsProperties umsProperties;
 
     @InjectMocks
     PatientServiceImpl patientService;
@@ -64,12 +73,20 @@ public class PatientServiceImplTest {
         Optional<String> userAuthId = Optional.of("userId");
         Long id = 30L;
         Long pId = 20L;
+        String codeSystem="code";
         PatientDto patientDto = mock(PatientDto.class);
+        UmsProperties.Mrn mrn=mock(UmsProperties.Mrn.class);
+        Demographics demographics=mock(Demographics.class);
 
-        when(patientRepository.findOneByMrn(patientId)).thenReturn(Optional.ofNullable(patient));
+        when(umsProperties.getMrn()).thenReturn(mrn);
+        when(mrn.getCodeSystem()).thenReturn(codeSystem);
+
+        when(demographicsRepository.findOneByIdentifiersValueAndIdentifiersIdentifierSystemSystem(patientId,codeSystem)).thenReturn(Optional.ofNullable(demographics));
+
+        when(demographics.getPatient()).thenReturn(patient);
 
         User user = mock(User.class);
-        when(userRepository.findOneByUserAuthIdAndDisabled(userAuthId.get(), false)).thenReturn(Optional.ofNullable(user));
+        when(userRepository.findByUserAuthIdAndDisabled(userAuthId.get(), false)).thenReturn(Optional.ofNullable(user));
 
         UserPatientRelationship userPatientRelationship1 = mock(UserPatientRelationship.class);
         UserPatientRelationship userPatientRelationship2 = mock(UserPatientRelationship.class);
@@ -99,9 +116,18 @@ public class PatientServiceImplTest {
         String patientId = "patientId";
         Patient patient = mock(Patient.class);
         Optional<String> userAuthId = Optional.of("userId");
-        when(patientRepository.findOneByMrn(patientId)).thenReturn(Optional.ofNullable(patient));
+        String codeSystem="code";
+        UmsProperties.Mrn mrn=mock(UmsProperties.Mrn.class);
+        Demographics demographics=mock(Demographics.class);
 
-        when(userRepository.findOneByUserAuthIdAndDisabled(userAuthId.get(), false)).thenReturn(Optional.empty());
+        when(umsProperties.getMrn()).thenReturn(mrn);
+        when(mrn.getCodeSystem()).thenReturn(codeSystem);
+
+        when(demographicsRepository.findOneByIdentifiersValueAndIdentifiersIdentifierSystemSystem(patientId,codeSystem)).thenReturn(Optional.ofNullable(demographics));
+
+        when(demographics.getPatient()).thenReturn(patient);
+
+        when(userRepository.findByUserAuthIdAndDisabled(userAuthId.get(), false)).thenReturn(Optional.empty());
 
         //Act
         patientService.getPatientByPatientId(patientId,userAuthId);
@@ -120,11 +146,27 @@ public class PatientServiceImplTest {
         Optional<String> userAuthId = Optional.of("userId");
         Long id = 30L;
         Long pId = 20L;
+        String codeSystem="code";
+        PatientDto patientDto = mock(PatientDto.class);
+        UmsProperties.Mrn mrn=mock(UmsProperties.Mrn.class);
+        Demographics demographics=mock(Demographics.class);
 
-        when(patientRepository.findOneByMrn(patientId)).thenReturn(Optional.ofNullable(patient));
+        when(umsProperties.getMrn()).thenReturn(mrn);
+        when(mrn.getCodeSystem()).thenReturn(codeSystem);
+
+        when(demographicsRepository.findOneByIdentifiersValueAndIdentifiersIdentifierSystemSystem(patientId,codeSystem)).thenReturn(Optional.ofNullable(demographics));
+
+        when(demographics.getPatient()).thenReturn(patient);
 
         User user = mock(User.class);
-        when(userRepository.findOneByUserAuthIdAndDisabled(userAuthId.get(), false)).thenReturn(Optional.ofNullable(user));
+        when(userRepository.findByUserAuthIdAndDisabled(userAuthId.get(), false)).thenReturn(Optional.ofNullable(user));
+
+        UserPatientRelationship userPatientRelationship1 = mock(UserPatientRelationship.class);
+        UserPatientRelationship userPatientRelationship2 = mock(UserPatientRelationship.class);
+
+        List<UserPatientRelationship> userPatientRelationships = new ArrayList<>();
+        userPatientRelationships.add(userPatientRelationship1);
+        userPatientRelationships.add(userPatientRelationship2);
 
         when(user.getId()).thenReturn(id);
         when(patient.getId()).thenReturn(pId);
@@ -150,7 +192,7 @@ public class PatientServiceImplTest {
         userPatientRelationships.add(userPatientRelationship1);
         userPatientRelationships.add(userPatientRelationship2);
 
-        when(userRepository.findOneByUserAuthIdAndDisabled(userAuthId, false)).thenReturn(Optional.ofNullable(user));
+        when(userRepository.findByUserAuthIdAndDisabled(userAuthId, false)).thenReturn(Optional.ofNullable(user));
 
         when(user.getId()).thenReturn(userId);
         when(userPatientRelationshipRepository.findAllByIdUserId(userId)).thenReturn(userPatientRelationships);
@@ -158,7 +200,6 @@ public class PatientServiceImplTest {
         PatientDto patientDto1 = mock(PatientDto.class);
         PatientDto patientDto2 = mock(PatientDto.class);
         List<PatientDto> patientDtos = new ArrayList<>();
-
 
         UserPatientRelationshipId userPatientRelationshipId1 = mock(UserPatientRelationshipId.class);
         UserPatientRelationshipId userPatientRelationshipId2 = mock(UserPatientRelationshipId.class);
@@ -194,7 +235,6 @@ public class PatientServiceImplTest {
         String code2 = "code2";
         when(role1.getCode()).thenReturn(code1);
         when(role2.getCode()).thenReturn(code2);
-
 
         patientDtos.add(patientDto1);
         patientDtos.add(patientDto2);
