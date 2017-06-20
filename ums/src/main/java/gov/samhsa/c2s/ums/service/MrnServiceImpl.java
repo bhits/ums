@@ -31,6 +31,7 @@ public class MrnServiceImpl implements MrnService {
      * @return the string
      */
     private String generateRandomMrn() {
+        //TODO:Based on Tao's comment, this method should be moved to domain of ums.
         StringBuilder localIdIdBuilder = new StringBuilder();
         if (null != umsProperties.getMrn().getPrefix()) {
             localIdIdBuilder.append(umsProperties.getMrn().getPrefix());

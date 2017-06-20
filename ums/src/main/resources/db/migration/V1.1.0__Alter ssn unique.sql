@@ -1,1 +1,0 @@
-ALTER TABLE demographics ADD UNIQUE (social_security_number);

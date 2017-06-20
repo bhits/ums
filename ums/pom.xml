@@ -5,7 +5,7 @@
 
     <groupId>gov.samhsa.c2s</groupId>
     <artifactId>ums</artifactId>
-    <version>0.1.0-SNAPSHOT</version>
+    <version>0.2.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>ums</name>
@@ -28,6 +28,9 @@
         <c2s.common-libraries.version>1.10.0</c2s.common-libraries.version>
         <hapi.fhir.version>2.2</hapi.fhir.version>
         <docker.maven.version>0.4.13</docker.maven.version>
+        <common-unit.version>1.9.0</common-unit.version>
+        <power-mock.version>1.6.5</power-mock.version>
+        <jacoco.version>0.7.7.201606060606</jacoco.version>
     </properties>
 
     <dependencies>
@@ -72,6 +75,11 @@
             <optional>true</optional>
             <scope>runtime</scope>
         </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-configuration-processor</artifactId>
+            <optional>true</optional>
+        </dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-mail</artifactId>
@@ -107,6 +115,10 @@
             <artifactId>jackson-datatype-jsr310</artifactId>
         </dependency>
         <dependency>
+            <groupId>com.fasterxml.jackson.datatype</groupId>
+            <artifactId>jackson-datatype-jdk8</artifactId>
+        </dependency>
+        <dependency>
             <groupId>gov.samhsa.c2s</groupId>
             <artifactId>validator-extension</artifactId>
         </dependency>
@@ -123,6 +135,20 @@
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
         </dependency>
+
+        <dependency>
+            <groupId>org.powermock</groupId>
+            <artifactId>powermock-api-mockito</artifactId>
+            <version>${power-mock.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.powermock</groupId>
+            <artifactId>powermock-module-junit4</artifactId>
+            <version>${power-mock.version}</version>
+            <scope>test</scope>
+        </dependency>
+
 		<dependency>
 			<groupId>org.cloudfoundry.identity</groupId>
 			<artifactId>cloudfoundry-identity-model</artifactId>
@@ -165,6 +191,16 @@
         <dependency>
             <groupId>ca.uhn.hapi.fhir</groupId>
             <artifactId>hapi-fhir-structures-dstu3</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.modelmapper</groupId>
+            <artifactId>modelmapper</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>gov.samhsa.c2s</groupId>
+            <artifactId>common-unit</artifactId>
+            <version>${common-unit.version}</version>
+            <scope>test</scope>
         </dependency>
         <!-- HAPI FHIR JARS -->
     </dependencies>
@@ -252,6 +288,35 @@
                     </resources>
                 </configuration>
             </plugin>
+
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>${jacoco.version}</version>
+                <configuration>
+                    <output>file</output>
+                    <append>true</append>
+                    <excludes>
+                        <exclude>**/dto/*</exclude>
+                    </excludes>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>jacoco-initialize</id>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>jacoco-site</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
         </plugins>
     </build>
 
