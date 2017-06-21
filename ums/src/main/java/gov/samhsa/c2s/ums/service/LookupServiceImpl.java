@@ -23,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
 import static java.util.stream.Collectors.toList;
@@ -105,6 +106,11 @@ public class LookupServiceImpl implements LookupService {
                 .filter(identifierSystemDto -> {
                     if (systemGenerated.isPresent()) {
                         final boolean sg = systemGenerated.get();
+                        if (sg == false &&
+                                (Objects.isNull(identifierSystemDto.getRequiredIdentifierSystemsByRole()) ||
+                                        identifierSystemDto.getRequiredIdentifierSystemsByRole().isEmpty())) {
+                            return true;
+                        }
                         return identifierSystemDto.getRequiredIdentifierSystemsByRole().entrySet().stream()
                                 .map(Map.Entry::getValue)
                                 .flatMap(List::stream)
