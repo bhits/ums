@@ -5,7 +5,8 @@ The UMS manages User Registration, Activation, Disable and register as a patient
 
 # Supported Source Code Tags and Current `Dockerfile` Link
 
-[`0.1.0 (latest)`](https://github.com/bhits-dev/ums/releases/tag/0.1.0)
+[`0.2.0 (latest)`](https://github.com/bhits-dev/ums/releases/tag/0.2.0), [`0.1.0`](https://github
+.com/bhits-dev/ums/releases/tag/0.1.0)
 
 [`Current Dockerfile`](https://github.com/bhits-dev/ums/blob/master/ums/src/main/docker/Dockerfile)
 
@@ -15,7 +16,7 @@ For more information about this image, the source code, and its history, please 
 
 The User Management Service (UMS) is a component of Consent2Share(C2S). It manages the user account creation process, user account activation, user disable, user update, and persisting of the user demographics. The UMS has been designed to support various roles for a given user such as Admin, Parent, Guardian, Patient, and so on. If it is configured to do so, it also registers user demographics (if the user is also a patient) to a Fast Healthcare Interoperability Resources (FHIR) server. 
 
-For more information and related downloads for Consent2Share, please visit [Consent2Share](https://bhits.github.io/consent2share/).
+For more information and related downloads for Consent2Share, please visit [Consent2Share](https://bhits-dev.github.io/consent2share/).
 
 # How to Use This Image
 
