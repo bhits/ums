@@ -122,7 +122,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public void registerUser(UserDto userDto) {
+    public UserDto registerUser(UserDto userDto) {
 
         // Step 1: Create User Record and User Role Mapping in UMS
 
@@ -185,6 +185,8 @@ public class UserServiceImpl implements UserService {
                 fhirPatientService.publishFhirPatient(userDto);
             }
         }
+
+        return modelMapper.map(user,UserDto.class);
     }
 
     @Override

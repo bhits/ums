@@ -37,8 +37,8 @@ public class UserRestController {
      */
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public void registerUser(@Valid @RequestBody UserDto userDto) {
-        userService.registerUser(userDto);
+    public UserDto registerUser(@Valid @RequestBody UserDto userDto) {
+        return userService.registerUser(userDto);
     }
 
     /**

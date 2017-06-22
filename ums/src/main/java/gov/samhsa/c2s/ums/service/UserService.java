@@ -12,7 +12,7 @@ import java.util.StringTokenizer;
 
 public interface UserService {
     @Transactional
-    void registerUser(UserDto consentDto);
+    UserDto registerUser(UserDto consentDto);
 
     @Transactional
     void disableUser(Long userId);
