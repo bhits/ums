@@ -388,19 +388,22 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<UserDto> searchUsersByDemographic(String firstName,
+    public Page<UserDto> searchUsersByDemographic(String firstName,
                                                   String lastName,
                                                   LocalDate birthDate,
-                                                  String genderCode) {
-        List<Demographics> demographicsesList;
+                                                  String genderCode,Optional<Integer> page,
+                                                  Optional<Integer> size) {
+        final PageRequest pageRequest = new PageRequest(page.filter(p -> p >= 0).orElse(0),
+                size.filter(s -> s > 0 && s <= umsProperties.getPagination().getMaxSize())
+                        .orElse(umsProperties.getPagination().getDefaultSize()));
         final AdministrativeGenderCode administrativeGenderCode = administrativeGenderCodeRepository.findByCode(genderCode);
-        demographicsesList = demographicsRepository.findAllByFirstNameAndLastNameAndBirthDayAndAdministrativeGenderCode(firstName, lastName,
-                birthDate, administrativeGenderCode);
-        if (demographicsesList.size() < 1) {
-            throw new UserNotFoundException("User Not Found!");
-        } else {
-            return demographicsesListToUserDtoList(demographicsesList);
-        }
+        Page<Demographics> demographicsPage = demographicsRepository.query(firstName, lastName, administrativeGenderCode, birthDate, pageRequest);
+
+        List<Demographics> demographicsesList=demographicsPage.getContent();
+
+        final List<UserDto> getUserDtoList = demographicsesListToUserDtoList(demographicsesList);
+        return new PageImpl<>(getUserDtoList, pageRequest, demographicsPage.getTotalElements());
+
     }
 
     @Override

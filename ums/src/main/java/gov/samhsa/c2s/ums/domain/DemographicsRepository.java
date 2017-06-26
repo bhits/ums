@@ -1,6 +1,7 @@
 package gov.samhsa.c2s.ums.domain;
 
 import gov.samhsa.c2s.ums.domain.reference.AdministrativeGenderCode;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -21,4 +22,17 @@ public interface DemographicsRepository extends JpaRepository<Demographics, Long
                                                                                            AdministrativeGenderCode administrativeGenderCode);
 
     Optional<Demographics> findOneByIdentifiersValueAndIdentifiersIdentifierSystemSystem(String value, String system);
+
+
+    @Query("SELECT DISTINCT p FROM Demographics p WHERE "
+            + " ((?1 = null) OR (p.firstName LIKE ?1))"
+            + " AND ((?2 = null) OR (p.lastName LIKE ?2))"
+            + " AND ((?3 = null) OR (p.administrativeGenderCode LIKE ?3))"
+            + " AND ((?4 = null) OR (p.birthDay LIKE ?4 ))")
+    Page<Demographics> query(
+            String firstName,
+            String lastName,
+            AdministrativeGenderCode genderCode,
+            LocalDate birthDay,
+            Pageable pageable);
 }

@@ -147,11 +147,13 @@ public class UserRestController {
      */
     @GetMapping(value = "/search/patientDemographic")
     @ResponseStatus(HttpStatus.OK)
-    public List<UserDto> searchUsersByDemographic(@RequestParam("firstName") String firstName,
-                                                  @RequestParam("lastName") String lastName,
-                                                  @RequestParam("birthDate") @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate birthDate,
-                                                  @RequestParam("genderCode") String genderCode) {
-        return userService.searchUsersByDemographic(firstName, lastName, birthDate, genderCode);
+    public Page<UserDto> searchUsersByDemographic(@RequestParam(value = "firstName", required = false) String firstName,
+                                                  @RequestParam(value = "lastName", required = false) String lastName,
+                                                  @RequestParam(value = "birthDate", required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate birthDate,
+                                                  @RequestParam(value = "genderCode", required = false) String genderCode,
+                                                  @RequestParam("page") Optional<Integer> page,
+                                                  @RequestParam("size") Optional<Integer> size) {
+        return userService.searchUsersByDemographic(firstName, lastName, birthDate, genderCode, page, size);
     }
 
     @GetMapping("/search/identifier")
