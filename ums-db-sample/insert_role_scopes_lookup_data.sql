@@ -59,7 +59,16 @@ VALUES
    'Write access to C2S Backend API'),
   ('3',
    'c2sUi.access',
-   'Access C2S UI');
+   'Access C2S UI'),
+  ('4',
+   'providerUiApi.read',
+   'Read Provider UI backend resource'),
+  ('5',
+   'providerUiApi.write',
+   'Write Provider UI backend resource'),
+  ('6',
+   'providerUi.access',
+   'Access Provider UI');
 
 --
 -- Insert data for table scope_roles
@@ -74,4 +83,10 @@ VALUES
   ('2',
    '1'),
   ('3',
-   '1');
+   '1'),
+  ('4',
+   '4'),
+  ('5',
+   '4'),
+  ('6',
+   '4');
