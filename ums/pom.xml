@@ -5,7 +5,7 @@
 
     <groupId>gov.samhsa.c2s</groupId>
     <artifactId>ums</artifactId>
-    <version>0.2.0-SNAPSHOT</version>
+    <version>0.3.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>ums</name>
@@ -193,10 +193,6 @@
             <artifactId>hapi-fhir-structures-dstu3</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.modelmapper</groupId>
-            <artifactId>modelmapper</artifactId>
-        </dependency>
-        <dependency>
             <groupId>gov.samhsa.c2s</groupId>
             <artifactId>common-unit</artifactId>
             <version>${common-unit.version}</version>
@@ -259,6 +255,7 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
             </plugin>
+
             <plugin>
                 <groupId>pl.project13.maven</groupId>
                 <artifactId>git-commit-id-plugin</artifactId>
@@ -266,6 +263,7 @@
                     <dotGitDirectory>${project.basedir}/../.git</dotGitDirectory>
                 </configuration>
             </plugin>
+
             <plugin>
                 <groupId>com.spotify</groupId>
                 <artifactId>docker-maven-plugin</artifactId>
@@ -316,9 +314,7 @@
                     </execution>
                 </executions>
             </plugin>
-
         </plugins>
     </build>
-
 
 </project>
