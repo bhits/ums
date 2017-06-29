@@ -12,7 +12,7 @@ import java.util.StringTokenizer;
 
 public interface UserService {
     @Transactional
-    void registerUser(UserDto consentDto);
+    UserDto registerUser(UserDto consentDto);
 
     @Transactional
     void disableUser(Long userId);
@@ -36,7 +36,8 @@ public interface UserService {
     List<UserDto> searchUsersByFirstNameAndORLastName(StringTokenizer token);
 
     @Transactional(readOnly = true)
-    List<UserDto> searchUsersByDemographic(String firstName, String lastName, LocalDate birthDate, String genderCode);
+    Page<UserDto> searchUsersByDemographic(String firstName, String lastName, LocalDate birthDate, String genderCode,Optional<Integer> page,
+                                           Optional<Integer> size);
 
     @Transactional(readOnly = true)
     List<UserDto> searchUsersByIdentifier(String value, String system);
