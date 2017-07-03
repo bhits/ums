@@ -15,6 +15,7 @@ import gov.samhsa.c2s.ums.domain.UserScopeAssignment;
 import gov.samhsa.c2s.ums.domain.UserScopeAssignmentRepository;
 import gov.samhsa.c2s.ums.infrastructure.EmailSender;
 import gov.samhsa.c2s.ums.infrastructure.ScimService;
+import gov.samhsa.c2s.ums.service.dto.EmailTokenDto;
 import gov.samhsa.c2s.ums.service.dto.ScopeAssignmentRequestDto;
 import gov.samhsa.c2s.ums.service.dto.ScopeAssignmentResponseDto;
 import gov.samhsa.c2s.ums.service.dto.UserActivationRequestDto;
@@ -205,6 +206,14 @@ public class UserActivationServiceImpl implements UserActivationService {
         response.setEmail(user.getDemographics().getTelecoms().stream().filter(telecom -> telecom.getSystem().equals(Telecom.System.EMAIL)).map(Telecom::getValue).findFirst().get());
         response.setVerified(userActivation.isVerified());
         return response;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public EmailTokenDto getUserEmailToken(Long userId) {
+        final User user = userRepository.findOne(userId);
+        final UserActivation userActivation = userActivationRepository.findOneByUserId(userId).orElseThrow(() -> new UserActivationNotFoundException("No user activation record found for user id: " + userId));
+        return new EmailTokenDto(userActivation.getEmailToken());
     }
 
     @Override

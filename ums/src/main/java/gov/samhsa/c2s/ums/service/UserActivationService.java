@@ -1,5 +1,6 @@
 package gov.samhsa.c2s.ums.service;
 
+import gov.samhsa.c2s.ums.service.dto.EmailTokenDto;
 import gov.samhsa.c2s.ums.service.dto.ScopeAssignmentRequestDto;
 import gov.samhsa.c2s.ums.service.dto.ScopeAssignmentResponseDto;
 import gov.samhsa.c2s.ums.service.dto.UserActivationRequestDto;
@@ -17,6 +18,8 @@ public interface UserActivationService {
     @Transactional(readOnly = true)
     UserActivationResponseDto findUserActivationInfoByUserId(Long userId);
 
+    @Transactional(readOnly = true)
+    EmailTokenDto getUserEmailToken(Long userId);
 
     @Transactional
     UserActivationResponseDto activateUser(UserActivationRequestDto userActivationRequest, String xForwardedProto, String xForwardedHost, int xForwardedPort);
