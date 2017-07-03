@@ -111,8 +111,20 @@ public class UserActivationServiceImpl implements UserActivationService {
         response.setVerified(saved.isVerified());
         response.setEmail(user.getDemographics().getTelecoms().stream().filter(telecom -> telecom.getSystem().equals(Telecom.System.EMAIL)).map(Telecom::getValue).findFirst().get());
         response.setGenderCode(user.getDemographics().getAdministrativeGenderCode().getCode());
+
+        //If user has roles which is not required send email
+        if (emailSenderProperties.getDisabledByRoles() != null && user.getRoles().stream().filter(role -> emailSenderProperties.getDisabledByRoles().contains(role.getCode())).findAny().isPresent())
+            return response;
+        else {
+            // Send email with verification link
+            sendEmailWithVerificationLink(user, saved, xForwardedProto, xForwardedHost, xForwardedPort);
+            return response;
+        }
+    }
+
+    private void sendEmailWithVerificationLink(User user, UserActivation saved, String xForwardedProto, String xForwardedHost, int xForwardedPort){
         // Send email with verification link
-        final String email = Optional.of(user)
+        String email = Optional.of(user)
                 // Try to find registrationPurposeEmail first
                 .map(User::getDemographics)
                 .map(Demographics::getPatient)
@@ -134,7 +146,7 @@ public class UserActivationServiceImpl implements UserActivationService {
                 email,
                 saved.getEmailToken(),
                 getRecipientFullName(user), new Locale(user.getLocale().getCode()));
-        return response;
+
     }
 
     @Override
