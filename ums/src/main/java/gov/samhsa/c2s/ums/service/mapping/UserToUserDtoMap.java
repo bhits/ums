@@ -24,6 +24,7 @@ public class UserToUserDtoMap extends PropertyMap<User, UserDto> {
     @Override
     protected void configure() {
         map().setId(source.getId());
+        map().setUserAuthId(source.getUserAuthId());
         map().setFirstName(source.getDemographics().getFirstName());
         map().setMiddleName(source.getDemographics().getMiddleName());
         map().setLastName(source.getDemographics().getLastName());
