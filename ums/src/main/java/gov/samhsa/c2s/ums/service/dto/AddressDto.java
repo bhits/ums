@@ -1,45 +1,41 @@
 package gov.samhsa.c2s.ums.service.dto;
 
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
-import javax.validation.constraints.Pattern;
-
 @Data
-@Builder
+@EqualsAndHashCode(callSuper = true)
 @AllArgsConstructor
 @NoArgsConstructor
-public class AddressDto {
+public class AddressDto extends BaseAddressDto {
+    public AddressDto(BaseAddressDto baseAddressDto, String use) {
+        super(
+                baseAddressDto.getLine1(),
+                baseAddressDto.getLine2(),
+                baseAddressDto.getCity(),
+                baseAddressDto.getStateCode(),
+                baseAddressDto.getPostalCode(),
+                baseAddressDto.getCountryCode()
+        );
 
-    /**
-     * The street address line.
-     */
-    private String line1;
+        this.use = use;
+    }
 
-    private String line2;
+    // copy constructor
+    public AddressDto(AddressDto addressDto) {
+        super(
+                addressDto.getLine1(),
+                addressDto.getLine2(),
+                addressDto.getCity(),
+                addressDto.getStateCode(),
+                addressDto.getPostalCode(),
+                addressDto.getCountryCode()
+        );
 
-    /**
-     * The city.
-     */
-    private String city;
-
-    /**
-     * The state code.
-     */
-    private String stateCode;
-
-    /**
-     * The postal code.
-     */
-    @Pattern(regexp = "\\d{5}(?:[-\\s]\\d{4})?")
-    private String postalCode;
-
-    /**
-     * The country code.
-     */
-    private String countryCode;
+        this.use = addressDto.getUse();
+    }
 
     private String use;
 }
