@@ -12,6 +12,13 @@ import org.hibernate.validator.constraints.NotBlank;
 @NoArgsConstructor
 public class TelecomDto {
 
+    // copy constructor
+    public TelecomDto(TelecomDto telecomDto) {
+        this.system = telecomDto.getSystem();
+        this.value = telecomDto.getValue();
+        this.use = telecomDto.getUse();
+    }
+
     @NotBlank
     private String system;
 
