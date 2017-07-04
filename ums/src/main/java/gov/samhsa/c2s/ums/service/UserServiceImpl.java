@@ -319,7 +319,9 @@ public class UserServiceImpl implements UserService {
             fhirPatientService.updateFhirPatient(userDto);
         }
 
-        userRepository.save(user);
+        User updatedUser = userRepository.save(user);
+
+        return modelMapper.map(updatedUser, UserDto.class);
     }
 
     @Override
