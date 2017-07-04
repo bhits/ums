@@ -87,9 +87,8 @@ public class UserRestController {
      * @param userDto User Dto Object
      */
     @PutMapping("/{userId}")
-    @ResponseStatus(HttpStatus.OK)
-    public void updateUser(@PathVariable Long userId, @Valid @RequestBody UserDto userDto) {
-        userService.updateUser(userId, userDto);
+    public UserDto updateUser(@PathVariable Long userId, @Valid @RequestBody UserDto userDto) {
+        return userService.updateUser(userId, userDto);
     }
 
     /**

@@ -21,7 +21,7 @@ public interface UserService {
     void enableUser(Long userId);
 
     @Transactional
-    void updateUser(Long userId, UserDto userDto);
+    UserDto updateUser(Long userId, UserDto userDto);
 
     @Transactional(readOnly = true)
     UserDto getUser(Long userId);

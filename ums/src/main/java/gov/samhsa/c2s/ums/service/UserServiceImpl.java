@@ -226,7 +226,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public void updateUser(Long userId, UserDto userDto) {
+    public UserDto updateUser(Long userId, UserDto userDto) {
 
         /* Get User Entity from UserDto */
         final User user = userRepository.findById(userId).orElseThrow(UserNotFoundException::new);
