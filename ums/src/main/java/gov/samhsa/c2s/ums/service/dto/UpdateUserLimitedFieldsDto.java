@@ -8,7 +8,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class UpdateUserLimitedFieldsDto {
-    private String userLocale;
     private String homePhone;
     private String homeEmail;
     private BaseAddressDto homeAddress;

@@ -330,9 +330,6 @@ public class UserServiceImpl implements UserService {
         // Get user from database as UserDto object
         User user = userRepository.findOne(userId);
 
-        // Update locale
-        user.setLocale(localeRepository.findByCode(updateUserLimitedFieldsDto.getUserLocale()));
-
         // Update address
         List<Address> addresses = user.getDemographics().getAddresses();
         AddressDto newHomeAddressDto = new AddressDto(updateUserLimitedFieldsDto.getHomeAddress(), UseTypes.HOME.toString());
