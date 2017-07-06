@@ -26,7 +26,6 @@ import gov.samhsa.c2s.ums.domain.valueobject.UserPatientRelationshipId;
 import gov.samhsa.c2s.ums.infrastructure.ScimService;
 import gov.samhsa.c2s.ums.service.dto.AccessDecisionDto;
 import gov.samhsa.c2s.ums.service.dto.AddressDto;
-import gov.samhsa.c2s.ums.service.dto.BaseAddressDto;
 import gov.samhsa.c2s.ums.service.dto.IdentifierDto;
 import gov.samhsa.c2s.ums.service.dto.RelationDto;
 import gov.samhsa.c2s.ums.service.dto.TelecomDto;
@@ -36,7 +35,6 @@ import gov.samhsa.c2s.ums.service.exception.InvalidIdentifierSystemException;
 import gov.samhsa.c2s.ums.service.exception.MissingEmailException;
 import gov.samhsa.c2s.ums.service.exception.PatientNotFoundException;
 import gov.samhsa.c2s.ums.service.exception.UserActivationNotFoundException;
-import gov.samhsa.c2s.ums.service.exception.UserDtoFieldSanityCheckException;
 import gov.samhsa.c2s.ums.service.exception.UserNotFoundException;
 import gov.samhsa.c2s.ums.service.fhir.FhirPatientService;
 import gov.samhsa.c2s.ums.service.mapping.PatientToMrnConverter;
@@ -62,7 +60,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.UUID;
-import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.toList;
@@ -332,39 +329,83 @@ public class UserServiceImpl implements UserService {
     public UserDto updateUserLimitedFields(Long userId, UpdateUserLimitedFieldsDto updateUserLimitedFieldsDto) {
         // Get user from database as UserDto object
         User user = userRepository.findOne(userId);
-        UserDto userDto = modelMapper.map(user, UserDto.class);
 
-        // Find system generated identifier systems based on the user roles
-        final Set<UmsProperties.RequiredIdentifierSystem> allRequiredIdentifierSystems = getAllRequiredIdentifierSystems(user);
-        final Set<UmsProperties.RequiredIdentifierSystem> systemGeneratedIdentifierSystems = getRequiredAndSystemGeneratedIdentifierSystems(allRequiredIdentifierSystems);
+        // Update locale
+        user.setLocale(localeRepository.findByCode(updateUserLimitedFieldsDto.getUserLocale()));
 
-        Optional<List<IdentifierDto>> userDtoIdentifierDtos = userDto.getIdentifiers();
+        // Update address
+        List<Address> addresses = user.getDemographics().getAddresses();
+        AddressDto newHomeAddressDto = new AddressDto(updateUserLimitedFieldsDto.getHomeAddress(), UseTypes.HOME.toString());
 
-        List<IdentifierDto> identifierDtosWithoutSystemGenerated = new ArrayList<>();
+        Optional<Address> oldHomeAddress = addresses.parallelStream()
+                .filter(address -> address.getUse().equals(Address.Use.HOME))
+                .findFirst();
 
-        // Remove system generated identifiers from list
-        if(userDtoIdentifierDtos.isPresent()){
-            identifierDtosWithoutSystemGenerated = userDtoIdentifierDtos
-                    .get()
-                    .parallelStream()
-                    .filter(identifierDto -> systemGeneratedIdentifierSystems
-                            .parallelStream()
-                            .noneMatch(sysGenIdentSys -> sysGenIdentSys
-                                    .getSystem()
-                                    .equals(identifierDto.getSystem())))
-                    .collect(toList());
+        if (oldHomeAddress.isPresent()) {
+            mapAddressDtoToAddress(oldHomeAddress.get(), newHomeAddressDto);
+        } else {
+            Address address = mapAddressDtoToAddress(new Address(), newHomeAddressDto);
+            address.setDemographics(user.getDemographics());
+            addresses.add(address);
         }
 
-        // Update userDto.identifiers property to exclude system generated identifiers
-        userDto.setIdentifiers(Optional.of(identifierDtosWithoutSystemGenerated));
+        List<Telecom> userTelecoms = user.getDemographics().getTelecoms();
 
-        // Update userDto fields with new values from updateUserLimitedFieldsDto object
-        userDto.setAddresses(updateHomeAddressInAddressList(userDto.getAddresses(), updateUserLimitedFieldsDto.getHomeAddress()));
-        userDto.setTelecoms(updateHomePhoneInTelecomList(userDto.getTelecoms(), updateUserLimitedFieldsDto.getHomePhone()));
-        userDto.setTelecoms(updateHomeEmailInTelecomList(userDto.getTelecoms(), updateUserLimitedFieldsDto.getHomeEmail()));
-        userDto.setLocale(updateUserLimitedFieldsDto.getUserLocale());
+        // Update home phone telecom
+        Optional<String> newHomePhoneOpt = Optional.ofNullable(updateUserLimitedFieldsDto.getHomePhone());
+        Optional<TelecomDto> newHomePhoneTelecomDto = newHomePhoneOpt.map(s -> new TelecomDto(SystemTypes.PHONE.toString(), s, UseTypes.HOME.toString()));
 
-        return updateUser(userId, userDto);
+        Optional<Telecom> oldHomePhoneTelecom = userTelecoms.parallelStream()
+                .filter(telecom ->
+                        telecom.getSystem().equals(Telecom.System.PHONE)
+                                && telecom.getUse().equals(Telecom.Use.HOME))
+                .findFirst();
+
+        if (newHomePhoneTelecomDto.isPresent()) {
+            if (oldHomePhoneTelecom.isPresent()) {
+                oldHomePhoneTelecom.get().setValue(newHomePhoneTelecomDto.get().getValue());
+            } else {
+                Telecom telecomToAdd = mapTelecomDtoToTelcom(new Telecom(), newHomePhoneTelecomDto.get());
+                telecomToAdd.setDemographics(user.getDemographics());
+                userTelecoms.add(telecomToAdd);
+            }
+        } else {
+            if (oldHomePhoneTelecom.isPresent()) {
+                // Remove home phone telecom if it already exists
+                oldHomePhoneTelecom.get().setDemographics(null);
+                userTelecoms.remove(oldHomePhoneTelecom.get());
+            }
+        }
+
+        // Update home email telecom
+        Optional<String> newHomeEmailOpt = Optional.ofNullable(updateUserLimitedFieldsDto.getHomeEmail());
+        Optional<TelecomDto> newHomeEmailTelecomDto = newHomeEmailOpt.map(s -> new TelecomDto(SystemTypes.EMAIL.toString(), s, UseTypes.HOME.toString()));
+
+        Optional<Telecom> oldHomeEmailTelecom = userTelecoms.parallelStream()
+                .filter(telecom ->
+                        telecom.getSystem().equals(Telecom.System.EMAIL)
+                                && telecom.getUse().equals(Telecom.Use.HOME))
+                .findFirst();
+
+        if (newHomeEmailTelecomDto.isPresent()) {
+            if (oldHomeEmailTelecom.isPresent()) {
+                oldHomeEmailTelecom.get().setValue(newHomeEmailTelecomDto.get().getValue());
+            } else {
+                Telecom telecomToAdd = mapTelecomDtoToTelcom(new Telecom(), newHomeEmailTelecomDto.get());
+                telecomToAdd.setDemographics(user.getDemographics());
+                userTelecoms.add(telecomToAdd);
+            }
+        } else {
+            if (oldHomeEmailTelecom.isPresent()) {
+                // Remove home email telecom if it already exists
+                oldHomeEmailTelecom.get().setDemographics(null);
+                userTelecoms.remove(oldHomeEmailTelecom.get());
+            }
+        }
+
+        User updatedUser = userRepository.save(user);
+
+        return modelMapper.map(updatedUser, UserDto.class);
     }
 
     @Override
@@ -635,122 +676,5 @@ public class UserServiceImpl implements UserService {
             default:
                 throw new InvalidIdentifierSystemException("This identifier system is not configured with an algorithm, the identifier cannot be generated");
         }
-    }
-
-    private List<AddressDto> updateHomeAddressInAddressList(List<AddressDto> inUserDtoAddresses, BaseAddressDto newBaseAddressDto) {
-        // Deep copy passed inUserDtoAddresses list
-        List<AddressDto> userDtoAddresses = inUserDtoAddresses.parallelStream()
-                .map(AddressDto::new)
-                .collect(toList());
-
-        AddressDto newAddressDto = new AddressDto(newBaseAddressDto, UseTypes.HOME.toString());
-
-        List<AddressDto> homeAddressList = userDtoAddresses.parallelStream()
-                .filter(addressDto -> addressDto
-                        .getUse()
-                        .equalsIgnoreCase(UseTypes.HOME.toString()))
-                .collect(toList());
-
-        // Sanity check in case multiple matching records are found
-        if (homeAddressList.size() == 1) {
-            int index = IntStream.range(0, userDtoAddresses.size())
-                    .filter(i -> userDtoAddresses.get(i).getUse().equalsIgnoreCase(UseTypes.HOME.toString()))
-                    .findFirst()
-                    .orElseThrow(IndexOutOfBoundsException::new);
-
-            userDtoAddresses.set(index, newAddressDto);
-        } else if (homeAddressList.size() < 1) {
-            userDtoAddresses.add(newAddressDto);
-        } else {
-            throw new UserDtoFieldSanityCheckException("More than 1 AddressDto in list of User addresses has the 'use' value of '" + UseTypes.HOME.toString() + "'");
-        }
-
-        return userDtoAddresses;
-    }
-
-    private List<TelecomDto> updateHomePhoneInTelecomList(List<TelecomDto> inUserDtoTelecoms, String newHomePhone) {
-        // Deep copy passed inUserDtoTelecoms
-        List<TelecomDto> userDtoTelecoms = inUserDtoTelecoms.parallelStream()
-                .map(TelecomDto::new)
-                .collect(toList());
-
-        TelecomDto newTelecomDto = new TelecomDto(SystemTypes.PHONE.toString(), newHomePhone, UseTypes.HOME.toString());
-
-        List<TelecomDto> homePhoneList = userDtoTelecoms.parallelStream()
-                .filter(telecomDto ->
-                        telecomDto
-                                .getSystem()
-                                .equalsIgnoreCase(SystemTypes.PHONE.toString())
-                                && telecomDto
-                                .getUse()
-                                .equalsIgnoreCase(UseTypes.HOME.toString()))
-                .collect(toList());
-
-        // Sanity check in case multiple matching records are found
-        if (homePhoneList.size() == 1) {
-            int index = IntStream.range(0, userDtoTelecoms.size())
-                    .filter(i ->
-                            (userDtoTelecoms
-                                    .get(i)
-                                    .getUse()
-                                    .equalsIgnoreCase(UseTypes.HOME.toString())
-                            ) && (userDtoTelecoms
-                                    .get(i)
-                                    .getSystem()
-                                    .equalsIgnoreCase(SystemTypes.PHONE.toString())))
-                    .findFirst()
-                    .orElseThrow(IndexOutOfBoundsException::new);
-
-            userDtoTelecoms.set(index, newTelecomDto);
-        } else if (homePhoneList.size() < 1) {
-            userDtoTelecoms.add(newTelecomDto);
-        } else {
-            throw new UserDtoFieldSanityCheckException("More than 1 TelecomDto in list of User telecoms has the 'use' value of '" + UseTypes.HOME.toString() + "' and the 'system' value of '" + SystemTypes.PHONE.toString() + "'");
-        }
-
-        return userDtoTelecoms;
-    }
-
-    private List<TelecomDto> updateHomeEmailInTelecomList(List<TelecomDto> inUserDtoTelecoms, String newHomeEmail) {
-        // Deep copy passed inUserDtoTelecoms
-        List<TelecomDto> userDtoTelecoms = inUserDtoTelecoms.parallelStream()
-                .map(TelecomDto::new)
-                .collect(toList());
-
-        TelecomDto newTelecomDto = new TelecomDto(SystemTypes.EMAIL.toString(), newHomeEmail, UseTypes.HOME.toString());
-
-        List<TelecomDto> homeEmailList = userDtoTelecoms.parallelStream()
-                .filter(telecomDto ->
-                        telecomDto
-                                .getSystem()
-                                .equalsIgnoreCase(SystemTypes.EMAIL.toString())
-                                && telecomDto
-                                .getUse()
-                                .equalsIgnoreCase(UseTypes.HOME.toString()))
-                .collect(toList());
-
-        // Sanity check in case multiple matching records are found
-        if (homeEmailList.size() == 1) {
-            int index = IntStream.range(0, userDtoTelecoms.size())
-                    .filter(i ->
-                            (userDtoTelecoms
-                                    .get(i)
-                                    .getUse()
-                                    .equalsIgnoreCase(UseTypes.HOME.toString())
-                            ) && (userDtoTelecoms
-                                    .get(i)
-                                    .getSystem()
-                                    .equalsIgnoreCase(SystemTypes.EMAIL.toString())))
-                    .findFirst()
-                    .orElseThrow(IndexOutOfBoundsException::new);
-
-            userDtoTelecoms.set(index, newTelecomDto);
-        } else if (homeEmailList.size() < 1) {
-            userDtoTelecoms.add(newTelecomDto);
-        } else {
-            throw new UserDtoFieldSanityCheckException("More than 1 TelecomDto in list of User telecoms has the 'use' value of '" + UseTypes.HOME.toString() + "' and the 'system' value of '" + SystemTypes.EMAIL.toString() + "'");
-        }
-
-        return userDtoTelecoms;
     }
 }
