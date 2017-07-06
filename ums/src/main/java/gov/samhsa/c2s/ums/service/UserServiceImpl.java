@@ -2,7 +2,6 @@ package gov.samhsa.c2s.ums.service;
 
 import gov.samhsa.c2s.ums.config.UmsProperties;
 import gov.samhsa.c2s.ums.domain.Address;
-import gov.samhsa.c2s.ums.domain.AddressRepository;
 import gov.samhsa.c2s.ums.domain.Demographics;
 import gov.samhsa.c2s.ums.domain.DemographicsRepository;
 import gov.samhsa.c2s.ums.domain.Identifier;
@@ -15,7 +14,6 @@ import gov.samhsa.c2s.ums.domain.PatientRepository;
 import gov.samhsa.c2s.ums.domain.Role;
 import gov.samhsa.c2s.ums.domain.RoleRepository;
 import gov.samhsa.c2s.ums.domain.Telecom;
-import gov.samhsa.c2s.ums.domain.TelecomRepository;
 import gov.samhsa.c2s.ums.domain.User;
 import gov.samhsa.c2s.ums.domain.UserPatientRelationship;
 import gov.samhsa.c2s.ums.domain.UserPatientRelationshipRepository;
@@ -91,8 +89,6 @@ public class UserServiceImpl implements UserService {
     private PatientRepository patientRepository;
 
     @Autowired
-    private LocaleRepository localeRepository;
-    @Autowired
     private RoleRepository roleRepository;
     @Autowired
     private StateCodeRepository stateCodeRepository;
@@ -100,13 +96,8 @@ public class UserServiceImpl implements UserService {
     private CountryCodeRepository countryCodeRepository;
 
     @Autowired
-    private TelecomRepository telecomRepository;
-    @Autowired
-    private AddressRepository addressRepository;
-    @Autowired
     private UserPatientRelationshipRepository userPatientRelationshipRepository;
-    @Autowired
-    private ScimService scimService;
+
     @Autowired
     private DemographicsRepository demographicsRepository;
 
@@ -123,6 +114,15 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     private PatientToMrnConverter patientToMrnConverter;
+
+    private final LocaleRepository localeRepository;
+    private final ScimService scimService;
+
+    @Autowired
+    public UserServiceImpl(LocaleRepository localeRepository, ScimService scimService) {
+        this.localeRepository = localeRepository;
+        this.scimService = scimService;
+    }
 
     @Override
     @Transactional
