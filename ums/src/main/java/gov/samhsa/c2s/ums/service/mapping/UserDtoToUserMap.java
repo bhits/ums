@@ -1,12 +1,12 @@
 package gov.samhsa.c2s.ums.service.mapping;
 
 import gov.samhsa.c2s.ums.domain.Locale;
+import gov.samhsa.c2s.ums.domain.LocaleRepository;
 import gov.samhsa.c2s.ums.domain.Role;
 import gov.samhsa.c2s.ums.domain.RoleRepository;
 import gov.samhsa.c2s.ums.domain.User;
 import gov.samhsa.c2s.ums.domain.reference.AdministrativeGenderCode;
 import gov.samhsa.c2s.ums.domain.reference.AdministrativeGenderCodeRepository;
-import gov.samhsa.c2s.ums.service.LocaleService;
 import gov.samhsa.c2s.ums.service.dto.UserDto;
 import org.modelmapper.AbstractConverter;
 import org.modelmapper.PropertyMap;
@@ -87,17 +87,19 @@ public class UserDtoToUserMap extends PropertyMap<UserDto, User> {
      */
     @Component
     private static class LocaleConverter extends AbstractConverter<UserDto, Locale> {
-        private final LocaleService localeService;
+        private final LocaleRepository localeRepository;
 
         @Autowired
-        public LocaleConverter(LocaleService localeService) {
-            this.localeService = localeService;
+        public LocaleConverter(LocaleRepository localeRepository) {
+            this.localeRepository = localeRepository;
         }
 
         @Override
         protected Locale convert(UserDto source) {
-            return localeService.findLocaleByCode(source.getLocale());
+            return localeRepository.findByCode(source.getLocale());
         }
     }
 
 }
+
+
