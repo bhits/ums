@@ -151,9 +151,11 @@ public class UserRestController {
                                                   @RequestParam(value = "lastName", required = false) String lastName,
                                                   @RequestParam(value = "birthDate", required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate birthDate,
                                                   @RequestParam(value = "genderCode", required = false) String genderCode,
+                                                  @RequestParam(value = "mrn", required = false) String mrn,
+                                                  @RequestParam(value = "roleCode", required = false) String roleCode,
                                                   @RequestParam("page") Optional<Integer> page,
                                                   @RequestParam("size") Optional<Integer> size) {
-        return userService.searchUsersByDemographic(firstName, lastName, birthDate, genderCode, page, size);
+        return userService.searchUsersByDemographic(firstName, lastName, birthDate, genderCode,mrn, roleCode,page, size);
     }
 
     @GetMapping("/search/identifier")

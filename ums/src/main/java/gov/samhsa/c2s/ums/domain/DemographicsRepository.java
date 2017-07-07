@@ -5,6 +5,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -25,14 +26,18 @@ public interface DemographicsRepository extends JpaRepository<Demographics, Long
 
 
     @Query("SELECT DISTINCT p FROM Demographics p WHERE "
-            + " ((?1 = null) OR (p.firstName LIKE ?1))"
-            + " AND ((?2 = null) OR (p.lastName LIKE ?2))"
-            + " AND ((?3 = null) OR (p.administrativeGenderCode LIKE ?3))"
-            + " AND ((?4 = null) OR (p.birthDay LIKE ?4 ))")
+            + " ((:firstName = null) OR (p.firstName LIKE :firstName))"
+            + " AND ((:lastName = null) OR (p.lastName LIKE :lastName))"
+            + " AND ((:genderCode = null) OR (p.administrativeGenderCode LIKE :genderCode))"
+            + " AND ((:birthDay = null) OR (p.birthDay LIKE :birthDay ))"
+            + " AND ((:patientIdentifier = null) OR (:patientIdentifier MEMBER OF p.identifiers ))"
+            + " AND ( :role MEMBER OF p.user.roles)")
     Page<Demographics> query(
-            String firstName,
-            String lastName,
-            AdministrativeGenderCode genderCode,
-            LocalDate birthDay,
+            @Param("firstName") String firstName,
+            @Param("lastName") String lastName,
+            @Param("genderCode") AdministrativeGenderCode genderCode,
+            @Param("birthDay") LocalDate birthDay,
+            @Param("patientIdentifier") Identifier patientIdentifier,
+            @Param("role") Role role,
             Pageable pageable);
 }

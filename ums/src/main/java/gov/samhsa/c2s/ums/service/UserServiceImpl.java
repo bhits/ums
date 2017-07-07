@@ -396,19 +396,31 @@ public class UserServiceImpl implements UserService {
     public Page<UserDto> searchUsersByDemographic(String firstName,
                                                   String lastName,
                                                   LocalDate birthDate,
-                                                  String genderCode, Optional<Integer> page,
+                                                  String genderCode,
+                                                  String mrn,
+                                                  String roleCode,
+                                                  Optional<Integer> page,
                                                   Optional<Integer> size) {
         final PageRequest pageRequest = new PageRequest(page.filter(p -> p >= 0).orElse(0),
                 size.filter(s -> s > 0 && s <= umsProperties.getPagination().getMaxSize())
                         .orElse(umsProperties.getPagination().getDefaultSize()));
         final AdministrativeGenderCode administrativeGenderCode = administrativeGenderCodeRepository.findByCode(genderCode);
-        Page<Demographics> demographicsPage = demographicsRepository.query(firstName, lastName, administrativeGenderCode, birthDate, pageRequest);
+        Role patientRole = null;
+        if (roleCode != null)
+            patientRole = roleRepository.findByCode(roleCode);
+        Identifier patientIdentifier = null;
+        if (mrn != null) {
+            if (!identifierRepository.findByValueAndIdentifierSystem(mrn, identifierSystemRepository.findBySystem(umsProperties.getMrn().getCodeSystem()).get()).isPresent())
+                return new PageImpl<>(new ArrayList<UserDto>(), pageRequest, 0);
+            else
+                patientIdentifier = identifierRepository.findByValueAndIdentifierSystem(mrn, identifierSystemRepository.findBySystem(umsProperties.getMrn().getCodeSystem()).get()).get();
+        }
+        Page<Demographics> demographicsPage = demographicsRepository.query(firstName, lastName, administrativeGenderCode, birthDate, patientIdentifier, patientRole, pageRequest);
 
         List<Demographics> demographicsesList = demographicsPage.getContent();
 
         final List<UserDto> getUserDtoList = demographicsesListToUserDtoList(demographicsesList);
         return new PageImpl<>(getUserDtoList, pageRequest, demographicsPage.getTotalElements());
-
     }
 
     @Override
