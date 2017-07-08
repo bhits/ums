@@ -43,4 +43,7 @@ public class User {
 
     @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Demographics demographics;
+
+    @OneToOne(mappedBy = "user", fetch = FetchType.LAZY)
+    private UserAvatar userAvatar;
 }
