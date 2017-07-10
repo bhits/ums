@@ -80,7 +80,7 @@ echo "Here is provider user verification code = $verificationCode."
 emailToken=$(curl --silent\
          -H "Accept: application/json"\
          -H "Content-Type:application/json"\
-         -X GET http://localhost:8461/users/${userId}/emailtoken | jsonValue emailToken )
+         -X GET http://localhost:8461/users/${userId}/emailToken | jsonValue emailToken )
 
 echo "Here is provider user token = $emailToken."
 

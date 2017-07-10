@@ -47,7 +47,7 @@ public class UserActivationRestController {
         return userActivationService.findUserActivationInfoByUserId(userId);
     }
 
-    @GetMapping(value = "/{userId}/emailtoken")
+    @GetMapping(value = "/{userId}/emailToken")
     public EmailTokenDto getUserEmailToken(@PathVariable Long userId) {
         return userActivationService.getUserEmailToken(userId);
     }
