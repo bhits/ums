@@ -36,7 +36,7 @@ public interface UserService {
     List<UserDto> searchUsersByFirstNameAndORLastName(StringTokenizer token);
 
     @Transactional(readOnly = true)
-    Page<UserDto> searchUsersByDemographic(String firstName, String lastName, LocalDate birthDate, String genderCode,Optional<Integer> page,
+    Page<UserDto> searchUsersByDemographic(String firstName, String lastName, LocalDate birthDate, String genderCode,String mrn, String roleCode,Optional<Integer> page,
                                            Optional<Integer> size);
 
     @Transactional(readOnly = true)

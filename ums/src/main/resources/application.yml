@@ -61,6 +61,9 @@ c2s:
           system: ${c2s.ums.mrn.codeSystem}
           # if the algorithm is different than 'NONE', the system will generate this identifier and it cannot be manually set
           algorithm: MRN
+      provider:
+        -
+          system: http://hl7.org/fhir/sid/us-npi
     Pagination:
       defaultSize: 10
       maxSize: 100
@@ -74,6 +77,9 @@ c2s:
       c2s-ui-verification-user-preferred-locale-arg-name: "userPreferredLocale"
       brand: Consent2Share
       email-token-expiration-in-days: 7
+      # To activate user account without sending email by roles
+      #disabled-by-roles:
+      #  - provider
     fhir:
       publish:
         enabled: false

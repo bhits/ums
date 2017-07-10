@@ -345,11 +345,11 @@ public class UserServiceImplTest {
 
         Page<Demographics> demographicsPage = new PageImpl<Demographics>(demographicsList) ;
 
-        when(demographicsRepository.query(firstName, lastName, administrativeGenderCode, birthDate,pageRequest))
+        when(demographicsRepository.query(firstName, lastName, administrativeGenderCode, birthDate,null,null,pageRequest))
                 .thenReturn(demographicsPage);
 
         //Act
-        Page<UserDto> userDtos = userServiceImpl.searchUsersByDemographic(firstName, lastName, birthDate, genderCode,Optional.of(0),Optional.of(10));
+        Page<UserDto> userDtos = userServiceImpl.searchUsersByDemographic(firstName, lastName, birthDate, genderCode,null,null,Optional.of(0),Optional.of(10));
 
         //Assert
         assertEquals(userDtos.getTotalElements(),2);
@@ -380,11 +380,11 @@ public class UserServiceImplTest {
 
         Page<Demographics> demographicsPage = new PageImpl<Demographics>(demographics) ;
 
-        when(demographicsRepository.query(firstName, lastName, administrativeGenderCode, birthDate,pageRequest))
+        when(demographicsRepository.query(firstName, lastName, administrativeGenderCode, birthDate,null,null,pageRequest))
                 .thenReturn(demographicsPage);
 
         //Act
-        Page<UserDto> userDtos = userServiceImpl.searchUsersByDemographic(firstName, lastName, birthDate, genderCode,Optional.of(0),Optional.of(10));
+        Page<UserDto> userDtos = userServiceImpl.searchUsersByDemographic(firstName, lastName, birthDate, genderCode,null,null, Optional.of(0),Optional.of(10));
 
         //Assert
         assertEquals(userDtos.getTotalElements(),0);
