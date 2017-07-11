@@ -1,11 +1,11 @@
 #!/bin/bash
 
 echo "This script is used to create and activate provider account"
-echo -n "Please enter lastName : "
-read lastName
-
 echo -n "Please enter firstName : "
 read firstName
+
+echo -n "Please enter lastName : "
+read lastName
 
 echo -n "Please enter birthDate(yyyy-MM-dd) : "
 read birthDate
