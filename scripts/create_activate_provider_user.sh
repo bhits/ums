@@ -19,7 +19,7 @@ read EMAIL
 echo -n "Please enter NPI : "
 read NPI
 
-# Generate user demographic to create user
+#Generate user demographic to create user
 generate_post_create_user_data()
 {
   cat <<EOF
@@ -47,17 +47,16 @@ generate_post_create_user_data()
           "addresses":  [],
           "locale": "en"
           }
-  EOF
+EOF
 }
 
-# Get property value from json response
-
+#Get property value from json response
 function jsonValue() {
 KEY=$1
 awk -F"[{,:}]" '{for(i=1;i<=NF;i++){if($i~/'$KEY'/){print $(i+1)}}}'|tr -d '"'| sed -n 1p
 }
 
-# Create user and retrieve user Id
+#Create user and retrieve user Id
 userId=$(curl --silent\
         -H "Accept: application/json" \
         -H "Content-Type:application/json" \
@@ -65,7 +64,7 @@ userId=$(curl --silent\
 
 echo "Here is provider user id = $userId."
 
-# Initialize activation user account and get verification code
+#Initialize activation user account and get verification code
 verificationCode=$(curl --silent\
         -H "Accept: application/json"\
         -H "Content-Type:application/json"\
@@ -108,7 +107,7 @@ generate_post_activation_user_data()
 EOF
 }
 
-# Activate user account
+#Activate user account
 verified=$(curl --silent\
         -H "Accept: application/json" \
         -H "Content-Type:application/json" \
