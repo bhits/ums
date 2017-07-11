@@ -148,10 +148,10 @@ public class UserRestControllerTest {
         Optional<Integer> size = Optional.of(234);
         Page<UserDto> page1= mock(Page.class);
 
-        when(userServiceMock.getAllUsers(page,size)).thenReturn(page1);
+        when(userServiceMock.getAllUsers(page,size,null)).thenReturn(page1);
 
         //Act
-        Page<UserDto> page2=sut.getAllUsers(page, size);
+        Page<UserDto> page2=sut.getAllUsers(page, size,null);
 
         //Assert
         assertEquals(page1,page2);
