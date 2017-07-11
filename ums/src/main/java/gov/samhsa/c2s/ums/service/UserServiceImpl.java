@@ -381,11 +381,15 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<UserDto> getAllUsers(Optional<Integer> page, Optional<Integer> size) {
+    public Page<UserDto> getAllUsers(Optional<Integer> page, Optional<Integer> size, Optional<String> roleCode) {
         final PageRequest pageRequest = new PageRequest(page.filter(p -> p >= 0).orElse(0),
                 size.filter(s -> s > 0 && s <= umsProperties.getPagination().getMaxSize())
                         .orElse(umsProperties.getPagination().getDefaultSize()));
-        final Page<User> usersPage = userRepository.findAll(pageRequest);
+        Page<User> usersPage;
+        if (roleCode.isPresent())
+            usersPage = userRepository.findAllByRolesCode(roleCode.get(), pageRequest);
+        else
+            usersPage = userRepository.findAll(pageRequest);
         final List<User> userList = usersPage.getContent();
         final List<UserDto> getUserDtoList = userListToUserDtoList(userList);
         return new PageImpl<>(getUserDtoList, pageRequest, usersPage.getTotalElements());
@@ -623,4 +627,5 @@ public class UserServiceImpl implements UserService {
                 throw new InvalidIdentifierSystemException("This identifier system is not configured with an algorithm, the identifier cannot be generated");
         }
     }
+
 }

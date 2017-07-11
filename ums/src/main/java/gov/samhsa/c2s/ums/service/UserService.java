@@ -30,7 +30,7 @@ public interface UserService {
     UserDto getUserByUserAuthId(String userAuthId);
 
     @Transactional(readOnly = true)
-    Page<UserDto> getAllUsers(Optional<Integer> page, Optional<Integer> size);
+    Page<UserDto> getAllUsers(Optional<Integer> page, Optional<Integer> size, Optional<String> roleCode);
 
     @Transactional(readOnly = true)
     List<UserDto> searchUsersByFirstNameAndORLastName(StringTokenizer token);
@@ -51,6 +51,6 @@ public interface UserService {
     @Transactional(readOnly = true)
     AccessDecisionDto accessDecision(String userAuthId, String patientMRN);
 
-    //Todo: Get all Users by role type
+
 
 }
