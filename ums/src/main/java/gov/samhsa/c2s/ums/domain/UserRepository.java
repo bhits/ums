@@ -18,4 +18,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
     List<User> findAllByDemographicsIdentifiersValueAndDemographicsIdentifiersIdentifierSystemSystem(String value, String system);
 
     Page<User> findAllByDisabled(boolean isDisabled, Pageable pageable);
+
+    Page<User> findAllByRolesCode(String roleCode, Pageable pageable);
 }
