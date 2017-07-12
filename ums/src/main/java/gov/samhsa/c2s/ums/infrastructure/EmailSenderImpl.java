@@ -94,6 +94,7 @@ public class EmailSenderImpl implements EmailSender {
         ctx.setVariable(PARAM_BRAND, emailSenderProperties.getBrand());
         ctx.setVariable(PARAM_VERIFICATION_HEADER, messageSource.getMessage(PROP_EMAIL_VERIFICATION_BODY_HEADER, null, locale));
         ctx.setVariable(PARAM_VERIFICATION_GREETING, messageSource.getMessage(PROP_EMAIL_VERIFICATION_GREETING, null, locale));
+        // Caution: this parameter injected to template without escaping. Do not set any user provided content here.
         ctx.setVariable(PARAM_VERIFICATION_MESSAGE, messageSource.getMessage(PROP_EMAIL_VERIFICATION_MESSAGE, null, locale));
         ctx.setVariable(PARAM_VERIFICATION_CREATE_LOGIN_LINK, messageSource.getMessage(PROP_EMAIL_VERIFICATION_CREATE_LOGIN_LINK, null, locale));
         ctx.setVariable(PARAM_SIGN_OFF, messageSource.getMessage(PROP_EMAIL_VERIFICATION_SIGN_OFF, null, locale));
