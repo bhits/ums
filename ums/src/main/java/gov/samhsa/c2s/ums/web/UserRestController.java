@@ -111,8 +111,9 @@ public class UserRestController {
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
     public Page<UserDto> getAllUsers(@RequestParam("page") Optional<Integer> page,
-                                     @RequestParam("size") Optional<Integer> size) {
-        return userService.getAllUsers(page, size);
+                                     @RequestParam("size") Optional<Integer> size,
+                                     @RequestParam("role") Optional<String> roleCode) {
+        return userService.getAllUsers(page, size, roleCode);
     }
 
     @GetMapping(value = "/authId/{userAuthId}")
@@ -162,4 +163,5 @@ public class UserRestController {
     public List<UserDto> searchUsersByIdentifier(@RequestParam String value, @RequestParam String system) {
         return userService.searchUsersByIdentifier(value, system);
     }
+
 }
