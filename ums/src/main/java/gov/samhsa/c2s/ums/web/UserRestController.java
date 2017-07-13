@@ -2,6 +2,7 @@ package gov.samhsa.c2s.ums.web;
 
 import gov.samhsa.c2s.ums.service.UserService;
 import gov.samhsa.c2s.ums.service.dto.AccessDecisionDto;
+import gov.samhsa.c2s.ums.service.dto.UpdateUserLimitedFieldsDto;
 import gov.samhsa.c2s.ums.service.dto.UserDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -87,9 +88,25 @@ public class UserRestController {
      * @param userDto User Dto Object
      */
     @PutMapping("/{userId}")
-    @ResponseStatus(HttpStatus.OK)
-    public void updateUser(@PathVariable Long userId, @Valid @RequestBody UserDto userDto) {
-        userService.updateUser(userId, userDto);
+    public UserDto updateUser(@PathVariable Long userId, @Valid @RequestBody UserDto userDto) {
+        return userService.updateUser(userId, userDto);
+    }
+
+    /**
+     * Update the following fields for a user:
+     * <ul>
+     *     <li>UserDto.addresses (only the home address)</li>
+     *     <li>UserDto.telecoms (only the home phone number & home e-mail address</li>
+     *     <li>UserDto.locale</li>
+     * </ul>
+     *
+     * @param userId  PK of User
+     * @param updateUserLimitedFieldsDto - the UpdateUserLimitedFieldsDto object containing the new values for the user fields to be updated
+     * @see UpdateUserLimitedFieldsDto
+     */
+    @PutMapping("/{userId}/limitedFields")
+    public UserDto updateUserLimitedFields(@PathVariable Long userId, @Valid @RequestBody UpdateUserLimitedFieldsDto updateUserLimitedFieldsDto) {
+        return userService.updateUserLimitedFields(userId, updateUserLimitedFieldsDto);
     }
 
     /**

@@ -1,6 +1,7 @@
 package gov.samhsa.c2s.ums.service;
 
 import gov.samhsa.c2s.ums.service.dto.AccessDecisionDto;
+import gov.samhsa.c2s.ums.service.dto.UpdateUserLimitedFieldsDto;
 import gov.samhsa.c2s.ums.service.dto.UserDto;
 import org.springframework.data.domain.Page;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,7 +22,10 @@ public interface UserService {
     void enableUser(Long userId);
 
     @Transactional
-    void updateUser(Long userId, UserDto userDto);
+    UserDto updateUser(Long userId, UserDto userDto);
+
+    @Transactional
+    UserDto updateUserLimitedFields(Long userId, UpdateUserLimitedFieldsDto updateUserLimitedFieldsDto);
 
     @Transactional(readOnly = true)
     UserDto getUser(Long userId);

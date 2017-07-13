@@ -1,18 +1,11 @@
 package gov.samhsa.c2s.ums.service;
 
 import gov.samhsa.c2s.ums.config.UmsProperties;
-import gov.samhsa.c2s.ums.domain.Address;
-import gov.samhsa.c2s.ums.domain.AddressRepository;
 import gov.samhsa.c2s.ums.domain.Demographics;
 import gov.samhsa.c2s.ums.domain.DemographicsRepository;
 import gov.samhsa.c2s.ums.domain.Locale;
 import gov.samhsa.c2s.ums.domain.LocaleRepository;
 import gov.samhsa.c2s.ums.domain.Patient;
-import gov.samhsa.c2s.ums.domain.PatientRepository;
-import gov.samhsa.c2s.ums.domain.Role;
-import gov.samhsa.c2s.ums.domain.RoleRepository;
-import gov.samhsa.c2s.ums.domain.Telecom;
-import gov.samhsa.c2s.ums.domain.TelecomRepository;
 import gov.samhsa.c2s.ums.domain.User;
 import gov.samhsa.c2s.ums.domain.UserPatientRelationship;
 import gov.samhsa.c2s.ums.domain.UserPatientRelationshipRepository;
@@ -21,37 +14,25 @@ import gov.samhsa.c2s.ums.domain.reference.AdministrativeGenderCode;
 import gov.samhsa.c2s.ums.domain.reference.AdministrativeGenderCodeRepository;
 import gov.samhsa.c2s.ums.infrastructure.ScimService;
 import gov.samhsa.c2s.ums.service.dto.AccessDecisionDto;
-import gov.samhsa.c2s.ums.service.dto.AddressDto;
-import gov.samhsa.c2s.ums.service.dto.RelationDto;
-import gov.samhsa.c2s.ums.service.dto.RoleDto;
-import gov.samhsa.c2s.ums.service.dto.TelecomDto;
 import gov.samhsa.c2s.ums.service.dto.UserDto;
 import gov.samhsa.c2s.ums.service.exception.UserNotFoundException;
-import gov.samhsa.c2s.ums.service.fhir.FhirPatientService;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.modelmapper.ModelMapper;
-import org.modelmapper.TypeToken;
-import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
-import java.util.StringTokenizer;
 
-import static junit.framework.TestCase.assertNotNull;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -62,54 +43,39 @@ public class UserServiceImplTest {
     public ExpectedException thrown = ExpectedException.none();
 
     @Mock
-    Patient patient;
+    private ScimService scimService;
 
     @Mock
-    ScimService scimService;
+    private UserRepository userRepository;
 
     @Mock
-    UserRepository userRepository;
+    private ModelMapper modelMapper;
 
     @Mock
-    ModelMapper modelMapper;
+    private AdministrativeGenderCodeRepository administrativeGenderCodeRepository;
 
     @Mock
-    MrnService mrnService;
+    private LocaleRepository localeRepository;
 
     @Mock
-    AdministrativeGenderCodeRepository administrativeGenderCodeRepository;
+    private UmsProperties umsProperties;
 
     @Mock
-    PatientRepository patientRepository;
+    private UserPatientRelationshipRepository userPatientRelationshipRepository;
 
     @Mock
-    TelecomRepository telecomRepository;
-
-    @Mock
-    RoleRepository roleRepository;
-
-    @Mock
-    AddressRepository addressRepository;
-
-    @Mock
-    LocaleRepository localeRepository;
-
-    @Mock
-    UmsProperties umsProperties;
-
-    @Mock
-    RelationDto relationDto;
-    @Mock
-    UserPatientRelationshipRepository userPatientRelationshipRepository;
-
-    @Mock
-    DemographicsRepository demographicsRepository;
-
-    @Mock
-    FhirPatientService fhirPatientService;
+    private DemographicsRepository demographicsRepository;
 
     @InjectMocks
-    UserServiceImpl userServiceImpl;
+    private UserServiceImpl userServiceImpl;
+
+    @Before
+    public void setUp() {
+        localeRepository = mock(LocaleRepository.class);
+        scimService = mock(ScimService.class);
+        userServiceImpl = new UserServiceImpl(localeRepository, scimService);
+        MockitoAnnotations.initMocks(this);
+    }
 
     @Test
     public void testDisableUser_Given_UserIsFoundById() {

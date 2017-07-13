@@ -23,6 +23,8 @@ public class UserDto {
 
     private Long id;
 
+    private String userAuthId;
+
     @NotEmpty
     private String lastName;
 
