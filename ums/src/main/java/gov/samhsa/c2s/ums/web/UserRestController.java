@@ -38,8 +38,8 @@ public class UserRestController {
      */
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public void registerUser(@Valid @RequestBody UserDto userDto) {
-        userService.registerUser(userDto);
+    public UserDto registerUser(@Valid @RequestBody UserDto userDto) {
+        return userService.registerUser(userDto);
     }
 
     /**
@@ -128,8 +128,9 @@ public class UserRestController {
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
     public Page<UserDto> getAllUsers(@RequestParam("page") Optional<Integer> page,
-                                     @RequestParam("size") Optional<Integer> size) {
-        return userService.getAllUsers(page, size);
+                                     @RequestParam("size") Optional<Integer> size,
+                                     @RequestParam("role") Optional<String> roleCode) {
+        return userService.getAllUsers(page, size, roleCode);
     }
 
     @GetMapping(value = "/authId/{userAuthId}")
@@ -164,15 +165,20 @@ public class UserRestController {
      */
     @GetMapping(value = "/search/patientDemographic")
     @ResponseStatus(HttpStatus.OK)
-    public List<UserDto> searchUsersByDemographic(@RequestParam("firstName") String firstName,
-                                                  @RequestParam("lastName") String lastName,
-                                                  @RequestParam("birthDate") @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate birthDate,
-                                                  @RequestParam("genderCode") String genderCode) {
-        return userService.searchUsersByDemographic(firstName, lastName, birthDate, genderCode);
+    public Page<UserDto> searchUsersByDemographic(@RequestParam(value = "firstName", required = false) String firstName,
+                                                  @RequestParam(value = "lastName", required = false) String lastName,
+                                                  @RequestParam(value = "birthDate", required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate birthDate,
+                                                  @RequestParam(value = "genderCode", required = false) String genderCode,
+                                                  @RequestParam(value = "mrn", required = false) String mrn,
+                                                  @RequestParam(value = "roleCode", required = false) String roleCode,
+                                                  @RequestParam("page") Optional<Integer> page,
+                                                  @RequestParam("size") Optional<Integer> size) {
+        return userService.searchUsersByDemographic(firstName, lastName, birthDate, genderCode,mrn, roleCode,page, size);
     }
 
     @GetMapping("/search/identifier")
     public List<UserDto> searchUsersByIdentifier(@RequestParam String value, @RequestParam String system) {
         return userService.searchUsersByIdentifier(value, system);
     }
+
 }

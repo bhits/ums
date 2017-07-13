@@ -26,6 +26,9 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -99,7 +102,7 @@ public class UserServiceImplTest {
     }
 
     @Test
-    public void testDisableUser_Given_NoUserIsFoundById_Then_ThrowsException(){
+    public void testDisableUser_Given_NoUserIsFoundById_Then_ThrowsException() {
         //Arrange
         thrown.expect(UserNotFoundException.class);
         thrown.expectMessage("User Not Found!");
@@ -144,7 +147,7 @@ public class UserServiceImplTest {
     }
 
     @Test
-    public void testEnableUser_Given_UserIsNotFoundByIdOrNotDisabled_Then_ThrowsException(){
+    public void testEnableUser_Given_UserIsNotFoundByIdOrNotDisabled_Then_ThrowsException() {
         //Arrange
         thrown.expect(UserNotFoundException.class);
         thrown.expectMessage("User Not Found!");
@@ -199,7 +202,7 @@ public class UserServiceImplTest {
         when(modelMapper.map(user, UserDto.class)).thenReturn(getUserResponseDto);
 
         //Act
-        UserDto userDto=userServiceImpl.getUserByUserAuthId(oAuth2UserId);
+        UserDto userDto = userServiceImpl.getUserByUserAuthId(oAuth2UserId);
 
         //Assert
         assertEquals(getUserResponseDto, userDto);
@@ -250,14 +253,14 @@ public class UserServiceImplTest {
         Long patientId = 20l;
         User user = mock(User.class);
         Patient patient = mock(Patient.class);
-        UmsProperties.Mrn mrn=mock(UmsProperties.Mrn.class);
-        String codeSystem="code";
-        Demographics demographics=mock(Demographics.class);
+        UmsProperties.Mrn mrn = mock(UmsProperties.Mrn.class);
+        String codeSystem = "code";
+        Demographics demographics = mock(Demographics.class);
 
         when(userRepository.findByUserAuthIdAndDisabled(userAuthId, false)).thenReturn(Optional.ofNullable(user));
         when(umsProperties.getMrn()).thenReturn(mrn);
         when(mrn.getCodeSystem()).thenReturn(codeSystem);
-        when(demographicsRepository.findOneByIdentifiersValueAndIdentifiersIdentifierSystemSystem(patientMrn,codeSystem)).thenReturn(Optional.ofNullable(demographics));
+        when(demographicsRepository.findOneByIdentifiersValueAndIdentifiersIdentifierSystemSystem(patientMrn, codeSystem)).thenReturn(Optional.ofNullable(demographics));
 
         when(demographics.getPatient()).thenReturn(patient);
         UserPatientRelationship userPatientRelationship1 = mock(UserPatientRelationship.class);
@@ -285,6 +288,15 @@ public class UserServiceImplTest {
         LocalDate birthDate = LocalDate.now();
         String genderCode = "genderCode";
 
+
+        PageRequest pageRequest = new PageRequest(0, 10);
+
+        UmsProperties.Pagination pagination = mock(UmsProperties.Pagination.class);
+        when(umsProperties.getPagination()).thenReturn(pagination);
+        when(pagination.getMaxSize()).thenReturn(10);
+        when(pagination.getDefaultSize()).thenReturn(10);
+
+
         Demographics demographics1 = mock(Demographics.class);
         Demographics demographics2 = mock(Demographics.class);
 
@@ -300,13 +312,6 @@ public class UserServiceImplTest {
         UserDto getUserResponseDto1 = mock(UserDto.class);
         UserDto getUserResponseDto2 = mock(UserDto.class);
 
-        AdministrativeGenderCode administrativeGenderCode = mock(AdministrativeGenderCode.class);
-
-        when(administrativeGenderCodeRepository.findByCode(genderCode)).thenReturn(administrativeGenderCode);
-
-        when(demographicsRepository.findAllByFirstNameAndLastNameAndBirthDayAndAdministrativeGenderCode(firstName, lastName, birthDate, administrativeGenderCode))
-                .thenReturn(demographicsList);
-
         when(demographics1.getUser()).thenReturn(user1);
         when(demographics2.getUser()).thenReturn(user2);
         when(modelMapper.map(user1, UserDto.class)).thenReturn(getUserResponseDto1);
@@ -315,36 +320,55 @@ public class UserServiceImplTest {
         getUserResponseDtos.add(getUserResponseDto1);
         getUserResponseDtos.add(getUserResponseDto2);
 
+        AdministrativeGenderCode administrativeGenderCode = mock(AdministrativeGenderCode.class);
+
+        when(administrativeGenderCodeRepository.findByCode(genderCode)).thenReturn(administrativeGenderCode);
+
+        Page<Demographics> demographicsPage = new PageImpl<Demographics>(demographicsList);
+
+        when(demographicsRepository.query(firstName, lastName, administrativeGenderCode, birthDate, null, null, pageRequest))
+                .thenReturn(demographicsPage);
+
         //Act
-        List<UserDto> getUserResponseDtoList = userServiceImpl.searchUsersByDemographic(firstName, lastName, birthDate, genderCode);
+        Page<UserDto> userDtos = userServiceImpl.searchUsersByDemographic(firstName, lastName, birthDate, genderCode, null, null, Optional.of(0), Optional.of(10));
 
         //Assert
-        assertEquals(getUserResponseDtos, getUserResponseDtoList);
+        assertEquals(userDtos.getTotalElements(), 2);
+
     }
 
     @Test
-    public void testSearchUsersByDemographic_Given_ThereIsNoUserOnUserList_Then_ThrowsException(){
+    public void testSearchUsersByDemographic_Given_ThereIsNoUserOnUserList() {
         //Arrange
-        thrown.expect(UserNotFoundException.class);
-        thrown.expectMessage("User Not Found!");
         String firstName = "firstName";
         String lastName = "lastName";
         LocalDate birthDate = LocalDate.now();
         String genderCode = "genderCode";
+
+        PageRequest pageRequest = new PageRequest(0, 10);
+
+        UmsProperties.Pagination pagination = mock(UmsProperties.Pagination.class);
+        when(umsProperties.getPagination()).thenReturn(pagination);
+        when(pagination.getMaxSize()).thenReturn(10);
+        when(pagination.getDefaultSize()).thenReturn(10);
 
         List<Demographics> demographicsList = new ArrayList<>();
         AdministrativeGenderCode administrativeGenderCode = mock(AdministrativeGenderCode.class);
 
         when(administrativeGenderCodeRepository.findByCode(genderCode)).thenReturn(administrativeGenderCode);
 
-        when(demographicsRepository.findAllByFirstNameAndLastNameAndBirthDayAndAdministrativeGenderCode(firstName, lastName, birthDate, administrativeGenderCode))
-                .thenReturn(demographicsList);
+        List<Demographics> demographics = new ArrayList<>();
+
+        Page<Demographics> demographicsPage = new PageImpl<Demographics>(demographics);
+
+        when(demographicsRepository.query(firstName, lastName, administrativeGenderCode, birthDate, null, null, pageRequest))
+                .thenReturn(demographicsPage);
 
         //Act
-        userServiceImpl.searchUsersByDemographic(firstName, lastName, birthDate, genderCode);
+        Page<UserDto> userDtos = userServiceImpl.searchUsersByDemographic(firstName, lastName, birthDate, genderCode, null, null, Optional.of(0), Optional.of(10));
 
         //Assert
-        //ExpectedException annotated by @rule is thrown.
+        assertEquals(userDtos.getTotalElements(), 0);
     }
 
 }

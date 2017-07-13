@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
+import java.util.List;
 
 @Component
 @ConfigurationProperties(prefix = "c2s.ums.email-sender")
@@ -32,4 +33,7 @@ public class EmailSenderProperties {
     @NotNull
     @Min(0)
     private int emailTokenExpirationInDays;
+
+    private List<String> disabledByRoles;
+
 }

@@ -13,7 +13,7 @@ import java.util.StringTokenizer;
 
 public interface UserService {
     @Transactional
-    void registerUser(UserDto consentDto);
+    UserDto registerUser(UserDto consentDto);
 
     @Transactional
     void disableUser(Long userId);
@@ -34,13 +34,14 @@ public interface UserService {
     UserDto getUserByUserAuthId(String userAuthId);
 
     @Transactional(readOnly = true)
-    Page<UserDto> getAllUsers(Optional<Integer> page, Optional<Integer> size);
+    Page<UserDto> getAllUsers(Optional<Integer> page, Optional<Integer> size, Optional<String> roleCode);
 
     @Transactional(readOnly = true)
     List<UserDto> searchUsersByFirstNameAndORLastName(StringTokenizer token);
 
     @Transactional(readOnly = true)
-    List<UserDto> searchUsersByDemographic(String firstName, String lastName, LocalDate birthDate, String genderCode);
+    Page<UserDto> searchUsersByDemographic(String firstName, String lastName, LocalDate birthDate, String genderCode,String mrn, String roleCode,Optional<Integer> page,
+                                           Optional<Integer> size);
 
     @Transactional(readOnly = true)
     List<UserDto> searchUsersByIdentifier(String value, String system);
@@ -54,6 +55,6 @@ public interface UserService {
     @Transactional(readOnly = true)
     AccessDecisionDto accessDecision(String userAuthId, String patientMRN);
 
-    //Todo: Get all Users by role type
+
 
 }

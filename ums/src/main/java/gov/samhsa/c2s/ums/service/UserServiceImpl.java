@@ -34,6 +34,7 @@ import gov.samhsa.c2s.ums.service.dto.UserDto;
 import gov.samhsa.c2s.ums.service.exception.InvalidIdentifierSystemException;
 import gov.samhsa.c2s.ums.service.exception.MissingEmailException;
 import gov.samhsa.c2s.ums.service.exception.PatientNotFoundException;
+import gov.samhsa.c2s.ums.service.exception.UnassignableIdentifierException;
 import gov.samhsa.c2s.ums.service.exception.UserActivationNotFoundException;
 import gov.samhsa.c2s.ums.service.exception.UserNotFoundException;
 import gov.samhsa.c2s.ums.service.fhir.FhirPatientService;
@@ -56,6 +57,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.StringTokenizer;
@@ -123,7 +125,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public void registerUser(UserDto userDto) {
+    public UserDto registerUser(UserDto userDto) {
 
         // Step 1: Create User Record and User Role Mapping in UMS
 
@@ -186,6 +188,8 @@ public class UserServiceImpl implements UserService {
                 fhirPatientService.publishFhirPatient(userDto);
             }
         }
+
+        return modelMapper.map(user, UserDto.class);
     }
 
     @Override
@@ -280,6 +284,9 @@ public class UserServiceImpl implements UserService {
                 .collect(toList());
         // Save the different and non-system-generated identifiers and add them to the user
         identifierRepository.save(identifiersToAdd);
+        // Assert the new identifiers to add does not contain unassignable identifiers
+        assertDoesNotContainUnassignableIdentifiers(user, identifiersToAdd);
+        // Add new identifiers
         user.getDemographics().getIdentifiers().addAll(identifiersToAdd);
         assertAllRequiredIdentifiersExist(user.getDemographics().getIdentifiers(), allRequiredIdentifierSystems);
 
@@ -457,11 +464,15 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<UserDto> getAllUsers(Optional<Integer> page, Optional<Integer> size) {
+    public Page<UserDto> getAllUsers(Optional<Integer> page, Optional<Integer> size, Optional<String> roleCode) {
         final PageRequest pageRequest = new PageRequest(page.filter(p -> p >= 0).orElse(0),
                 size.filter(s -> s > 0 && s <= umsProperties.getPagination().getMaxSize())
                         .orElse(umsProperties.getPagination().getDefaultSize()));
-        final Page<User> usersPage = userRepository.findAll(pageRequest);
+        Page<User> usersPage;
+        if (roleCode.isPresent())
+            usersPage = userRepository.findAllByRolesCode(roleCode.get(), pageRequest);
+        else
+            usersPage = userRepository.findAll(pageRequest);
         final List<User> userList = usersPage.getContent();
         final List<UserDto> getUserDtoList = userListToUserDtoList(userList);
         return new PageImpl<>(getUserDtoList, pageRequest, usersPage.getTotalElements());
@@ -469,19 +480,34 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<UserDto> searchUsersByDemographic(String firstName,
+    public Page<UserDto> searchUsersByDemographic(String firstName,
                                                   String lastName,
                                                   LocalDate birthDate,
-                                                  String genderCode) {
-        List<Demographics> demographicsesList;
+                                                  String genderCode,
+                                                  String mrn,
+                                                  String roleCode,
+                                                  Optional<Integer> page,
+                                                  Optional<Integer> size) {
+        final PageRequest pageRequest = new PageRequest(page.filter(p -> p >= 0).orElse(0),
+                size.filter(s -> s > 0 && s <= umsProperties.getPagination().getMaxSize())
+                        .orElse(umsProperties.getPagination().getDefaultSize()));
         final AdministrativeGenderCode administrativeGenderCode = administrativeGenderCodeRepository.findByCode(genderCode);
-        demographicsesList = demographicsRepository.findAllByFirstNameAndLastNameAndBirthDayAndAdministrativeGenderCode(firstName, lastName,
-                birthDate, administrativeGenderCode);
-        if (demographicsesList.size() < 1) {
-            throw new UserNotFoundException("User Not Found!");
-        } else {
-            return demographicsesListToUserDtoList(demographicsesList);
+        Role patientRole = null;
+        if (roleCode != null)
+            patientRole = roleRepository.findByCode(roleCode);
+        Identifier patientIdentifier = null;
+        if (mrn != null) {
+            if (!identifierRepository.findByValueAndIdentifierSystem(mrn, identifierSystemRepository.findBySystem(umsProperties.getMrn().getCodeSystem()).get()).isPresent())
+                return new PageImpl<>(new ArrayList<UserDto>(), pageRequest, 0);
+            else
+                patientIdentifier = identifierRepository.findByValueAndIdentifierSystem(mrn, identifierSystemRepository.findBySystem(umsProperties.getMrn().getCodeSystem()).get()).get();
         }
+        Page<Demographics> demographicsPage = demographicsRepository.query(firstName, lastName, administrativeGenderCode, birthDate, patientIdentifier, patientRole, pageRequest);
+
+        List<Demographics> demographicsesList = demographicsPage.getContent();
+
+        final List<UserDto> getUserDtoList = demographicsesListToUserDtoList(demographicsesList);
+        return new PageImpl<>(getUserDtoList, pageRequest, demographicsPage.getTotalElements());
     }
 
     @Override
@@ -565,6 +591,16 @@ public class UserServiceImpl implements UserService {
                     .append("' can only be generated by the system")
                     .toString();
             throw new InvalidIdentifierSystemException(errMsg);
+        }
+    }
+
+    private void assertDoesNotContainUnassignableIdentifiers(User user, List<Identifier> identifiersToAdd) {
+        if (identifiersToAdd.stream()
+                .filter(identifier -> Boolean.FALSE.equals(identifier.getIdentifierSystem().getReassignable()))
+                .map(Identifier::getDemographics)
+                .filter(Objects::nonNull)
+                .anyMatch(demographics -> !user.getDemographics().equals(demographics))) {
+            throw new UnassignableIdentifierException();
         }
     }
 
@@ -674,4 +710,5 @@ public class UserServiceImpl implements UserService {
                 throw new InvalidIdentifierSystemException("This identifier system is not configured with an algorithm, the identifier cannot be generated");
         }
     }
+
 }
