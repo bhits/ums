@@ -1,15 +1,11 @@
 package gov.samhsa.c2s.ums.service;
 
 import gov.samhsa.c2s.ums.config.UmsProperties;
-import gov.samhsa.c2s.ums.domain.AddressRepository;
 import gov.samhsa.c2s.ums.domain.Demographics;
 import gov.samhsa.c2s.ums.domain.DemographicsRepository;
 import gov.samhsa.c2s.ums.domain.Locale;
 import gov.samhsa.c2s.ums.domain.LocaleRepository;
 import gov.samhsa.c2s.ums.domain.Patient;
-import gov.samhsa.c2s.ums.domain.PatientRepository;
-import gov.samhsa.c2s.ums.domain.RoleRepository;
-import gov.samhsa.c2s.ums.domain.TelecomRepository;
 import gov.samhsa.c2s.ums.domain.User;
 import gov.samhsa.c2s.ums.domain.UserPatientRelationship;
 import gov.samhsa.c2s.ums.domain.UserPatientRelationshipRepository;
@@ -18,16 +14,16 @@ import gov.samhsa.c2s.ums.domain.reference.AdministrativeGenderCode;
 import gov.samhsa.c2s.ums.domain.reference.AdministrativeGenderCodeRepository;
 import gov.samhsa.c2s.ums.infrastructure.ScimService;
 import gov.samhsa.c2s.ums.service.dto.AccessDecisionDto;
-import gov.samhsa.c2s.ums.service.dto.RelationDto;
 import gov.samhsa.c2s.ums.service.dto.UserDto;
 import gov.samhsa.c2s.ums.service.exception.UserNotFoundException;
-import gov.samhsa.c2s.ums.service.fhir.FhirPatientService;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
@@ -50,54 +46,39 @@ public class UserServiceImplTest {
     public ExpectedException thrown = ExpectedException.none();
 
     @Mock
-    Patient patient;
+    private ScimService scimService;
 
     @Mock
-    ScimService scimService;
+    private UserRepository userRepository;
 
     @Mock
-    UserRepository userRepository;
+    private ModelMapper modelMapper;
 
     @Mock
-    ModelMapper modelMapper;
+    private AdministrativeGenderCodeRepository administrativeGenderCodeRepository;
 
     @Mock
-    MrnService mrnService;
+    private LocaleRepository localeRepository;
 
     @Mock
-    AdministrativeGenderCodeRepository administrativeGenderCodeRepository;
+    private UmsProperties umsProperties;
 
     @Mock
-    PatientRepository patientRepository;
+    private UserPatientRelationshipRepository userPatientRelationshipRepository;
 
     @Mock
-    TelecomRepository telecomRepository;
-
-    @Mock
-    RoleRepository roleRepository;
-
-    @Mock
-    AddressRepository addressRepository;
-
-    @Mock
-    LocaleRepository localeRepository;
-
-    @Mock
-    UmsProperties umsProperties;
-
-    @Mock
-    RelationDto relationDto;
-    @Mock
-    UserPatientRelationshipRepository userPatientRelationshipRepository;
-
-    @Mock
-    DemographicsRepository demographicsRepository;
-
-    @Mock
-    FhirPatientService fhirPatientService;
+    private DemographicsRepository demographicsRepository;
 
     @InjectMocks
-    UserServiceImpl userServiceImpl;
+    private UserServiceImpl userServiceImpl;
+
+    @Before
+    public void setUp() {
+        localeRepository = mock(LocaleRepository.class);
+        scimService = mock(ScimService.class);
+        userServiceImpl = new UserServiceImpl(localeRepository, scimService);
+        MockitoAnnotations.initMocks(this);
+    }
 
     @Test
     public void testDisableUser_Given_UserIsFoundById() {
@@ -121,7 +102,7 @@ public class UserServiceImplTest {
     }
 
     @Test
-    public void testDisableUser_Given_NoUserIsFoundById_Then_ThrowsException(){
+    public void testDisableUser_Given_NoUserIsFoundById_Then_ThrowsException() {
         //Arrange
         thrown.expect(UserNotFoundException.class);
         thrown.expectMessage("User Not Found!");
@@ -166,7 +147,7 @@ public class UserServiceImplTest {
     }
 
     @Test
-    public void testEnableUser_Given_UserIsNotFoundByIdOrNotDisabled_Then_ThrowsException(){
+    public void testEnableUser_Given_UserIsNotFoundByIdOrNotDisabled_Then_ThrowsException() {
         //Arrange
         thrown.expect(UserNotFoundException.class);
         thrown.expectMessage("User Not Found!");
@@ -221,7 +202,7 @@ public class UserServiceImplTest {
         when(modelMapper.map(user, UserDto.class)).thenReturn(getUserResponseDto);
 
         //Act
-        UserDto userDto=userServiceImpl.getUserByUserAuthId(oAuth2UserId);
+        UserDto userDto = userServiceImpl.getUserByUserAuthId(oAuth2UserId);
 
         //Assert
         assertEquals(getUserResponseDto, userDto);
@@ -272,14 +253,14 @@ public class UserServiceImplTest {
         Long patientId = 20l;
         User user = mock(User.class);
         Patient patient = mock(Patient.class);
-        UmsProperties.Mrn mrn=mock(UmsProperties.Mrn.class);
-        String codeSystem="code";
-        Demographics demographics=mock(Demographics.class);
+        UmsProperties.Mrn mrn = mock(UmsProperties.Mrn.class);
+        String codeSystem = "code";
+        Demographics demographics = mock(Demographics.class);
 
         when(userRepository.findByUserAuthIdAndDisabled(userAuthId, false)).thenReturn(Optional.ofNullable(user));
         when(umsProperties.getMrn()).thenReturn(mrn);
         when(mrn.getCodeSystem()).thenReturn(codeSystem);
-        when(demographicsRepository.findOneByIdentifiersValueAndIdentifiersIdentifierSystemSystem(patientMrn,codeSystem)).thenReturn(Optional.ofNullable(demographics));
+        when(demographicsRepository.findOneByIdentifiersValueAndIdentifiersIdentifierSystemSystem(patientMrn, codeSystem)).thenReturn(Optional.ofNullable(demographics));
 
         when(demographics.getPatient()).thenReturn(patient);
         UserPatientRelationship userPatientRelationship1 = mock(UserPatientRelationship.class);
@@ -308,7 +289,7 @@ public class UserServiceImplTest {
         String genderCode = "genderCode";
 
 
-        PageRequest pageRequest=new PageRequest(0,10);
+        PageRequest pageRequest = new PageRequest(0, 10);
 
         UmsProperties.Pagination pagination = mock(UmsProperties.Pagination.class);
         when(umsProperties.getPagination()).thenReturn(pagination);
@@ -343,28 +324,28 @@ public class UserServiceImplTest {
 
         when(administrativeGenderCodeRepository.findByCode(genderCode)).thenReturn(administrativeGenderCode);
 
-        Page<Demographics> demographicsPage = new PageImpl<Demographics>(demographicsList) ;
+        Page<Demographics> demographicsPage = new PageImpl<Demographics>(demographicsList);
 
-        when(demographicsRepository.query(firstName, lastName, administrativeGenderCode, birthDate,null,null,pageRequest))
+        when(demographicsRepository.query(firstName, lastName, administrativeGenderCode, birthDate, null, null, pageRequest))
                 .thenReturn(demographicsPage);
 
         //Act
-        Page<UserDto> userDtos = userServiceImpl.searchUsersByDemographic(firstName, lastName, birthDate, genderCode,null,null,Optional.of(0),Optional.of(10));
+        Page<UserDto> userDtos = userServiceImpl.searchUsersByDemographic(firstName, lastName, birthDate, genderCode, null, null, Optional.of(0), Optional.of(10));
 
         //Assert
-        assertEquals(userDtos.getTotalElements(),2);
+        assertEquals(userDtos.getTotalElements(), 2);
 
     }
 
     @Test
-    public void testSearchUsersByDemographic_Given_ThereIsNoUserOnUserList(){
+    public void testSearchUsersByDemographic_Given_ThereIsNoUserOnUserList() {
         //Arrange
         String firstName = "firstName";
         String lastName = "lastName";
         LocalDate birthDate = LocalDate.now();
         String genderCode = "genderCode";
 
-        PageRequest pageRequest=new PageRequest(0,10);
+        PageRequest pageRequest = new PageRequest(0, 10);
 
         UmsProperties.Pagination pagination = mock(UmsProperties.Pagination.class);
         when(umsProperties.getPagination()).thenReturn(pagination);
@@ -376,18 +357,18 @@ public class UserServiceImplTest {
 
         when(administrativeGenderCodeRepository.findByCode(genderCode)).thenReturn(administrativeGenderCode);
 
-        List<Demographics> demographics=new ArrayList<>();
+        List<Demographics> demographics = new ArrayList<>();
 
-        Page<Demographics> demographicsPage = new PageImpl<Demographics>(demographics) ;
+        Page<Demographics> demographicsPage = new PageImpl<Demographics>(demographics);
 
-        when(demographicsRepository.query(firstName, lastName, administrativeGenderCode, birthDate,null,null,pageRequest))
+        when(demographicsRepository.query(firstName, lastName, administrativeGenderCode, birthDate, null, null, pageRequest))
                 .thenReturn(demographicsPage);
 
         //Act
-        Page<UserDto> userDtos = userServiceImpl.searchUsersByDemographic(firstName, lastName, birthDate, genderCode,null,null, Optional.of(0),Optional.of(10));
+        Page<UserDto> userDtos = userServiceImpl.searchUsersByDemographic(firstName, lastName, birthDate, genderCode, null, null, Optional.of(0), Optional.of(10));
 
         //Assert
-        assertEquals(userDtos.getTotalElements(),0);
+        assertEquals(userDtos.getTotalElements(), 0);
     }
 
 }
