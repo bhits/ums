@@ -21,6 +21,8 @@ import java.util.Optional;
 import java.util.StringTokenizer;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyLong;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -29,13 +31,10 @@ import static org.mockito.Mockito.when;
 public class UserRestControllerTest {
     @Rule
     public ExpectedException thrown = ExpectedException.none();
-
-    @Mock
-    private UserService userServiceMock;
-
     @Mock
     StringTokenizer tokenizer;
-
+    @Mock
+    private UserService userServiceMock;
     @InjectMocks
     private UserRestController sut;
 
@@ -51,7 +50,7 @@ public class UserRestControllerTest {
     @Test
     public void testRegisterUser() {
         //Arrange
-        UserDto userDto=mock(UserDto.class);
+        UserDto userDto = mock(UserDto.class);
 
         //Act
         sut.registerUser(userDto);
@@ -105,11 +104,18 @@ public class UserRestControllerTest {
         //Arrange
         Long userId = 20L;
         UserDto userDto = mock(UserDto.class);
+        when(userDto.getId()).thenReturn(userId);
+
+        UserDto mockedUpdatedUserDto = mock(UserDto.class);
+        when(mockedUpdatedUserDto.getId()).thenReturn(userId);
+
+        when(userServiceMock.updateUser(anyLong(), any(UserDto.class))).thenReturn(mockedUpdatedUserDto);
 
         //Act
-        sut.updateUser(userId, userDto);
+        UserDto updatedUserDto = sut.updateUser(userId, userDto);
 
         //Assert
+        assertEquals(userId, updatedUserDto.getId());
         verify(userServiceMock).updateUser(userId, userDto);
     }
 
@@ -146,15 +152,15 @@ public class UserRestControllerTest {
         //Arrange
         Optional<Integer> page = Optional.of(1233);
         Optional<Integer> size = Optional.of(234);
-        Page<UserDto> page1= mock(Page.class);
+        Page<UserDto> page1 = mock(Page.class);
 
-        when(userServiceMock.getAllUsers(page,size,null)).thenReturn(page1);
+        when(userServiceMock.getAllUsers(page, size, null)).thenReturn(page1);
 
         //Act
-        Page<UserDto> page2=sut.getAllUsers(page, size,null);
+        Page<UserDto> page2 = sut.getAllUsers(page, size, null);
 
         //Assert
-        assertEquals(page1,page2);
+        assertEquals(page1, page2);
     }
 
     @Test
