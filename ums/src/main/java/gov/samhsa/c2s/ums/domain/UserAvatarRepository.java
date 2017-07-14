@@ -6,4 +6,6 @@ import java.util.Optional;
 
 public interface UserAvatarRepository extends JpaRepository<UserAvatar, Long> {
     Optional<UserAvatar> findByUserId(Long userId);
+
+    void deleteByUserId(Long userId);
 }

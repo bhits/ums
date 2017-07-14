@@ -7,6 +7,7 @@ import gov.samhsa.c2s.ums.domain.UserRepository;
 import gov.samhsa.c2s.ums.service.dto.AvatarBytesAndMetaDto;
 import gov.samhsa.c2s.ums.service.dto.UserAvatarDto;
 import gov.samhsa.c2s.ums.service.exception.InvalidAvatarInputException;
+import gov.samhsa.c2s.ums.service.exception.UserAvatarDeleteException;
 import gov.samhsa.c2s.ums.service.exception.UserAvatarNotFoundException;
 import gov.samhsa.c2s.ums.service.exception.UserAvatarSaveException;
 import gov.samhsa.c2s.ums.service.exception.UserNotFoundException;
@@ -59,6 +60,17 @@ public class UserAvatarServiceImpl implements UserAvatarService {
         }
 
         return modelMapper.map(savedUserAvatar, UserAvatarDto.class);
+    }
+
+    @Override
+    @Transactional
+    public void deleteUserAvatar(Long userId) {
+        try {
+            userAvatarRepository.deleteByUserId(userId);
+        } catch (RuntimeException e) {
+            log.error("A RuntimeException occurred while attempting to delete a user's avatar", e);
+            throw new UserAvatarDeleteException("Unable to delete user's avatar");
+        }
     }
 
     private UserAvatar buildNewUserAvatar(AvatarBytesAndMetaDto avatarFile, Long fileWidthPixels, Long fileHeightPixels, User user) {
