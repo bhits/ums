@@ -43,6 +43,6 @@ public class UserAvatar {
     private Long fileHeightPixels;
 
     @NotNull
-    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToOne(fetch = FetchType.LAZY)
     private User user;
 }
