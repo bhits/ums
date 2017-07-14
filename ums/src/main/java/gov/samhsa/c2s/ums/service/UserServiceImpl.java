@@ -125,6 +125,7 @@ public class UserServiceImpl implements UserService {
     public void registerUser(UserDto userDto) {
 
         // Step 1: Create User Record and User Role Mapping in UMS
+        System.out.println(">>>>>" + userDto);
 
         /* Get User Entity from UserDto */
         final User user = modelMapper.map(userDto, User.class);
@@ -189,13 +190,14 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public void disableUser(Long userId) {
+    public void disableUser(Long userId, Optional<String> lastUpdatedBy) {
         //Check if user account has been activated
         assertUserAccountHasBeenActivated(userId);
         //Set isDisabled to true in the User table
         User user = userRepository.findByIdAndDisabled(userId, false)
                 .orElseThrow(() -> new UserNotFoundException("User Not Found!"));
         user.setDisabled(true);
+        user.setLastUpdatedBy(lastUpdatedBy.orElse(null));
         //
         /**
          * Use OAuth API to set users.active to false.
@@ -208,13 +210,14 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public void enableUser(Long userId) {
+    public void enableUser(Long userId, Optional<String> lastUpdatedBy) {
         //Check if user account has been activated
         assertUserAccountHasBeenActivated(userId);
         //Set isDisabled to false in the User table
         User user = userRepository.findByIdAndDisabled(userId, true)
                 .orElseThrow(() -> new UserNotFoundException("User Not Found!"));
         user.setDisabled(false);
+        user.setLastUpdatedBy(lastUpdatedBy.orElse(null));
 
         /**
          * Use OAuth API to set users.active to true.
@@ -229,8 +232,11 @@ public class UserServiceImpl implements UserService {
     public void updateUser(Long userId, UserDto userDto) {
 
         /* Get User Entity from UserDto */
+        System.out.println("%%%%%%%" + userDto);
+
         final User user = userRepository.findById(userId).orElseThrow(UserNotFoundException::new);
 
+        user.setLastUpdatedBy(userDto.getLastUpdatedBy());
         user.setLocale(localeRepository.findByCode(userDto.getLocale()));
         user.setRoles(userDto.getRoles().stream().flatMap(roleDto -> roleRepository.findAllByCode(roleDto.getCode()).stream()).collect(toSet()));
         user.getDemographics().setMiddleName(userDto.getMiddleName());

@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.Valid;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/users")
@@ -34,10 +35,11 @@ public class UserActivationRestController {
 
     @PostMapping(value = "/{userId}/activation")
     public UserActivationResponseDto initiateUserActivation(@PathVariable Long userId,
+                                                        @RequestParam(value = "lastUpdatedBy") Optional<String> lastUpdatedBy,
                                                         @RequestHeader(X_FORWARDED_PROTO) String xForwardedProto,
                                                         @RequestHeader(X_FORWARDED_HOST) String xForwardedHost,
                                                         @RequestHeader(X_FORWARDED_PORT) int xForwardedPort) {
-        final UserActivationResponseDto userActivationResponseDto = userActivationService.initiateUserActivation(userId, xForwardedProto, xForwardedHost, xForwardedPort);
+        final UserActivationResponseDto userActivationResponseDto = userActivationService.initiateUserActivation(userId, xForwardedProto, xForwardedHost, xForwardedPort, lastUpdatedBy);
         return userActivationResponseDto;
     }
 

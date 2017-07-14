@@ -87,7 +87,7 @@ public class UserActivationServiceImpl implements UserActivationService {
     private UserScopeAssignmentRepository userScopeAssignmentRepository;
 
     @Override
-    public UserActivationResponseDto initiateUserActivation(Long userId, String xForwardedProto, String xForwardedHost, int xForwardedPort) {
+    public UserActivationResponseDto initiateUserActivation(Long userId, String xForwardedProto, String xForwardedHost, int xForwardedPort, Optional<String> lastUpdatedBy) {
         // Find user
         final User user = userRepository.findById(userId).orElseThrow(UserNotFoundException::new);
 
@@ -134,6 +134,12 @@ public class UserActivationServiceImpl implements UserActivationService {
                 email,
                 saved.getEmailToken(),
                 getRecipientFullName(user), new Locale(user.getLocale().getCode()));
+
+        //log who updated
+        user.setLastUpdatedBy(lastUpdatedBy.orElse(null));
+
+        userRepository.save(user);
+
         return response;
     }
 

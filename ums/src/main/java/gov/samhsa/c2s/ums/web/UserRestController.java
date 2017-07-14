@@ -48,8 +48,9 @@ public class UserRestController {
      */
     @PutMapping("/{userId}/enabled")
     @ResponseStatus(HttpStatus.OK)
-    public void enableUser(@PathVariable Long userId) {
-        userService.enableUser(userId);
+    public void enableUser(@PathVariable Long userId,
+                           @RequestParam(value = "lastUpdatedBy") Optional<String> lastUpdatedBy) {
+        userService.enableUser(userId, lastUpdatedBy);
     }
 
     /**
@@ -59,8 +60,9 @@ public class UserRestController {
      */
     @PutMapping("/{userId}/disabled")
     @ResponseStatus(HttpStatus.OK)
-    public void disableUser(@PathVariable Long userId) {
-        userService.disableUser(userId);
+    public void disableUser(@PathVariable Long userId,
+                            @RequestParam(value = "lastUpdatedBy") Optional<String> lastUpdatedBy) {
+        userService.disableUser(userId, lastUpdatedBy);
     }
 
     /**
