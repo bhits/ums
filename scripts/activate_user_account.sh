@@ -21,6 +21,12 @@ read password
 echo -n "Please confirm password : "
 read confirmPassword
 
+#Get property value from json response
+function jsonValue() {
+KEY=$1
+awk -F"[{,:}]" '{for(i=1;i<=NF;i++){if($i~/'$KEY'/){print $(i+1)}}}'|tr -d '"'| sed -n 1p
+}
+
 #Generate activation request json
 generate_post_activation_user_data()
 {

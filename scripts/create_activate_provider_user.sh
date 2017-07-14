@@ -57,16 +57,16 @@ awk -F"[{,:}]" '{for(i=1;i<=NF;i++){if($i~/'$KEY'/){print $(i+1)}}}'|tr -d '"'| 
 }
 
 #Create user and retrieve user Id
-echo -n "Step 1 of 3: Creating the Provider User Account ... "
+echo "Step 1 of 3: Creating the Provider User Account ... "
 userId=$(curl --silent\
         -H "Accept: application/json" \
         -H "Content-Type:application/json" \
         -X POST --data "$(generate_post_create_user_data)" "http://localhost:8461/users" | jsonValue id)
 
-echo -n "INFO: The Provider User ID is : $userId"
+echo "INFO: The Provider User ID is : $userId"
 
 #Initialize activation user account and get verification code
-echo -n "Step 2 of 3: Generating Verification Code  for Activating ..."
+echo  "Step 2 of 3: Generating Verification Code  for Activating ..."
 verificationCode=$(curl --silent\
         -H "Accept: application/json"\
         -H "Content-Type:application/json"\
@@ -75,7 +75,7 @@ verificationCode=$(curl --silent\
         -H "X-Forwarded-Port:80"\
         -X POST "http://localhost:8461/users/$userId/activation" | jsonValue verificationCode)
 
-echo -n "INFO: The Provider User Verification Code is : $verificationCode"
+echo "INFO: The Provider User Verification Code is : $verificationCode"
 
 #Get Email token
 emailToken=$(curl --silent\
@@ -83,7 +83,7 @@ emailToken=$(curl --silent\
          -H "Content-Type:application/json"\
          -X GET http://localhost:8461/users/${userId}/emailToken | jsonValue emailToken )
 
-echo -n "INFO: The Provider User Email Token is : $emailToken"
+echo "INFO: The Provider User Email Token is : $emailToken"
 
 #Activate user account with username and password
 echo -n "Please enter a Username : "
@@ -110,7 +110,7 @@ EOF
 }
 
 #Activate user account
-echo -n "Step 3 of 3: Activating the Provider User Account ... "
+echo "Step 3 of 3: Activating the Provider User Account ... "
 verified=$(curl --silent\
         -H "Accept: application/json" \
         -H "Content-Type:application/json" \
@@ -119,5 +119,5 @@ verified=$(curl --silent\
         -H "X-Forwarded-Port:80" \
         -X POST --data "$(generate_post_activation_user_data)" "http://localhost:8461/users/activation"| jsonValue verified )
 
-echo -n "Is the Provider User Account Activated?: $verified"
-echo -n "END"
+echo  "Is the Provider User Account Activated?: $verified"
+echo  "END"
