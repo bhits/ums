@@ -125,7 +125,6 @@ public class UserServiceImpl implements UserService {
     public void registerUser(UserDto userDto) {
 
         // Step 1: Create User Record and User Role Mapping in UMS
-        System.out.println(">>>>>" + userDto);
 
         /* Get User Entity from UserDto */
         final User user = modelMapper.map(userDto, User.class);
@@ -232,7 +231,6 @@ public class UserServiceImpl implements UserService {
     public void updateUser(Long userId, UserDto userDto) {
 
         /* Get User Entity from UserDto */
-        System.out.println("%%%%%%%" + userDto);
 
         final User user = userRepository.findById(userId).orElseThrow(UserNotFoundException::new);
 
