@@ -126,7 +126,7 @@ public class UserServiceImplTest {
         when(userRepository.save(user)).thenReturn(user);
 
         //Act
-        userServiceImpl.disableUser(userId);
+        userServiceImpl.disableUser(userId, null);
 
         //Assert
         verify(userRepository).save(user);
@@ -149,7 +149,7 @@ public class UserServiceImplTest {
         when(userRepository.findByIdAndDisabled(userId, false)).thenReturn(Optional.empty());
 
         //Act
-        userServiceImpl.disableUser(userId);
+        userServiceImpl.disableUser(userId, null);
 
         //Assert
         //ExpectedException annotated by @rule is thrown;
@@ -171,7 +171,7 @@ public class UserServiceImplTest {
         when(userRepository.save(user)).thenReturn(user);
 
         //Act
-        userServiceImpl.enableUser(userId);
+        userServiceImpl.enableUser(userId, null);
 
         //Assert
         verify(userRepository).save(user);
@@ -195,7 +195,7 @@ public class UserServiceImplTest {
         when(userRepository.save(user)).thenReturn(user);
 
         //Act
-        userServiceImpl.enableUser(userId);
+        userServiceImpl.enableUser(userId, null);
 
         //Assert
         //ExpectedException annotated by @rule is thrown.
