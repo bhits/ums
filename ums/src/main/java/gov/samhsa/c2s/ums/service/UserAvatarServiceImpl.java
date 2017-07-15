@@ -64,6 +64,34 @@ public class UserAvatarServiceImpl implements UserAvatarService {
 
     @Override
     @Transactional
+    public UserAvatarDto updateUserAvatar(Long userId, AvatarBytesAndMetaDto avatarFile, Long fileWidthPixels, Long fileHeightPixels) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("User Not Found!"));
+
+        UserAvatar userAvatar = userAvatarRepository.findByUserId(user.getId())
+                .orElseThrow(() -> new UserAvatarNotFoundException("The user does not have an existing avatar to update"));
+
+        userAvatar.setFileContents(avatarFile.getFileContents());
+        userAvatar.setFileExtension(avatarFile.getFileExtension());
+        userAvatar.setFileName(avatarFile.getFileName());
+        userAvatar.setFileSizeBytes(avatarFile.getFileSizeBytes());
+        userAvatar.setFileHeightPixels(fileHeightPixels);
+        userAvatar.setFileWidthPixels(fileWidthPixels);
+
+        UserAvatar savedUserAvatar;
+
+        try {
+            savedUserAvatar = userAvatarRepository.save(userAvatar);
+        } catch (RuntimeException e) {
+            log.error("A RuntimeException occurred while attempting to update a user avatar", e);
+            throw new UserAvatarSaveException("Unable to update user avatar");
+        }
+
+        return modelMapper.map(savedUserAvatar, UserAvatarDto.class);
+    }
+
+    @Override
+    @Transactional
     public void deleteUserAvatar(Long userId) {
         try {
             userAvatarRepository.deleteByUserId(userId);
