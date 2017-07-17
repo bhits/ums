@@ -84,8 +84,8 @@ public class FhirPatientServiceImpl implements FhirPatientService {
 
     @Override
     public void publishFhirPatient(UserDto userDto) {
-        Patient patient = createFhirPatient(userDto);
-        ValidationResult validationResult = fhirValidator.validateWithResult(patient);
+        final Patient patient = createFhirPatient(userDto);
+        final ValidationResult validationResult = fhirValidator.validateWithResult(patient);
         if (validationResult.isSuccessful())
             fhirClient.create().resource(patient).execute();
         else
@@ -94,19 +94,19 @@ public class FhirPatientServiceImpl implements FhirPatientService {
 
     @Override
     public void updateFhirPatient(UserDto userDto) {
-        if (umsProperties.getFhir().getPublish().isUseCreateForUpdate()) {
-            publishFhirPatient(userDto);
-        } else {
-            Patient patient = createFhirPatient(userDto);
-            ValidationResult validationResult = fhirValidator.validateWithResult(patient);
-            if (validationResult.isSuccessful()) {
+        final Patient patient = createFhirPatient(userDto);
+        final ValidationResult validationResult = fhirValidator.validateWithResult(patient);
+        if (validationResult.isSuccessful()) {
+            if (umsProperties.getFhir().getPublish().isUseCreateForUpdate()) {
+                fhirClient.create().resource(patient).execute();
+            } else {
                 fhirClient.update().resource(patient)
                         .conditional()
                         .where(Patient.IDENTIFIER.exactly().systemAndCode(umsProperties.getMrn().getCodeSystem(), patient.getId()))
                         .execute();
-            } else {
-                throw new FHIRFormatErrorException("FHIR Patient Validation is not successful" + validationResult.getMessages());
             }
+        } else {
+            throw new FHIRFormatErrorException("FHIR Patient Validation is not successful" + validationResult.getMessages());
         }
     }
 
