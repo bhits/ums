@@ -15,6 +15,7 @@ import gov.samhsa.c2s.ums.domain.UserScopeAssignment;
 import gov.samhsa.c2s.ums.domain.UserScopeAssignmentRepository;
 import gov.samhsa.c2s.ums.infrastructure.EmailSender;
 import gov.samhsa.c2s.ums.infrastructure.ScimService;
+import gov.samhsa.c2s.ums.service.dto.EmailTokenDto;
 import gov.samhsa.c2s.ums.service.dto.ScopeAssignmentRequestDto;
 import gov.samhsa.c2s.ums.service.dto.ScopeAssignmentResponseDto;
 import gov.samhsa.c2s.ums.service.dto.UserActivationRequestDto;
@@ -111,8 +112,24 @@ public class UserActivationServiceImpl implements UserActivationService {
         response.setVerified(saved.isVerified());
         response.setEmail(user.getDemographics().getTelecoms().stream().filter(telecom -> telecom.getSystem().equals(Telecom.System.EMAIL)).map(Telecom::getValue).findFirst().get());
         response.setGenderCode(user.getDemographics().getAdministrativeGenderCode().getCode());
+
+        user.setLastUpdatedBy(lastUpdatedBy.orElse(null));
+        userRepository.save(user);
+
+        //If user has roles which is not required send email
+        if (emailSenderProperties.getDisabledByRoles() != null && user.getRoles().stream().filter(role -> emailSenderProperties.getDisabledByRoles().contains(role.getCode())).findAny().isPresent())
+            return response;
+        else {
+            // Send email with verification link
+            sendEmailWithVerificationLink(user, saved, xForwardedProto, xForwardedHost, xForwardedPort);
+            return response;
+        }
+
+    }
+
+    private void sendEmailWithVerificationLink(User user, UserActivation saved, String xForwardedProto, String xForwardedHost, int xForwardedPort){
         // Send email with verification link
-        final String email = Optional.of(user)
+        String email = Optional.of(user)
                 // Try to find registrationPurposeEmail first
                 .map(User::getDemographics)
                 .map(Demographics::getPatient)
@@ -135,12 +152,6 @@ public class UserActivationServiceImpl implements UserActivationService {
                 saved.getEmailToken(),
                 getRecipientFullName(user), new Locale(user.getLocale().getCode()));
 
-        //log who updated
-        user.setLastUpdatedBy(lastUpdatedBy.orElse(null));
-
-        userRepository.save(user);
-
-        return response;
     }
 
     @Override
@@ -199,6 +210,14 @@ public class UserActivationServiceImpl implements UserActivationService {
         response.setEmail(user.getDemographics().getTelecoms().stream().filter(telecom -> telecom.getSystem().equals(Telecom.System.EMAIL)).map(Telecom::getValue).findFirst().get());
         response.setVerified(userActivation.isVerified());
         return response;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public EmailTokenDto getUserEmailToken(Long userId) {
+        final User user = userRepository.findOne(userId);
+        final UserActivation userActivation = userActivationRepository.findOneByUserId(userId).orElseThrow(() -> new UserActivationNotFoundException("No user activation record found for user id: " + userId));
+        return new EmailTokenDto(userActivation.getEmailToken());
     }
 
     @Override

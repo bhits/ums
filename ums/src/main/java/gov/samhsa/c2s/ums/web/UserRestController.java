@@ -2,6 +2,7 @@ package gov.samhsa.c2s.ums.web;
 
 import gov.samhsa.c2s.ums.service.UserService;
 import gov.samhsa.c2s.ums.service.dto.AccessDecisionDto;
+import gov.samhsa.c2s.ums.service.dto.UpdateUserLimitedFieldsDto;
 import gov.samhsa.c2s.ums.service.dto.UserDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -37,8 +38,8 @@ public class UserRestController {
      */
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public void registerUser(@Valid @RequestBody UserDto userDto) {
-        userService.registerUser(userDto);
+    public UserDto registerUser(@Valid @RequestBody UserDto userDto) {
+        return userService.registerUser(userDto);
     }
 
     /**
@@ -89,9 +90,25 @@ public class UserRestController {
      * @param userDto User Dto Object
      */
     @PutMapping("/{userId}")
-    @ResponseStatus(HttpStatus.OK)
-    public void updateUser(@PathVariable Long userId, @Valid @RequestBody UserDto userDto) {
-        userService.updateUser(userId, userDto);
+    public UserDto updateUser(@PathVariable Long userId, @Valid @RequestBody UserDto userDto) {
+        return userService.updateUser(userId, userDto);
+    }
+
+    /**
+     * Update the following fields for a user:
+     * <ul>
+     *     <li>UserDto.addresses (only the home address)</li>
+     *     <li>UserDto.telecoms (only the home phone number & home e-mail address</li>
+     *     <li>UserDto.locale</li>
+     * </ul>
+     *
+     * @param userId  PK of User
+     * @param updateUserLimitedFieldsDto - the UpdateUserLimitedFieldsDto object containing the new values for the user fields to be updated
+     * @see UpdateUserLimitedFieldsDto
+     */
+    @PutMapping("/{userId}/limitedFields")
+    public UserDto updateUserLimitedFields(@PathVariable Long userId, @Valid @RequestBody UpdateUserLimitedFieldsDto updateUserLimitedFieldsDto) {
+        return userService.updateUserLimitedFields(userId, updateUserLimitedFieldsDto);
     }
 
     /**
@@ -113,8 +130,9 @@ public class UserRestController {
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
     public Page<UserDto> getAllUsers(@RequestParam("page") Optional<Integer> page,
-                                     @RequestParam("size") Optional<Integer> size) {
-        return userService.getAllUsers(page, size);
+                                     @RequestParam("size") Optional<Integer> size,
+                                     @RequestParam("role") Optional<String> roleCode) {
+        return userService.getAllUsers(page, size, roleCode);
     }
 
     @GetMapping(value = "/authId/{userAuthId}")
@@ -149,15 +167,20 @@ public class UserRestController {
      */
     @GetMapping(value = "/search/patientDemographic")
     @ResponseStatus(HttpStatus.OK)
-    public List<UserDto> searchUsersByDemographic(@RequestParam("firstName") String firstName,
-                                                  @RequestParam("lastName") String lastName,
-                                                  @RequestParam("birthDate") @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate birthDate,
-                                                  @RequestParam("genderCode") String genderCode) {
-        return userService.searchUsersByDemographic(firstName, lastName, birthDate, genderCode);
+    public Page<UserDto> searchUsersByDemographic(@RequestParam(value = "firstName", required = false) String firstName,
+                                                  @RequestParam(value = "lastName", required = false) String lastName,
+                                                  @RequestParam(value = "birthDate", required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate birthDate,
+                                                  @RequestParam(value = "genderCode", required = false) String genderCode,
+                                                  @RequestParam(value = "mrn", required = false) String mrn,
+                                                  @RequestParam(value = "roleCode", required = false) String roleCode,
+                                                  @RequestParam("page") Optional<Integer> page,
+                                                  @RequestParam("size") Optional<Integer> size) {
+        return userService.searchUsersByDemographic(firstName, lastName, birthDate, genderCode,mrn, roleCode,page, size);
     }
 
     @GetMapping("/search/identifier")
     public List<UserDto> searchUsersByIdentifier(@RequestParam String value, @RequestParam String system) {
         return userService.searchUsersByIdentifier(value, system);
     }
+
 }

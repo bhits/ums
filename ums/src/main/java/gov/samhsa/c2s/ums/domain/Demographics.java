@@ -102,6 +102,8 @@ public class Demographics {
                 .filter(identifier -> Boolean.FALSE.equals(identifier.getIdentifierSystem().getReassignable()))
                 .anyMatch(identifier -> Optional.of(identifier)
                         .map(Identifier::getDemographics)
-                        .map(List::size).filter(size -> size > 0).isPresent());
+                        .filter(demographics -> !demographics.contains(this))
+                        .map(List::size).filter(size -> size > 0).isPresent()
+                );
     }
 }

@@ -1,6 +1,7 @@
 package gov.samhsa.c2s.ums.service;
 
 import gov.samhsa.c2s.ums.service.dto.AccessDecisionDto;
+import gov.samhsa.c2s.ums.service.dto.UpdateUserLimitedFieldsDto;
 import gov.samhsa.c2s.ums.service.dto.UserDto;
 import org.springframework.data.domain.Page;
 import org.springframework.transaction.annotation.Transactional;
@@ -12,7 +13,7 @@ import java.util.StringTokenizer;
 
 public interface UserService {
     @Transactional
-    void registerUser(UserDto consentDto);
+    UserDto registerUser(UserDto consentDto);
 
     @Transactional
     void disableUser(Long userId, Optional<String> lastUpdatedBy);
@@ -21,7 +22,10 @@ public interface UserService {
     void enableUser(Long userId, Optional<String> lastUpdatedBy);
 
     @Transactional
-    void updateUser(Long userId, UserDto userDto);
+    UserDto updateUser(Long userId, UserDto userDto);
+
+    @Transactional
+    UserDto updateUserLimitedFields(Long userId, UpdateUserLimitedFieldsDto updateUserLimitedFieldsDto);
 
     @Transactional(readOnly = true)
     UserDto getUser(Long userId);
@@ -30,13 +34,14 @@ public interface UserService {
     UserDto getUserByUserAuthId(String userAuthId);
 
     @Transactional(readOnly = true)
-    Page<UserDto> getAllUsers(Optional<Integer> page, Optional<Integer> size);
+    Page<UserDto> getAllUsers(Optional<Integer> page, Optional<Integer> size, Optional<String> roleCode);
 
     @Transactional(readOnly = true)
     List<UserDto> searchUsersByFirstNameAndORLastName(StringTokenizer token);
 
     @Transactional(readOnly = true)
-    List<UserDto> searchUsersByDemographic(String firstName, String lastName, LocalDate birthDate, String genderCode);
+    Page<UserDto> searchUsersByDemographic(String firstName, String lastName, LocalDate birthDate, String genderCode,String mrn, String roleCode,Optional<Integer> page,
+                                           Optional<Integer> size);
 
     @Transactional(readOnly = true)
     List<UserDto> searchUsersByIdentifier(String value, String system);
@@ -50,6 +55,6 @@ public interface UserService {
     @Transactional(readOnly = true)
     AccessDecisionDto accessDecision(String userAuthId, String patientMRN);
 
-    //Todo: Get all Users by role type
+
 
 }

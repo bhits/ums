@@ -1,6 +1,7 @@
 package gov.samhsa.c2s.ums.web;
 
 import gov.samhsa.c2s.ums.service.UserActivationService;
+import gov.samhsa.c2s.ums.service.dto.EmailTokenDto;
 import gov.samhsa.c2s.ums.service.dto.ScopeAssignmentRequestDto;
 import gov.samhsa.c2s.ums.service.dto.ScopeAssignmentResponseDto;
 import gov.samhsa.c2s.ums.service.dto.UserActivationRequestDto;
@@ -46,6 +47,11 @@ public class UserActivationRestController {
     @GetMapping(value = "/{userId}/activation")
     public UserActivationResponseDto getCurrentUserCreationInfo(@PathVariable Long userId) {
         return userActivationService.findUserActivationInfoByUserId(userId);
+    }
+
+    @GetMapping(value = "/{userId}/emailToken")
+    public EmailTokenDto getUserEmailToken(@PathVariable Long userId) {
+        return userActivationService.getUserEmailToken(userId);
     }
 
     @GetMapping(value = "/activation")

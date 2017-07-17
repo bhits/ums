@@ -2,7 +2,6 @@ package gov.samhsa.c2s.ums.service;
 
 import gov.samhsa.c2s.ums.config.UmsProperties;
 import gov.samhsa.c2s.ums.domain.Address;
-import gov.samhsa.c2s.ums.domain.AddressRepository;
 import gov.samhsa.c2s.ums.domain.Demographics;
 import gov.samhsa.c2s.ums.domain.DemographicsRepository;
 import gov.samhsa.c2s.ums.domain.Identifier;
@@ -15,7 +14,6 @@ import gov.samhsa.c2s.ums.domain.PatientRepository;
 import gov.samhsa.c2s.ums.domain.Role;
 import gov.samhsa.c2s.ums.domain.RoleRepository;
 import gov.samhsa.c2s.ums.domain.Telecom;
-import gov.samhsa.c2s.ums.domain.TelecomRepository;
 import gov.samhsa.c2s.ums.domain.User;
 import gov.samhsa.c2s.ums.domain.UserPatientRelationship;
 import gov.samhsa.c2s.ums.domain.UserPatientRelationshipRepository;
@@ -31,10 +29,12 @@ import gov.samhsa.c2s.ums.service.dto.AddressDto;
 import gov.samhsa.c2s.ums.service.dto.IdentifierDto;
 import gov.samhsa.c2s.ums.service.dto.RelationDto;
 import gov.samhsa.c2s.ums.service.dto.TelecomDto;
+import gov.samhsa.c2s.ums.service.dto.UpdateUserLimitedFieldsDto;
 import gov.samhsa.c2s.ums.service.dto.UserDto;
 import gov.samhsa.c2s.ums.service.exception.InvalidIdentifierSystemException;
 import gov.samhsa.c2s.ums.service.exception.MissingEmailException;
 import gov.samhsa.c2s.ums.service.exception.PatientNotFoundException;
+import gov.samhsa.c2s.ums.service.exception.UnassignableIdentifierException;
 import gov.samhsa.c2s.ums.service.exception.UserActivationNotFoundException;
 import gov.samhsa.c2s.ums.service.exception.UserNotFoundException;
 import gov.samhsa.c2s.ums.service.fhir.FhirPatientService;
@@ -57,6 +57,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.StringTokenizer;
@@ -87,8 +88,6 @@ public class UserServiceImpl implements UserService {
     private PatientRepository patientRepository;
 
     @Autowired
-    private LocaleRepository localeRepository;
-    @Autowired
     private RoleRepository roleRepository;
     @Autowired
     private StateCodeRepository stateCodeRepository;
@@ -96,13 +95,8 @@ public class UserServiceImpl implements UserService {
     private CountryCodeRepository countryCodeRepository;
 
     @Autowired
-    private TelecomRepository telecomRepository;
-    @Autowired
-    private AddressRepository addressRepository;
-    @Autowired
     private UserPatientRelationshipRepository userPatientRelationshipRepository;
-    @Autowired
-    private ScimService scimService;
+
     @Autowired
     private DemographicsRepository demographicsRepository;
 
@@ -120,9 +114,18 @@ public class UserServiceImpl implements UserService {
     @Autowired
     private PatientToMrnConverter patientToMrnConverter;
 
+    private final LocaleRepository localeRepository;
+    private final ScimService scimService;
+
+    @Autowired
+    public UserServiceImpl(LocaleRepository localeRepository, ScimService scimService) {
+        this.localeRepository = localeRepository;
+        this.scimService = scimService;
+    }
+
     @Override
     @Transactional
-    public void registerUser(UserDto userDto) {
+    public UserDto registerUser(UserDto userDto) {
 
         // Step 1: Create User Record and User Role Mapping in UMS
 
@@ -185,6 +188,8 @@ public class UserServiceImpl implements UserService {
                 fhirPatientService.publishFhirPatient(userDto);
             }
         }
+
+        return modelMapper.map(user, UserDto.class);
     }
 
     @Override
@@ -228,7 +233,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public void updateUser(Long userId, UserDto userDto) {
+    public UserDto updateUser(Long userId, UserDto userDto) {
 
         /* Get User Entity from UserDto */
 
@@ -283,6 +288,9 @@ public class UserServiceImpl implements UserService {
                 .collect(toList());
         // Save the different and non-system-generated identifiers and add them to the user
         identifierRepository.save(identifiersToAdd);
+        // Assert the new identifiers to add does not contain unassignable identifiers
+        assertDoesNotContainUnassignableIdentifiers(user, identifiersToAdd);
+        // Add new identifiers
         user.getDemographics().getIdentifiers().addAll(identifiersToAdd);
         assertAllRequiredIdentifiersExist(user.getDemographics().getIdentifiers(), allRequiredIdentifierSystems);
 
@@ -323,7 +331,89 @@ public class UserServiceImpl implements UserService {
             fhirPatientService.updateFhirPatient(userDto);
         }
 
-        userRepository.save(user);
+        User updatedUser = userRepository.save(user);
+
+        return modelMapper.map(updatedUser, UserDto.class);
+    }
+
+    @Override
+    public UserDto updateUserLimitedFields(Long userId, UpdateUserLimitedFieldsDto updateUserLimitedFieldsDto) {
+        // Get user from database as UserDto object
+        User user = userRepository.findOne(userId);
+
+        // Update address
+        List<Address> addresses = user.getDemographics().getAddresses();
+        AddressDto newHomeAddressDto = new AddressDto(updateUserLimitedFieldsDto.getHomeAddress(), UseTypes.HOME.toString());
+
+        Optional<Address> oldHomeAddress = addresses.parallelStream()
+                .filter(address -> address.getUse().equals(Address.Use.HOME))
+                .findFirst();
+
+        if (oldHomeAddress.isPresent()) {
+            mapAddressDtoToAddress(oldHomeAddress.get(), newHomeAddressDto);
+        } else {
+            Address address = mapAddressDtoToAddress(new Address(), newHomeAddressDto);
+            address.setDemographics(user.getDemographics());
+            addresses.add(address);
+        }
+
+        List<Telecom> userTelecoms = user.getDemographics().getTelecoms();
+
+        // Update home phone telecom
+        Optional<String> newHomePhoneOpt = Optional.ofNullable(updateUserLimitedFieldsDto.getHomePhone());
+        Optional<TelecomDto> newHomePhoneTelecomDto = newHomePhoneOpt.map(s -> new TelecomDto(SystemTypes.PHONE.toString(), s, UseTypes.HOME.toString()));
+
+        Optional<Telecom> oldHomePhoneTelecom = userTelecoms.parallelStream()
+                .filter(telecom ->
+                        telecom.getSystem().equals(Telecom.System.PHONE)
+                                && telecom.getUse().equals(Telecom.Use.HOME))
+                .findFirst();
+
+        if (newHomePhoneTelecomDto.isPresent()) {
+            if (oldHomePhoneTelecom.isPresent()) {
+                oldHomePhoneTelecom.get().setValue(newHomePhoneTelecomDto.get().getValue());
+            } else {
+                Telecom telecomToAdd = mapTelecomDtoToTelcom(new Telecom(), newHomePhoneTelecomDto.get());
+                telecomToAdd.setDemographics(user.getDemographics());
+                userTelecoms.add(telecomToAdd);
+            }
+        } else {
+            if (oldHomePhoneTelecom.isPresent()) {
+                // Remove home phone telecom if it already exists
+                oldHomePhoneTelecom.get().setDemographics(null);
+                userTelecoms.remove(oldHomePhoneTelecom.get());
+            }
+        }
+
+        // Update home email telecom
+        Optional<String> newHomeEmailOpt = Optional.ofNullable(updateUserLimitedFieldsDto.getHomeEmail());
+        Optional<TelecomDto> newHomeEmailTelecomDto = newHomeEmailOpt.map(s -> new TelecomDto(SystemTypes.EMAIL.toString(), s, UseTypes.HOME.toString()));
+
+        Optional<Telecom> oldHomeEmailTelecom = userTelecoms.parallelStream()
+                .filter(telecom ->
+                        telecom.getSystem().equals(Telecom.System.EMAIL)
+                                && telecom.getUse().equals(Telecom.Use.HOME))
+                .findFirst();
+
+        if (newHomeEmailTelecomDto.isPresent()) {
+            if (oldHomeEmailTelecom.isPresent()) {
+                oldHomeEmailTelecom.get().setValue(newHomeEmailTelecomDto.get().getValue());
+            } else {
+                Telecom telecomToAdd = mapTelecomDtoToTelcom(new Telecom(), newHomeEmailTelecomDto.get());
+                telecomToAdd.setDemographics(user.getDemographics());
+                userTelecoms.add(telecomToAdd);
+            }
+        } else {
+            if (oldHomeEmailTelecom.isPresent()) {
+                // Remove home email telecom if it already exists
+                oldHomeEmailTelecom.get().setDemographics(null);
+                userTelecoms.remove(oldHomeEmailTelecom.get());
+            }
+        }
+
+        User updatedUser = userRepository.save(user);
+
+        return modelMapper.map(updatedUser, UserDto.class);
     }
 
     @Override
@@ -378,11 +468,15 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<UserDto> getAllUsers(Optional<Integer> page, Optional<Integer> size) {
+    public Page<UserDto> getAllUsers(Optional<Integer> page, Optional<Integer> size, Optional<String> roleCode) {
         final PageRequest pageRequest = new PageRequest(page.filter(p -> p >= 0).orElse(0),
                 size.filter(s -> s > 0 && s <= umsProperties.getPagination().getMaxSize())
                         .orElse(umsProperties.getPagination().getDefaultSize()));
-        final Page<User> usersPage = userRepository.findAll(pageRequest);
+        Page<User> usersPage;
+        if (roleCode.isPresent())
+            usersPage = userRepository.findAllByRolesCode(roleCode.get(), pageRequest);
+        else
+            usersPage = userRepository.findAll(pageRequest);
         final List<User> userList = usersPage.getContent();
         final List<UserDto> getUserDtoList = userListToUserDtoList(userList);
         return new PageImpl<>(getUserDtoList, pageRequest, usersPage.getTotalElements());
@@ -390,19 +484,34 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<UserDto> searchUsersByDemographic(String firstName,
+    public Page<UserDto> searchUsersByDemographic(String firstName,
                                                   String lastName,
                                                   LocalDate birthDate,
-                                                  String genderCode) {
-        List<Demographics> demographicsesList;
+                                                  String genderCode,
+                                                  String mrn,
+                                                  String roleCode,
+                                                  Optional<Integer> page,
+                                                  Optional<Integer> size) {
+        final PageRequest pageRequest = new PageRequest(page.filter(p -> p >= 0).orElse(0),
+                size.filter(s -> s > 0 && s <= umsProperties.getPagination().getMaxSize())
+                        .orElse(umsProperties.getPagination().getDefaultSize()));
         final AdministrativeGenderCode administrativeGenderCode = administrativeGenderCodeRepository.findByCode(genderCode);
-        demographicsesList = demographicsRepository.findAllByFirstNameAndLastNameAndBirthDayAndAdministrativeGenderCode(firstName, lastName,
-                birthDate, administrativeGenderCode);
-        if (demographicsesList.size() < 1) {
-            throw new UserNotFoundException("User Not Found!");
-        } else {
-            return demographicsesListToUserDtoList(demographicsesList);
+        Role patientRole = null;
+        if (roleCode != null)
+            patientRole = roleRepository.findByCode(roleCode);
+        Identifier patientIdentifier = null;
+        if (mrn != null) {
+            if (!identifierRepository.findByValueAndIdentifierSystem(mrn, identifierSystemRepository.findBySystem(umsProperties.getMrn().getCodeSystem()).get()).isPresent())
+                return new PageImpl<>(new ArrayList<UserDto>(), pageRequest, 0);
+            else
+                patientIdentifier = identifierRepository.findByValueAndIdentifierSystem(mrn, identifierSystemRepository.findBySystem(umsProperties.getMrn().getCodeSystem()).get()).get();
         }
+        Page<Demographics> demographicsPage = demographicsRepository.query(firstName, lastName, administrativeGenderCode, birthDate, patientIdentifier, patientRole, pageRequest);
+
+        List<Demographics> demographicsesList = demographicsPage.getContent();
+
+        final List<UserDto> getUserDtoList = demographicsesListToUserDtoList(demographicsesList);
+        return new PageImpl<>(getUserDtoList, pageRequest, demographicsPage.getTotalElements());
     }
 
     @Override
@@ -486,6 +595,16 @@ public class UserServiceImpl implements UserService {
                     .append("' can only be generated by the system")
                     .toString();
             throw new InvalidIdentifierSystemException(errMsg);
+        }
+    }
+
+    private void assertDoesNotContainUnassignableIdentifiers(User user, List<Identifier> identifiersToAdd) {
+        if (identifiersToAdd.stream()
+                .filter(identifier -> Boolean.FALSE.equals(identifier.getIdentifierSystem().getReassignable()))
+                .map(Identifier::getDemographics)
+                .filter(Objects::nonNull)
+                .anyMatch(demographics -> !user.getDemographics().equals(demographics))) {
+            throw new UnassignableIdentifierException();
         }
     }
 
@@ -595,4 +714,5 @@ public class UserServiceImpl implements UserService {
                 throw new InvalidIdentifierSystemException("This identifier system is not configured with an algorithm, the identifier cannot be generated");
         }
     }
+
 }
