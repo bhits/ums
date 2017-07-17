@@ -24,6 +24,7 @@ public class UmsProperties {
     @Valid
     private Mrn mrn;
     private Pagination pagination;
+    @NotNull
     @Valid
     private Fhir fhir;
     @Valid
@@ -93,6 +94,8 @@ public class UmsProperties {
             private String serverUrl;
             @NotBlank
             private String clientSocketTimeoutInMs;
+            @NotBlank
+            private boolean useCreateForUpdate = false;
         }
     }
 
