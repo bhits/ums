@@ -32,6 +32,7 @@ import gov.samhsa.c2s.ums.service.dto.TelecomDto;
 import gov.samhsa.c2s.ums.service.dto.UpdateUserLimitedFieldsDto;
 import gov.samhsa.c2s.ums.service.dto.UserDto;
 import gov.samhsa.c2s.ums.service.exception.InvalidIdentifierSystemException;
+import gov.samhsa.c2s.ums.service.exception.LoggedInUserNotFound;
 import gov.samhsa.c2s.ums.service.exception.MissingEmailException;
 import gov.samhsa.c2s.ums.service.exception.PatientNotFoundException;
 import gov.samhsa.c2s.ums.service.exception.UnassignableIdentifierException;
@@ -201,7 +202,7 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.findByIdAndDisabled(userId, false)
                 .orElseThrow(() -> new UserNotFoundException("User Not Found!"));
         user.setDisabled(true);
-        user.setLastUpdatedBy(lastUpdatedBy.orElse(null));
+        user.setLastUpdatedBy(lastUpdatedBy.orElseThrow(LoggedInUserNotFound::new));
         //
         /**
          * Use OAuth API to set users.active to false.
@@ -221,7 +222,7 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.findByIdAndDisabled(userId, true)
                 .orElseThrow(() -> new UserNotFoundException("User Not Found!"));
         user.setDisabled(false);
-        user.setLastUpdatedBy(lastUpdatedBy.orElse(null));
+        user.setLastUpdatedBy(lastUpdatedBy.orElseThrow(LoggedInUserNotFound::new));
 
         /**
          * Use OAuth API to set users.active to true.
