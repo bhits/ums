@@ -313,31 +313,24 @@ public class UserServiceImpl implements UserService {
         }
 
         //update telephone
-        List<Telecom> telecoms = user.getDemographics().getTelecoms();
-
-        if(userDto.getTelecoms().size() ==0){
-            List<Telecom> telecomstoRemove=telecoms.stream().filter(telecom -> telecom.getSystem().toString().equals("PHONE")).collect(toList());
-            telecomRepository.deleteInBatch(telecomstoRemove);
-        }
-
-        if (userDto.getTelecoms() != null) {
-            if(userDto.getTelecoms().size()==1){
-                if(userDto.getTelecoms().get(0).getSystem().equals("EMAIL")){
-                    List<Telecom> telecomstoRemove=telecoms.stream().filter(telecom -> telecom.getSystem().toString().equals("PHONE")).collect(toList());
-                    telecomRepository.deleteInBatch(telecomstoRemove);
-                }
-            }
-            userDto.getTelecoms().stream().forEach(telecomDto -> {
-                Optional<Telecom> tempTeleCom = telecoms.stream().filter(telecom -> telecom.getSystem().toString().equals(telecomDto.getSystem()) && telecom.getUse().toString().equals(telecomDto.getUse())).findFirst();
-                if (tempTeleCom.isPresent()) {
-                    tempTeleCom.get().setValue(telecomDto.getValue());
-                } else {
-                    Telecom telecom = mapTelecomDtoToTelcom(new Telecom(), telecomDto);
-                    telecom.setDemographics(user.getDemographics());
-                    telecoms.add(telecom);
-                }
-            });
-        }
+        final List<Telecom> telecoms = user.getDemographics().getTelecoms();
+        final List<TelecomDto> telecomDtos = Optional.ofNullable(userDto.getTelecoms()).orElseGet(Collections::emptyList);
+        // Find telecoms to remove
+        final List<Telecom> telecomsToRemove = telecoms.stream()
+                .filter(telecom -> telecomDtos.stream()
+                        .noneMatch(telecomDto -> deepEquals(telecom, telecomDto)
+                        ))
+                .collect(toList());
+        user.getDemographics().getTelecoms().removeAll(telecomsToRemove);
+        telecomRepository.deleteInBatch(telecomsToRemove);
+        // Find telecoms to add
+        final List<Telecom> telecomsToAdd = telecomDtos.stream()
+                .filter(telecomDto -> telecoms.stream()
+                        .noneMatch(telecom -> deepEquals(telecom, telecomDto)))
+                .map(telecomDto -> mapTelecomDtoToTelcom(new Telecom(), telecomDto))
+                .collect(toList());
+        telecomRepository.save(telecomsToAdd);
+        user.getDemographics().getTelecoms().addAll(telecomsToAdd);
 
         if (umsProperties.getFhir().getPublish().isEnabled() && user.getDemographics().getPatient() != null) {
             userDto.setMrn(userToMrnConverter.convert(user));
@@ -347,6 +340,12 @@ public class UserServiceImpl implements UserService {
         User updatedUser = userRepository.save(user);
 
         return modelMapper.map(updatedUser, UserDto.class);
+    }
+
+    private boolean deepEquals(Telecom telecom, TelecomDto telecomDto) {
+        return telecom.getSystem().toString().equals(telecomDto.getSystem()) &&
+                telecom.getValue().equals(telecomDto.getValue()) &&
+                telecom.getUse().toString().equals(telecomDto.getUse());
     }
 
     @Override
