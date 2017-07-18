@@ -263,11 +263,18 @@ public class UserActivationServiceImpl implements UserActivationService {
         userActivationRepository.save(userActivation);
         // Add user to groups
         scimService.addUserToGroups(userActivation);
-        emailSender.sendEmailToConfirmVerification(
-                xForwardedProto, xForwardedHost, xForwardedPort,
-                user.getDemographics().getTelecoms().stream().filter(telecom -> telecom.getSystem().equals(Telecom.System.EMAIL)).map(Telecom::getValue).findFirst().get(),
-                getRecipientFullName(user), new Locale(user.getLocale().getCode()));
-        return response;
+
+        //If user has roles which is not required send email
+        if (emailSenderProperties.getDisabledByRoles() != null && user.getRoles().stream().filter(role -> emailSenderProperties.getDisabledByRoles().contains(role.getCode())).findAny().isPresent())
+            return response;
+        else {
+            // Send email with confirmation
+            emailSender.sendEmailToConfirmVerification(
+                    xForwardedProto, xForwardedHost, xForwardedPort,
+                    user.getDemographics().getTelecoms().stream().filter(telecom -> telecom.getSystem().equals(Telecom.System.EMAIL)).map(Telecom::getValue).findFirst().get(),
+                    getRecipientFullName(user), new Locale(user.getLocale().getCode()));
+            return response;
+        }
     }
 
     private void assertPasswordAndConfirmPassword(UserActivationRequestDto userActivationRequest) {
