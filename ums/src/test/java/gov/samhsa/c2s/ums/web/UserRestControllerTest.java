@@ -65,10 +65,10 @@ public class UserRestControllerTest {
         Long userId = 20L;
 
         //Act
-        sut.enableUser(userId);
+        sut.enableUser(userId, null);
 
         //Assert
-        verify(userServiceMock).enableUser(userId);
+        verify(userServiceMock).enableUser(userId, null);
     }
 
     @Test
@@ -76,10 +76,10 @@ public class UserRestControllerTest {
         //Arrange
         Long userId = 20L;
         //Act
-        sut.disableUser(userId);
+        sut.disableUser(userId, null);
 
         //Assert
-        verify(userServiceMock).disableUser(userId);
+        verify(userServiceMock).disableUser(userId, null);
     }
 
     @Test

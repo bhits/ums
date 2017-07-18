@@ -7,12 +7,14 @@ import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.cloud.netflix.feign.EnableFeignClients;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
 import org.springframework.data.jpa.convert.threeten.Jsr310JpaConverters;
+import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 
 @SpringBootApplication
 @EnableFeignClients
 @EntityScan(basePackageClasses = {UmsApplication.class, Jsr310JpaConverters.class})
 @EnableAspectJAutoProxy
 @EnableDiscoveryClient
+@EnableJpaAuditing
 public class UmsApplication {
 
 	public static void main(String[] args) {
