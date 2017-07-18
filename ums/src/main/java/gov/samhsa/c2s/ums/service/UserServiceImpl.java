@@ -411,6 +411,9 @@ public class UserServiceImpl implements UserService {
             }
         }
 
+        //Update last updated by
+        user.setLastUpdatedBy(updateUserLimitedFieldsDto.getLastUpdatedBy());
+
         User updatedUser = userRepository.save(user);
 
         return modelMapper.map(updatedUser, UserDto.class);
