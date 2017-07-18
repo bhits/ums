@@ -202,7 +202,7 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.findByIdAndDisabled(userId, false)
                 .orElseThrow(() -> new UserNotFoundException("User Not Found!"));
         user.setDisabled(true);
-        user.setLastUpdatedBy(lastUpdatedBy.orElseThrow(LoggedInUserNotFound::new));
+        user.setLastUpdatedBy(lastUpdatedBy.orElse(null));
         //
         /**
          * Use OAuth API to set users.active to false.
@@ -222,7 +222,7 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.findByIdAndDisabled(userId, true)
                 .orElseThrow(() -> new UserNotFoundException("User Not Found!"));
         user.setDisabled(false);
-        user.setLastUpdatedBy(lastUpdatedBy.orElseThrow(LoggedInUserNotFound::new));
+        user.setLastUpdatedBy(lastUpdatedBy.orElse(null));
 
         /**
          * Use OAuth API to set users.active to true.

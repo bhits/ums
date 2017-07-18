@@ -91,7 +91,7 @@ public class UserActivationServiceImpl implements UserActivationService {
     @Override
     public UserActivationResponseDto initiateUserActivation(Long userId, String xForwardedProto, String xForwardedHost, int xForwardedPort, Optional<String> lastUpdatedBy) {
         // Find user
-        final User user = userRepository.findById(userId).orElseThrow(UserNotFoundException::new);
+        final User user = userRepository.findById(userId).orElse(null);
 
         String emailToken = emailTokenGenerator.generateEmailToken();
         final Instant emailTokenExpirationDate = Instant.now().plus(Period.ofDays(emailSenderProperties.getEmailTokenExpirationInDays()));
