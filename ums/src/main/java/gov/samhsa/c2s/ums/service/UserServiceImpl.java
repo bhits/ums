@@ -14,6 +14,7 @@ import gov.samhsa.c2s.ums.domain.PatientRepository;
 import gov.samhsa.c2s.ums.domain.Role;
 import gov.samhsa.c2s.ums.domain.RoleRepository;
 import gov.samhsa.c2s.ums.domain.Telecom;
+import gov.samhsa.c2s.ums.domain.TelecomRepository;
 import gov.samhsa.c2s.ums.domain.User;
 import gov.samhsa.c2s.ums.domain.UserPatientRelationship;
 import gov.samhsa.c2s.ums.domain.UserPatientRelationshipRepository;
@@ -105,6 +106,10 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     private IdentifierSystemRepository identifierSystemRepository;
+
+    @Autowired
+    private TelecomRepository telecomRepository;
+
     @Autowired
     private IdentifierRepository identifierRepository;
 
@@ -309,7 +314,19 @@ public class UserServiceImpl implements UserService {
 
         //update telephone
         List<Telecom> telecoms = user.getDemographics().getTelecoms();
+
+        if(userDto.getTelecoms().size() ==0){
+            List<Telecom> telecomstoRemove=telecoms.stream().filter(telecom -> telecom.getSystem().toString().equals("PHONE")).collect(toList());
+            telecomRepository.deleteInBatch(telecomstoRemove);
+        }
+
         if (userDto.getTelecoms() != null) {
+            if(userDto.getTelecoms().size()==1){
+                if(userDto.getTelecoms().get(0).getSystem().equals("EMAIL")){
+                    List<Telecom> telecomstoRemove=telecoms.stream().filter(telecom -> telecom.getSystem().toString().equals("PHONE")).collect(toList());
+                    telecomRepository.deleteInBatch(telecomstoRemove);
+                }
+            }
             userDto.getTelecoms().stream().forEach(telecomDto -> {
                 Optional<Telecom> tempTeleCom = telecoms.stream().filter(telecom -> telecom.getSystem().toString().equals(telecomDto.getSystem()) && telecom.getUse().toString().equals(telecomDto.getUse())).findFirst();
                 if (tempTeleCom.isPresent()) {
