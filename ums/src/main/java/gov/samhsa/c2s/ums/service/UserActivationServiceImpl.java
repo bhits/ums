@@ -25,6 +25,7 @@ import gov.samhsa.c2s.ums.service.dto.UsernameUsedDto;
 import gov.samhsa.c2s.ums.service.dto.VerificationResponseDto;
 import gov.samhsa.c2s.ums.service.exception.EmailNotFoundException;
 import gov.samhsa.c2s.ums.service.exception.EmailTokenExpiredException;
+import gov.samhsa.c2s.ums.service.exception.LoggedInUserNotFound;
 import gov.samhsa.c2s.ums.service.exception.PasswordConfirmationFailedException;
 import gov.samhsa.c2s.ums.service.exception.ScopeDoesNotExistInDBException;
 import gov.samhsa.c2s.ums.service.exception.UserActivationCannotBeVerifiedException;
@@ -88,7 +89,7 @@ public class UserActivationServiceImpl implements UserActivationService {
     private UserScopeAssignmentRepository userScopeAssignmentRepository;
 
     @Override
-    public UserActivationResponseDto initiateUserActivation(Long userId, String xForwardedProto, String xForwardedHost, int xForwardedPort) {
+    public UserActivationResponseDto initiateUserActivation(Long userId, String xForwardedProto, String xForwardedHost, int xForwardedPort, Optional<String> lastUpdatedBy) {
         // Find user
         final User user = userRepository.findById(userId).orElseThrow(UserNotFoundException::new);
 
@@ -113,6 +114,9 @@ public class UserActivationServiceImpl implements UserActivationService {
         response.setEmail(user.getDemographics().getTelecoms().stream().filter(telecom -> telecom.getSystem().equals(Telecom.System.EMAIL)).map(Telecom::getValue).findFirst().get());
         response.setGenderCode(user.getDemographics().getAdministrativeGenderCode().getCode());
 
+        user.setLastUpdatedBy(lastUpdatedBy.orElseThrow(LoggedInUserNotFound::new));
+        userRepository.save(user);
+
         //If user has roles which is not required send email
         if (emailSenderProperties.getDisabledByRoles() != null && user.getRoles().stream().filter(role -> emailSenderProperties.getDisabledByRoles().contains(role.getCode())).findAny().isPresent())
             return response;
@@ -121,6 +125,7 @@ public class UserActivationServiceImpl implements UserActivationService {
             sendEmailWithVerificationLink(user, saved, xForwardedProto, xForwardedHost, xForwardedPort);
             return response;
         }
+
     }
 
     private void sendEmailWithVerificationLink(User user, UserActivation saved, String xForwardedProto, String xForwardedHost, int xForwardedPort){
