@@ -321,16 +321,27 @@ public class UserServiceImpl implements UserService {
                         .noneMatch(telecomDto -> deepEquals(telecom, telecomDto)
                         ))
                 .collect(toList());
-        user.getDemographics().getTelecoms().removeAll(telecomsToRemove);
+
+        //Not remove the email by empty email dtos
+        if((telecomDtos.size()==1 && telecomDtos.get(0).getSystem().equals("PHONE") )|| (telecomDtos.size()==0)){
+            List<Telecom> telecomNotToRemove= telecomsToRemove.stream().filter(telecom -> telecom.getSystem().toString().equals("EMAIL")).collect(toList());
+            telecomsToRemove.removeAll(telecomNotToRemove);
+        }
+
         telecomRepository.deleteInBatch(telecomsToRemove);
+
         // Find telecoms to add
         final List<Telecom> telecomsToAdd = telecomDtos.stream()
                 .filter(telecomDto -> telecoms.stream()
                         .noneMatch(telecom -> deepEquals(telecom, telecomDto)))
                 .map(telecomDto -> mapTelecomDtoToTelcom(new Telecom(), telecomDto))
                 .collect(toList());
+
+        telecomsToAdd.stream().forEach(telecom -> telecom.setDemographics(user.getDemographics()));
+        System.out.println(telecomsToAdd.size());
         telecomRepository.save(telecomsToAdd);
         user.getDemographics().getTelecoms().addAll(telecomsToAdd);
+
 
         if (umsProperties.getFhir().getPublish().isEnabled() && user.getDemographics().getPatient() != null) {
             userDto.setMrn(userToMrnConverter.convert(user));
