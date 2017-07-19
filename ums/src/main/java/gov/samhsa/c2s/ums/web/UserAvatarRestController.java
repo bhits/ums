@@ -16,11 +16,11 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/user-avatars")
-public class UserAvatarController {
+public class UserAvatarRestController {
     private final UserAvatarService userAvatarService;
 
     @Autowired
-    public UserAvatarController(UserAvatarService userAvatarService) {
+    public UserAvatarRestController(UserAvatarService userAvatarService) {
         this.userAvatarService = userAvatarService;
     }
 
