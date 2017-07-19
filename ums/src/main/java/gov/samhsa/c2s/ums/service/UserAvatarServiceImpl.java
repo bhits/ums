@@ -17,6 +17,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Optional;
+
 @Service
 @Slf4j
 public class UserAvatarServiceImpl implements UserAvatarService {
@@ -51,40 +53,31 @@ public class UserAvatarServiceImpl implements UserAvatarService {
                 .orElseThrow(() -> new UserNotFoundException("User Not Found!"));
 
         UserAvatar savedUserAvatar;
+        Optional<UserAvatar> currentUserAvatar = userAvatarRepository.findByUserId(userId);
 
-        try {
-            savedUserAvatar = userAvatarRepository.save(buildNewUserAvatar(avatarFile, fileWidthPixels, fileHeightPixels, user));
-        } catch (RuntimeException e) {
-            log.error("A RuntimeException occurred while attempting to save a new user avatar", e);
-            throw new UserAvatarSaveException("Unable to save user avatar");
-        }
+        if (currentUserAvatar.isPresent()) {
+            UserAvatar userAvatar = currentUserAvatar.get();
 
-        return modelMapper.map(savedUserAvatar, UserAvatarDto.class);
-    }
+            userAvatar.setFileContents(avatarFile.getFileContents());
+            userAvatar.setFileExtension(avatarFile.getFileExtension());
+            userAvatar.setFileName(avatarFile.getFileName());
+            userAvatar.setFileSizeBytes(avatarFile.getFileSizeBytes());
+            userAvatar.setFileHeightPixels(fileHeightPixels);
+            userAvatar.setFileWidthPixels(fileWidthPixels);
 
-    @Override
-    @Transactional
-    public UserAvatarDto updateUserAvatar(Long userId, AvatarBytesAndMetaDto avatarFile, Long fileWidthPixels, Long fileHeightPixels) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException("User Not Found!"));
-
-        UserAvatar userAvatar = userAvatarRepository.findByUserId(user.getId())
-                .orElseThrow(() -> new UserAvatarNotFoundException("The user does not have an existing avatar to update"));
-
-        userAvatar.setFileContents(avatarFile.getFileContents());
-        userAvatar.setFileExtension(avatarFile.getFileExtension());
-        userAvatar.setFileName(avatarFile.getFileName());
-        userAvatar.setFileSizeBytes(avatarFile.getFileSizeBytes());
-        userAvatar.setFileHeightPixels(fileHeightPixels);
-        userAvatar.setFileWidthPixels(fileWidthPixels);
-
-        UserAvatar savedUserAvatar;
-
-        try {
-            savedUserAvatar = userAvatarRepository.save(userAvatar);
-        } catch (RuntimeException e) {
-            log.error("A RuntimeException occurred while attempting to update a user avatar", e);
-            throw new UserAvatarSaveException("Unable to update user avatar");
+            try {
+                savedUserAvatar = userAvatarRepository.save(userAvatar);
+            } catch (RuntimeException e) {
+                log.error("A RuntimeException occurred while attempting to update a user avatar", e);
+                throw new UserAvatarSaveException("Unable to save user avatar");
+            }
+        } else {
+            try {
+                savedUserAvatar = userAvatarRepository.save(buildNewUserAvatar(avatarFile, fileWidthPixels, fileHeightPixels, user));
+            } catch (RuntimeException e) {
+                log.error("A RuntimeException occurred while attempting to save a user avatar", e);
+                throw new UserAvatarSaveException("Unable to save user avatar");
+            }
         }
 
         return modelMapper.map(savedUserAvatar, UserAvatarDto.class);

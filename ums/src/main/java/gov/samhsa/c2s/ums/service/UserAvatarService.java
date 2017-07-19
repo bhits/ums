@@ -14,8 +14,5 @@ public interface UserAvatarService {
     UserAvatarDto saveUserAvatar(Long userId, AvatarBytesAndMetaDto avatarFile, Long fileWidthPixels, Long fileHeightPixels);
 
     @Transactional
-    UserAvatarDto updateUserAvatar(Long userId, AvatarBytesAndMetaDto avatarFile, Long fileWidthPixels, Long fileHeightPixels);
-
-    @Transactional
     void deleteUserAvatar(Long userId);
 }
