@@ -167,7 +167,7 @@ public class UserActivationServiceImplTest {
         when(locale.getCode()).thenReturn("code");
 
         //Act
-        UserActivationResponseDto userActivationResponseDto = userActivationService.initiateUserActivation(userId, xForwardedProto, xForwardedHost, xForwardedPort);
+        UserActivationResponseDto userActivationResponseDto = userActivationService.initiateUserActivation(userId, xForwardedProto, xForwardedHost, xForwardedPort, Optional.of(""));
 
         //Assert
         assertEquals(response, userActivationResponseDto);
@@ -191,7 +191,7 @@ public class UserActivationServiceImplTest {
         when(userActivation.isVerified()).thenReturn(true);
 
         //Act
-        userActivationService.initiateUserActivation(userId, xForwardedProto, xForwardedHost, xForwardedPort);
+        userActivationService.initiateUserActivation(userId, xForwardedProto, xForwardedHost, xForwardedPort, null);
 
         //Assert
         //ExpectedException annotated by @rule is thrown.

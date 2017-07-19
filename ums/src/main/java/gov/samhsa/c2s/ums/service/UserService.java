@@ -16,10 +16,10 @@ public interface UserService {
     UserDto registerUser(UserDto consentDto);
 
     @Transactional
-    void disableUser(Long userId);
+    void disableUser(Long userId, Optional<String> lastUpdatedBy);
 
     @Transactional
-    void enableUser(Long userId);
+    void enableUser(Long userId, Optional<String> lastUpdatedBy);
 
     @Transactional
     UserDto updateUser(Long userId, UserDto userDto);

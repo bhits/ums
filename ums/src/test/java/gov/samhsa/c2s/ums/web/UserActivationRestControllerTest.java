@@ -35,10 +35,10 @@ public class UserActivationRestControllerTest {
         //Arrange
         long userId = 30L;
         UserActivationResponseDto userActivationResponseDto = mock(UserActivationResponseDto.class);
-        when(userActivationService.initiateUserActivation(userId, xForwardProto, xForwardHost, xForwardPort)).thenReturn(userActivationResponseDto);
+        when(userActivationService.initiateUserActivation(userId, xForwardProto, xForwardHost, xForwardPort, null)).thenReturn(userActivationResponseDto);
 
         //Act
-        UserActivationResponseDto userActivationResponseDto2 = userActivationRestController.initiateUserActivation(userId, xForwardProto, xForwardHost, xForwardPort);
+        UserActivationResponseDto userActivationResponseDto2 = userActivationRestController.initiateUserActivation(userId, null, xForwardProto, xForwardHost, xForwardPort);
 
         //Assert
         assertEquals(userActivationResponseDto, userActivationResponseDto2);
