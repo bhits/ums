@@ -30,7 +30,6 @@ import gov.samhsa.c2s.ums.service.exception.ScopeDoesNotExistInDBException;
 import gov.samhsa.c2s.ums.service.exception.UserActivationCannotBeVerifiedException;
 import gov.samhsa.c2s.ums.service.exception.UserActivationNotFoundException;
 import gov.samhsa.c2s.ums.service.exception.UserIsAlreadyVerifiedException;
-import gov.samhsa.c2s.ums.service.exception.UserNotFoundException;
 import gov.samhsa.c2s.ums.service.exception.VerificationFailedException;
 import org.cloudfoundry.identity.uaa.scim.ScimUser;
 import org.modelmapper.ModelMapper;
@@ -88,9 +87,9 @@ public class UserActivationServiceImpl implements UserActivationService {
     private UserScopeAssignmentRepository userScopeAssignmentRepository;
 
     @Override
-    public UserActivationResponseDto initiateUserActivation(Long userId, String xForwardedProto, String xForwardedHost, int xForwardedPort) {
+    public UserActivationResponseDto initiateUserActivation(Long userId, String xForwardedProto, String xForwardedHost, int xForwardedPort, Optional<String> lastUpdatedBy) {
         // Find user
-        final User user = userRepository.findById(userId).orElseThrow(UserNotFoundException::new);
+        final User user = userRepository.findById(userId).orElse(null);
 
         String emailToken = emailTokenGenerator.generateEmailToken();
         final Instant emailTokenExpirationDate = Instant.now().plus(Period.ofDays(emailSenderProperties.getEmailTokenExpirationInDays()));
@@ -113,6 +112,9 @@ public class UserActivationServiceImpl implements UserActivationService {
         response.setEmail(user.getDemographics().getTelecoms().stream().filter(telecom -> telecom.getSystem().equals(Telecom.System.EMAIL)).map(Telecom::getValue).findFirst().get());
         response.setGenderCode(user.getDemographics().getAdministrativeGenderCode().getCode());
 
+        user.setLastUpdatedBy(lastUpdatedBy.orElse(null));
+        userRepository.save(user);
+
         //If user has roles which is not required send email
         if (emailSenderProperties.getDisabledByRoles() != null && user.getRoles().stream().filter(role -> emailSenderProperties.getDisabledByRoles().contains(role.getCode())).findAny().isPresent())
             return response;
@@ -121,6 +123,7 @@ public class UserActivationServiceImpl implements UserActivationService {
             sendEmailWithVerificationLink(user, saved, xForwardedProto, xForwardedHost, xForwardedPort);
             return response;
         }
+
     }
 
     private void sendEmailWithVerificationLink(User user, UserActivation saved, String xForwardedProto, String xForwardedHost, int xForwardedPort){
@@ -263,11 +266,18 @@ public class UserActivationServiceImpl implements UserActivationService {
         userActivationRepository.save(userActivation);
         // Add user to groups
         scimService.addUserToGroups(userActivation);
-        emailSender.sendEmailToConfirmVerification(
-                xForwardedProto, xForwardedHost, xForwardedPort,
-                user.getDemographics().getTelecoms().stream().filter(telecom -> telecom.getSystem().equals(Telecom.System.EMAIL)).map(Telecom::getValue).findFirst().get(),
-                getRecipientFullName(user), new Locale(user.getLocale().getCode()));
-        return response;
+
+        //If user has roles which is not required send email
+        if (emailSenderProperties.getDisabledByRoles() != null && user.getRoles().stream().filter(role -> emailSenderProperties.getDisabledByRoles().contains(role.getCode())).findAny().isPresent())
+            return response;
+        else {
+            // Send email with confirmation
+            emailSender.sendEmailToConfirmVerification(
+                    xForwardedProto, xForwardedHost, xForwardedPort,
+                    user.getDemographics().getTelecoms().stream().filter(telecom -> telecom.getSystem().equals(Telecom.System.EMAIL)).map(Telecom::getValue).findFirst().get(),
+                    getRecipientFullName(user), new Locale(user.getLocale().getCode()));
+            return response;
+        }
     }
 
     private void assertPasswordAndConfirmPassword(UserActivationRequestDto userActivationRequest) {

@@ -7,12 +7,13 @@ import ca.uhn.fhir.validation.ValidationResult;
 import gov.samhsa.c2s.ums.config.UmsProperties;
 import gov.samhsa.c2s.ums.service.dto.UserDto;
 import gov.samhsa.c2s.ums.service.exception.FHIRFormatErrorException;
-import org.hl7.fhir.dstu3.model.Bundle;
 import org.hl7.fhir.dstu3.model.ContactPoint;
 import org.hl7.fhir.dstu3.model.Enumerations;
 import org.hl7.fhir.dstu3.model.IdType;
 import org.hl7.fhir.dstu3.model.Identifier;
 import org.hl7.fhir.dstu3.model.Patient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -21,6 +22,7 @@ import java.util.function.Function;
 
 @Service
 public class FhirPatientServiceImpl implements FhirPatientService {
+    private final Logger logger = LoggerFactory.getLogger(FhirPatientServiceImpl.class);
 
     Function<String, Enumerations.AdministrativeGender> getPatientGender = new Function<String, Enumerations.AdministrativeGender>() {
         @Override
@@ -85,32 +87,34 @@ public class FhirPatientServiceImpl implements FhirPatientService {
 
     @Override
     public void publishFhirPatient(UserDto userDto) {
-        Patient patient = createFhirPatient(userDto);
-        ValidationResult validationResult = fhirValidator.validateWithResult(patient);
-        if (validationResult.isSuccessful())
+        final Patient patient = createFhirPatient(userDto);
+        final ValidationResult validationResult = fhirValidator.validateWithResult(patient);
+        if (validationResult.isSuccessful()) {
             fhirClient.create().resource(patient).execute();
-        else
+        } else {
             throw new FHIRFormatErrorException("FHIR Patient Validation is not successful" + validationResult.getMessages());
+        }
+
     }
 
     @Override
     public void updateFhirPatient(UserDto userDto) {
-        Bundle bundle = fhirClient.search().forResource(Patient.class)
-                .where(Patient.IDENTIFIER.exactly().systemAndCode(umsProperties.getMrn().getCodeSystem(), userDto.getMrn()))
-                .returnBundle(Bundle.class).execute();
-
-        Patient patient = createFhirPatient(userDto);
-        ValidationResult validationResult = fhirValidator.validateWithResult(patient);
-
+        final Patient patient = createFhirPatient(userDto);
+        final ValidationResult validationResult = fhirValidator.validateWithResult(patient);
         if (validationResult.isSuccessful()) {
-            if (bundle.getEntry().size() > 0)
+            if (umsProperties.getFhir().getPublish().isUseCreateForUpdate()) {
+                logger.debug("Calling FHIR Patient Create for Update based on the configuration");
+                fhirClient.create().resource(patient).execute();
+            } else {
+                logger.debug("Calling FHIR Patient Update for Update based on the configuration");
                 fhirClient.update().resource(patient)
                         .conditional()
                         .where(Patient.IDENTIFIER.exactly().systemAndCode(umsProperties.getMrn().getCodeSystem(), patient.getId()))
                         .execute();
-            else fhirClient.create().resource(patient).execute();
-        } else
+            }
+        } else {
             throw new FHIRFormatErrorException("FHIR Patient Validation is not successful" + validationResult.getMessages());
+        }
     }
 
     @Override
