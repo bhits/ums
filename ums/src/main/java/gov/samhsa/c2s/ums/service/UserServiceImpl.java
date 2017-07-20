@@ -320,18 +320,19 @@ public class UserServiceImpl implements UserService {
         //update telephone
         final List<Telecom> telecoms = user.getDemographics().getTelecoms();
         final List<TelecomDto> telecomDtos = Optional.ofNullable(userDto.getTelecoms()).orElseGet(Collections::emptyList);
+
+        // Assert emails
+        Optional<Patient> patientOptional = Optional.of(user)
+                .map(User::getDemographics)
+                .map(Demographics::getPatient);
+        assertEmails(userDto, userDto.getRegistrationPurposeEmail(), patientOptional.isPresent());
+
         // Find telecoms to remove
         final List<Telecom> telecomsToRemove = telecoms.stream()
                 .filter(telecom -> telecomDtos.stream()
                         .noneMatch(telecomDto -> deepEquals(telecom, telecomDto)
                         ))
                 .collect(toList());
-
-        //Not remove the email by empty email dtos
-        if((telecomDtos.size()==1 && telecomDtos.get(0).getSystem().equals("PHONE") )|| (telecomDtos.size()==0)){
-            List<Telecom> telecomNotToRemove= telecomsToRemove.stream().filter(telecom -> telecom.getSystem().toString().equals("EMAIL")).collect(toList());
-            telecomsToRemove.removeAll(telecomNotToRemove);
-        }
 
         telecomRepository.deleteInBatch(telecomsToRemove);
 
@@ -343,25 +344,23 @@ public class UserServiceImpl implements UserService {
                 .collect(toList());
 
         telecomsToAdd.stream().forEach(telecom -> telecom.setDemographics(user.getDemographics()));
-        System.out.println(telecomsToAdd.size());
         telecomRepository.save(telecomsToAdd);
         user.getDemographics().getTelecoms().addAll(telecomsToAdd);
 
 
-        if (umsProperties.getFhir().getPublish().isEnabled() && user.getDemographics().getPatient() != null) {
-            userDto.setMrn(userToMrnConverter.convert(user));
-            fhirPatientService.updateFhirPatient(userDto);
-        }
+        patientOptional
+                .ifPresent(patient -> {
+                    userDto.getRegistrationPurposeEmail().ifPresent(patient::setRegistrationPurposeEmail);
+                    patientRepository.save(patient);
+                    if (umsProperties.getFhir().getPublish().isEnabled()) {
+                        userDto.setMrn(userToMrnConverter.convert(user));
+                        fhirPatientService.updateFhirPatient(userDto);
+                    }
+                });
 
         User updatedUser = userRepository.save(user);
 
         return modelMapper.map(updatedUser, UserDto.class);
-    }
-
-    private boolean deepEquals(Telecom telecom, TelecomDto telecomDto) {
-        return telecom.getSystem().toString().equals(telecomDto.getSystem()) &&
-                telecom.getValue().equals(telecomDto.getValue()) &&
-                telecom.getUse().toString().equals(telecomDto.getUse());
     }
 
     @Override
@@ -746,4 +745,18 @@ public class UserServiceImpl implements UserService {
         }
     }
 
+    private void assertEmails(UserDto userDto, Optional<String> registrationPurposeEmail, boolean patientPresent) {
+        final boolean userHasEmail = userDto.getTelecoms().stream()
+                .anyMatch(telecom -> telecom.getSystem().equals("EMAIL"));
+        final boolean hasRegistrationPurposeEmail = registrationPurposeEmail.filter(StringUtils::hasText).isPresent();
+        if ((!userHasEmail) && (patientPresent && !hasRegistrationPurposeEmail)) {
+            throw new MissingEmailException("At least one of personal email OR a registration purpose email is required");
+        }
+    }
+
+    private boolean deepEquals(Telecom telecom, TelecomDto telecomDto) {
+        return telecom.getSystem().toString().equals(telecomDto.getSystem()) &&
+                telecom.getValue().equals(telecomDto.getValue()) &&
+                telecom.getUse().toString().equals(telecomDto.getUse());
+    }
 }
