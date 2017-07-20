@@ -1,6 +1,6 @@
 # User Management Service
 
-The User Management Service (UMS) is a component of Consent2Share(C2S). It manages the user account creation process, user account activation, user disable, user update, and persisting of the user demographics. The UMS has been designed to support various roles for a given user such as Admin, Parent, Guardian, Patient, and so on. If it is configured to do so, it also registers user demographics (if the user is also a patient) to a Fast Healthcare Interoperability Resources (FHIR) server. 
+The User Management Service (UMS) is a component of Consent2Share(C2S). It manages the user account creation process, user account activation, user disable, user update, and persisting of the user demographics. The UMS has been designed to support various roles for a given user such as Admin, Parent, Guardian, Patient, and so on. If it is configured to do so, it also registers user demographics (if the user is also a patient) to a Fast Healthcare Interoperability Resources (FHIR) server. The UMS also has a script to create Provider users, who can login to Consent2Share as Providers to create and manage the patients. Please review the [Creating a Provider User](#creating-a-provider-user) section for more information. 
 
 
 ## Build
@@ -106,6 +106,11 @@ Java has a default CA Certificates Store that allows it to trust well-known cert
 
 [//]: # (## Project Documentation)
 [//]: # (## Contribute)
+
+
+### Creating a Provider User
+
+This project comes with a [script](https://github.com/bhits-dev/ums/blob/master/scripts/create_activate_provider_user.sh) to create users within Consent2Share who can login to Consent2Share as Providers. Before running the script, make sure to have an instance of UMS and [UAA](https://github.com/bhits-dev/uaa) up and running. Run the script and enter the requested information such as First Name, Last name, DOB etc. Wait for the message "Is the Provider User Account Activated?: True" to verify that the user has been created successfully.
 
 ## Contact
 
