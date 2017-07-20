@@ -1,6 +1,6 @@
 # User Management Service
 
-The User Management Service (UMS) is a component of Consent2Share(C2S). It manages the user account creation process, user account activation, user disable, user update, and persisting of the user demographics. The UMS has been designed to support various roles for a given user such as Admin, Parent, Guardian, Patient, and so on. If it is configured to do so, it also registers user demographics (if the user is also a patient) to a Fast Healthcare Interoperability Resources (FHIR) server. The UMS also has a script to create Provider users, who can login to Consent2Share as Providers to create and manage the patients. Please review the [Creating a Provider User](#creating-a-provider-user) section for more information. 
+The User Management Service (UMS) is a component of Consent2Share. It manages the user account creation process, user account activation, user disable function, user update function, and persisting of the user demographics. The UMS has been designed to support various roles for given users such as Admin, Parent, Guardian, Patient, and so on. If it is configured to do so, it also registers user demographics (if the user is also a patient) to a Fast Healthcare Interoperability Resources (FHIR) server. The UMS also has a script to create Provider users, who can login to Consent2Share as Providers to create and manage their patients. Please review the [Creating a Provider User](#creating-a-provider-user) section for more information. 
 
 
 ## Build
@@ -44,11 +44,11 @@ This is a [Spring Boot](https://projects.spring.io/spring-boot/) project and ser
 
 This project utilizes [`Configuration Server`](https://github.com/bhits-dev/config-server) which is based on [Spring Cloud Config](https://github.com/spring-cloud/spring-cloud-config) to manage externalized configuration, which is stored in a `Configuration Data Git Repository`. We provide a [`Default Configuration Data Git Repository`]( https://github.com/bhits-dev/c2s-config-data).
 
-This project can run with the default configuration, which is targeted for a local development environment. Default configuration data is from three places: `bootstrap.yml`, `application.yml`, and the data which `Configuration Server` reads from `Configuration Data Git Repository`. Both `bootstrap.yml` and `application.yml` files are located in the `resources` folder of this source code.
+This project can run with the default configuration, which is targeted for a local development environment. Default configuration data comes from three places: `bootstrap.yml`, `application.yml`, and the data which `Configuration Server` reads from `Configuration Data Git Repository`. Both `bootstrap.yml` and `application.yml` files are located in the `resources` folder of this source code.
 
 We **recommend** overriding the configuration as needed in the `Configuration Data Git Repository`, which is used by the `Configuration Server`.
 
-Also, please refer to [Spring Cloud Config Documentation](https://cloud.spring.io/spring-cloud-config/spring-cloud-config.html) to see how the config server works, [Spring Boot Externalized Configuration](http://docs.spring.io/spring-boot/docs/current/reference/html/boot-features-external-config.html) documentation to see how Spring Boot applies the order to load the properties, and [Spring Boot Common Properties](http://docs.spring.io/spring-boot/docs/current/reference/html/common-application-properties.html) documentation to see the common properties used by Spring Boot.
+Also, please refer to [Spring Cloud Config Documentation](https://cloud.spring.io/spring-cloud-config/spring-cloud-config.html) to see how the config server works, [Spring Boot Externalized Configuration](http://docs.spring.io/spring-boot/docs/current/reference/html/boot-features-external-config.html) and documentation to see how Spring Boot applies the order to load the properties, and [Spring Boot Common Properties](http://docs.spring.io/spring-boot/docs/current/reference/html/common-application-properties.html) documentation to see the common properties used by Spring Boot.
 
 ### Other Ways to Override Configuration
 
@@ -110,7 +110,7 @@ Java has a default CA Certificates Store that allows it to trust well-known cert
 
 ### Creating a Provider User
 
-This project comes with a [script](https://github.com/bhits-dev/ums/blob/master/scripts/create_activate_provider_user.sh) to create users within Consent2Share who can login to Consent2Share as Providers. Before running the script, make sure to have an instance of UMS and [UAA](https://github.com/bhits-dev/uaa) up and running. Run the script and enter the requested information such as First Name, Last name, DOB etc. Wait for the message "Is the Provider User Account Activated?: True" to verify that the user has been created successfully.
+This project comes with a [script](https://github.com/bhits-dev/ums/blob/master/scripts/create_activate_provider_user.sh) to create users who can login to Consent2Share as Providers. Before running the script, make sure to have an instance of UMS and [UAA](https://github.com/bhits-dev/uaa) up and running. Run the script and enter the requested information such as First Name, Last Name, DOB and so on. Wait for the message "Is the Provider User Account Activated?: True" to verify that the user has been successfully created.
 
 ## Contact
 
