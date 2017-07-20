@@ -22,8 +22,8 @@ import java.util.Optional;
 @Service
 @Slf4j
 public class UserAvatarServiceImpl implements UserAvatarService {
-    private static final Long REQUIRED_WIDTH_IN_PIXELS = 460L;  // TODO: Replace this hardcoded constant with externalized configurable value
-    private static final Long REQUIRED_HEIGHT_IN_PIXELS = 460L;  // TODO: Replace this hardcoded constant with externalized configurable value
+    private static final Long REQUIRED_WIDTH_IN_PIXELS = 48L;  // TODO: Replace this hardcoded constant with externalized configurable value
+    private static final Long REQUIRED_HEIGHT_IN_PIXELS = 48L;  // TODO: Replace this hardcoded constant with externalized configurable value
 
     private final ModelMapper modelMapper;
     private final UserAvatarRepository userAvatarRepository;
