@@ -33,7 +33,6 @@ import gov.samhsa.c2s.ums.service.dto.TelecomDto;
 import gov.samhsa.c2s.ums.service.dto.UpdateUserLimitedFieldsDto;
 import gov.samhsa.c2s.ums.service.dto.UserDto;
 import gov.samhsa.c2s.ums.service.exception.InvalidIdentifierSystemException;
-import gov.samhsa.c2s.ums.service.exception.LoggedInUserNotFound;
 import gov.samhsa.c2s.ums.service.exception.MissingEmailException;
 import gov.samhsa.c2s.ums.service.exception.PatientNotFoundException;
 import gov.samhsa.c2s.ums.service.exception.UnassignableIdentifierException;
@@ -88,46 +87,32 @@ public class UserServiceImpl implements UserService {
     private MrnService mrnService;
     @Autowired
     private PatientRepository patientRepository;
-
     @Autowired
     private RoleRepository roleRepository;
     @Autowired
     private StateCodeRepository stateCodeRepository;
     @Autowired
     private CountryCodeRepository countryCodeRepository;
-
     @Autowired
     private UserPatientRelationshipRepository userPatientRelationshipRepository;
-
     @Autowired
     private DemographicsRepository demographicsRepository;
-
     @Autowired
     private FhirPatientService fhirPatientService;
-
     @Autowired
     private IdentifierSystemRepository identifierSystemRepository;
-
     @Autowired
     private TelecomRepository telecomRepository;
-
     @Autowired
     private IdentifierRepository identifierRepository;
-
     @Autowired
     private UserToMrnConverter userToMrnConverter;
-
     @Autowired
     private PatientToMrnConverter patientToMrnConverter;
-
-    private final LocaleRepository localeRepository;
-    private final ScimService scimService;
-
     @Autowired
-    public UserServiceImpl(LocaleRepository localeRepository, ScimService scimService) {
-        this.localeRepository = localeRepository;
-        this.scimService = scimService;
-    }
+    private LocaleRepository localeRepository;
+    @Autowired
+    private ScimService scimService;
 
     @Override
     @Transactional
@@ -325,13 +310,12 @@ public class UserServiceImpl implements UserService {
         Optional<Patient> patientOptional = Optional.of(user)
                 .map(User::getDemographics)
                 .map(Demographics::getPatient);
-        assertEmails(userDto, userDto.getRegistrationPurposeEmail(), patientOptional.isPresent());
+        assertEmails(userDto, patientOptional.isPresent());
 
         // Find telecoms to remove
         final List<Telecom> telecomsToRemove = telecoms.stream()
                 .filter(telecom -> telecomDtos.stream()
-                        .noneMatch(telecomDto -> deepEquals(telecom, telecomDto)
-                        ))
+                        .noneMatch(telecomDto -> deepEquals(telecom, telecomDto)))
                 .collect(toList());
 
         telecomRepository.deleteInBatch(telecomsToRemove);
@@ -347,7 +331,6 @@ public class UserServiceImpl implements UserService {
         telecomRepository.save(telecomsToAdd);
         user.getDemographics().getTelecoms().addAll(telecomsToAdd);
 
-
         patientOptional
                 .ifPresent(patient -> {
                     userDto.getRegistrationPurposeEmail().ifPresent(patient::setRegistrationPurposeEmail);
@@ -358,7 +341,7 @@ public class UserServiceImpl implements UserService {
                     }
                 });
 
-        User updatedUser = userRepository.save(user);
+        final User updatedUser = userRepository.save(user);
 
         return modelMapper.map(updatedUser, UserDto.class);
     }
@@ -745,10 +728,10 @@ public class UserServiceImpl implements UserService {
         }
     }
 
-    private void assertEmails(UserDto userDto, Optional<String> registrationPurposeEmail, boolean patientPresent) {
+    private void assertEmails(UserDto userDto, boolean patientPresent) {
         final boolean userHasEmail = userDto.getTelecoms().stream()
-                .anyMatch(telecom -> telecom.getSystem().equals("EMAIL"));
-        final boolean hasRegistrationPurposeEmail = registrationPurposeEmail.filter(StringUtils::hasText).isPresent();
+                .anyMatch(telecom -> telecom.getSystem().equals(Telecom.System.EMAIL.toString()));
+        final boolean hasRegistrationPurposeEmail = userDto.getRegistrationPurposeEmail().filter(StringUtils::hasText).isPresent();
         if ((!userHasEmail) && (patientPresent && !hasRegistrationPurposeEmail)) {
             throw new MissingEmailException("At least one of personal email OR a registration purpose email is required");
         }
