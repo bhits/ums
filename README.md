@@ -1,6 +1,6 @@
 # User Management Service
 
-The User Management Service (UMS) is a component of Consent2Share. It manages the user account creation process, user account activation, user disable function, user update function, and persisting of the user demographics. The UMS has been designed to support various roles for given users such as Admin, Parent, Guardian, Patient, and so on. If it is configured to do so, it also registers user demographics (if the user is also a patient) to a Fast Healthcare Interoperability Resources (FHIR) server. The UMS also has a script to create Provider users, who can login to Consent2Share as Providers to create and manage their patients. Please review the [Creating a Provider User](#creating-a-provider-user) section for more information. 
+The User Management Service (UMS) is a component of Consent2Share. It manages the user account creation process, user account activation, user disable function, user update function, and persisting the user demographics. The UMS has been designed to support various roles for given users such as Staff, Parent, Guardian, Patient, and so on. If it is configured to do so, it also registers user demographics (if the user is also a patient) to a Fast Healthcare Interoperability Resources (FHIR) server. The UMS also has a script to create Provider users, who can login to Consent2Share as Providers to create and manage their patients. Please review the [Creating a Provider User](#creating-a-provider-user) section for more information. 
 
 
 ## Build
@@ -48,7 +48,7 @@ This project can run with the default configuration, which is targeted for a loc
 
 We **recommend** overriding the configuration as needed in the `Configuration Data Git Repository`, which is used by the `Configuration Server`.
 
-Also, please refer to [Spring Cloud Config Documentation](https://cloud.spring.io/spring-cloud-config/spring-cloud-config.html) to see how the config server works, [Spring Boot Externalized Configuration](http://docs.spring.io/spring-boot/docs/current/reference/html/boot-features-external-config.html) and documentation to see how Spring Boot applies the order to load the properties, and [Spring Boot Common Properties](http://docs.spring.io/spring-boot/docs/current/reference/html/common-application-properties.html) documentation to see the common properties used by Spring Boot.
+Also, please refer to [Spring Cloud Config Documentation](https://cloud.spring.io/spring-cloud-config/spring-cloud-config.html) to see how the config server works, [Spring Boot Externalized Configuration Documentation](http://docs.spring.io/spring-boot/docs/current/reference/html/boot-features-external-config.html) to see how Spring Boot applies the order to load the properties, and [Spring Boot Common Properties](http://docs.spring.io/spring-boot/docs/current/reference/html/common-application-properties.html) documentation to see the common properties used by Spring Boot.
 
 ### Other Ways to Override Configuration
 
@@ -110,7 +110,7 @@ Java has a default CA Certificates Store that allows it to trust well-known cert
 
 ### Creating a Provider User
 
-This project comes with a [script](https://github.com/bhits-dev/ums/blob/master/scripts/create_activate_provider_user.sh) to create users who can login to Consent2Share as Providers. Before running the script, make sure to have an instance of UMS and [UAA](https://github.com/bhits-dev/uaa) up and running. Run the script and enter the requested information such as First Name, Last Name, DOB and so on. Wait for the message "Is the Provider User Account Activated?: True" to verify that the user has been successfully created.
+This project comes with a [script](scripts/create_activate_provider_user.sh) to create users who can login to Consent2Share as Providers. Before running the script, make sure to have an instance of UMS, [Discovery Server](https://github.com/bhits/discovery-server), [Edge Server](https://github.com/bhits-dev/edge-server) and [UAA](https://github.com/bhits-dev/uaa) up and running. Run the script and enter the requested information, including First Name, Last Name, DOB, and so on. Wait for the message "Is the Provider User Account Activated?: True" to verify that the user has been successfully created.
 
 ## Contact
 
