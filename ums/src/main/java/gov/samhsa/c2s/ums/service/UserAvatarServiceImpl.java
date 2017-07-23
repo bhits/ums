@@ -55,16 +55,18 @@ public class UserAvatarServiceImpl implements UserAvatarService {
         UserAvatar savedUserAvatar;
         Optional<UserAvatar> currentUserAvatar = userAvatarRepository.findByUserId(userId);
 
-        if (currentUserAvatar.isPresent()) {   // Replace existing avatar with new avatar
+        if (currentUserAvatar.isPresent()) {
+            // Replace existing avatar with new avatar
             try {
                 savedUserAvatar = userAvatarRepository.save(buildUserAvatar(currentUserAvatar.get(), avatarFile, fileWidthPixels, fileHeightPixels, user));
             } catch (RuntimeException e) {
                 log.error("A RuntimeException occurred while attempting to update a user avatar", e);
                 throw new UserAvatarSaveException("Unable to save user avatar");
             }
-        } else {   // Save new avatar
+        } else {
+            // Save new avatar
             try {
-                savedUserAvatar = userAvatarRepository.save(buildNewUserAvatar(avatarFile, fileWidthPixels, fileHeightPixels, user));
+                savedUserAvatar = userAvatarRepository.save(buildUserAvatar(new UserAvatar(), avatarFile, fileWidthPixels, fileHeightPixels, user));
             } catch (RuntimeException e) {
                 log.error("A RuntimeException occurred while attempting to save a user avatar", e);
                 throw new UserAvatarSaveException("Unable to save user avatar");
@@ -83,10 +85,6 @@ public class UserAvatarServiceImpl implements UserAvatarService {
             log.error("A RuntimeException occurred while attempting to delete a user's avatar", e);
             throw new UserAvatarDeleteException("Unable to delete user's avatar");
         }
-    }
-
-    private UserAvatar buildNewUserAvatar(AvatarBytesAndMetaDto avatarFile, Long fileWidthPixels, Long fileHeightPixels, User user) {
-        return buildUserAvatar(new UserAvatar(), avatarFile, fileWidthPixels, fileHeightPixels, user);
     }
 
     private UserAvatar buildUserAvatar(UserAvatar originalUserAvatar, AvatarBytesAndMetaDto avatarFile, Long fileWidthPixels, Long fileHeightPixels, User user) {
