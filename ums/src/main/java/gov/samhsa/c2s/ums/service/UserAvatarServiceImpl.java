@@ -55,22 +55,15 @@ public class UserAvatarServiceImpl implements UserAvatarService {
         UserAvatar savedUserAvatar;
         Optional<UserAvatar> currentUserAvatar = userAvatarRepository.findByUserId(userId);
 
-        if (currentUserAvatar.isPresent()) {
-            // Replace existing avatar with new avatar
-            try {
-                savedUserAvatar = userAvatarRepository.save(buildUserAvatar(currentUserAvatar.get(), avatarFile, fileWidthPixels, fileHeightPixels, user));
-            } catch (RuntimeException e) {
-                log.error("A RuntimeException occurred while attempting to update a user avatar", e);
-                throw new UserAvatarSaveException("Unable to save user avatar");
-            }
-        } else {
-            // Save new avatar
-            try {
-                savedUserAvatar = userAvatarRepository.save(buildUserAvatar(new UserAvatar(), avatarFile, fileWidthPixels, fileHeightPixels, user));
-            } catch (RuntimeException e) {
-                log.error("A RuntimeException occurred while attempting to save a user avatar", e);
-                throw new UserAvatarSaveException("Unable to save user avatar");
-            }
+        UserAvatar newUserAvatar = currentUserAvatar
+                .map(userAvatar -> buildUserAvatar(userAvatar, avatarFile, fileWidthPixels, fileHeightPixels, user))
+                .orElseGet(() -> buildUserAvatar(new UserAvatar(), avatarFile, fileWidthPixels, fileHeightPixels, user));
+
+        try {
+            savedUserAvatar = userAvatarRepository.save(newUserAvatar);
+        } catch (RuntimeException e) {
+            log.error("A RuntimeException occurred while attempting to save a user avatar", e);
+            throw new UserAvatarSaveException("Unable to save user avatar");
         }
 
         return modelMapper.map(savedUserAvatar, UserAvatarDto.class);
