@@ -55,7 +55,7 @@ public class UserAvatarServiceImpl implements UserAvatarService {
 
     @Override
     @Transactional
-    public UserAvatarDto saveUserAvatar(Long userId, AvatarBytesAndMetaDto avatarFile, Long fileWidthPixels, Long fileHeightPixels) {
+    public UserAvatarDto saveUserAvatar(Long userId, AvatarBytesAndMetaDto avatarFile) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("User Not Found!"));
 
@@ -63,8 +63,8 @@ public class UserAvatarServiceImpl implements UserAvatarService {
         Optional<UserAvatar> currentUserAvatar = userAvatarRepository.findByUserId(userId);
 
         UserAvatar newUserAvatar = currentUserAvatar
-                .map(userAvatar -> buildUserAvatar(userAvatar, avatarFile, fileWidthPixels, fileHeightPixels, user))
-                .orElseGet(() -> buildUserAvatar(new UserAvatar(), avatarFile, fileWidthPixels, fileHeightPixels, user));
+                .map(userAvatar -> buildUserAvatar(userAvatar, avatarFile, user))
+                .orElseGet(() -> buildUserAvatar(new UserAvatar(), avatarFile, user));
 
         try {
             savedUserAvatar = userAvatarRepository.save(newUserAvatar);
@@ -87,9 +87,9 @@ public class UserAvatarServiceImpl implements UserAvatarService {
         }
     }
 
-    private UserAvatar buildUserAvatar(UserAvatar originalUserAvatar, AvatarBytesAndMetaDto avatarFile, Long fileWidthPixels, Long fileHeightPixels, User user) {
+    private UserAvatar buildUserAvatar(UserAvatar originalUserAvatar, AvatarBytesAndMetaDto avatarFile, User user) {
         if (avatarFile.getFileContents() == null || avatarFile.getFileContents().length <= 0) {
-            log.error("Unable to generate a new UserAvatar object in buildNewUserAvatar method because value of avatarFile.getFileContents is null or the length is less than or equal to zero");
+            log.error("Unable to generate a new UserAvatar object because value of avatarFile.getFileContents is null or the length is less than or equal to zero");
             throw new InvalidAvatarInputException("The avatar file cannot be null");
         }
 
@@ -97,23 +97,17 @@ public class UserAvatarServiceImpl implements UserAvatarService {
 
         // TODO: Add check to ensure file size is equal or less than configured max file size
 
-        if (fileWidthPixels == null || !fileWidthPixels.equals(REQUIRED_WIDTH_IN_PIXELS)) {
-            log.error("Unable to generate a new UserAvatar object in buildNewUserAvatar method because value of fileWidthPixels parameter is null or not equal to required value (" + REQUIRED_WIDTH_IN_PIXELS + "):", fileWidthPixels);
-            throw new InvalidAvatarInputException("The avatar file image width is not valid");
-        }
 
-        if (fileHeightPixels == null || !fileHeightPixels.equals(REQUIRED_HEIGHT_IN_PIXELS)) {
-            log.error("Unable to generate a new UserAvatar object in buildNewUserAvatar method because value of fileHeightPixels parameter is null or not equal to required value (" + REQUIRED_HEIGHT_IN_PIXELS + "):", fileHeightPixels);
-            throw new InvalidAvatarInputException("The avatar file image height is not valid");
-        }
+        // Ensure avatar image's height and width are valid
+        Dimension imageDimension = checkImageDimensions(avatarFile);
 
         UserAvatar newUserAvatar = originalUserAvatar;
         newUserAvatar.setFileContents(avatarFile.getFileContents());
         newUserAvatar.setFileExtension(avatarFile.getFileExtension());
         newUserAvatar.setFileName(avatarFile.getFileName());
         newUserAvatar.setFileSizeBytes(avatarFile.getFileSizeBytes());
-        newUserAvatar.setFileHeightPixels(fileHeightPixels);
-        newUserAvatar.setFileWidthPixels(fileWidthPixels);
+        newUserAvatar.setFileHeightPixels((long) imageDimension.height);
+        newUserAvatar.setFileWidthPixels((long) imageDimension.width);
         newUserAvatar.setUser(user);
 
         return newUserAvatar;

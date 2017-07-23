@@ -10,7 +10,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -31,18 +30,13 @@ public class UserAvatarRestController {
     @PostMapping("/user/{userId}/avatar")
     public UserAvatarDto saveNewUserAvatar(
             @PathVariable Long userId,
-            @RequestBody AvatarBytesAndMetaDto avatarFile,
-            @RequestParam(value = "fileWidthPixels") Long fileWidthPixels,
-            @RequestParam(value = "fileHeightPixels") Long fileHeightPixels
+            @RequestBody AvatarBytesAndMetaDto avatarFile
     ) {
-        // TODO: Replace request params for width & height with values calculated directly from the uploaded file within the UserAvatarService
-
-        return userAvatarService.saveUserAvatar(userId, avatarFile, fileWidthPixels, fileHeightPixels);
+        return userAvatarService.saveUserAvatar(userId, avatarFile);
     }
 
     @DeleteMapping("/user/{userId}/avatar")
     public void deleteUserAvatar(@PathVariable Long userId) {
         userAvatarService.deleteUserAvatar(userId);
     }
-
 }
