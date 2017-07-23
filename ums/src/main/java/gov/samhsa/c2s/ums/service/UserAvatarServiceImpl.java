@@ -11,12 +11,14 @@ import gov.samhsa.c2s.ums.service.exception.UserAvatarDeleteException;
 import gov.samhsa.c2s.ums.service.exception.UserAvatarNotFoundException;
 import gov.samhsa.c2s.ums.service.exception.UserAvatarSaveException;
 import gov.samhsa.c2s.ums.service.exception.UserNotFoundException;
+import gov.samhsa.c2s.ums.service.exception.checkedexceptions.NoImageReaderForFileType;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.awt.Dimension;
 import java.util.Optional;
 
 @Service
@@ -26,12 +28,17 @@ public class UserAvatarServiceImpl implements UserAvatarService {
     private static final Long REQUIRED_HEIGHT_IN_PIXELS = 48L;  // TODO: Replace this hardcoded constant with externalized configurable value
 
     private final ModelMapper modelMapper;
+    private final ImageProcessingService imageProcessingService;
     private final UserAvatarRepository userAvatarRepository;
     private final UserRepository userRepository;
 
     @Autowired
-    public UserAvatarServiceImpl(ModelMapper modelMapper, UserAvatarRepository userAvatarRepository, UserRepository userRepository) {
+    public UserAvatarServiceImpl(ModelMapper modelMapper,
+                                 ImageProcessingService imageProcessingService,
+                                 UserAvatarRepository userAvatarRepository,
+                                 UserRepository userRepository) {
         this.modelMapper = modelMapper;
+        this.imageProcessingService = imageProcessingService;
         this.userAvatarRepository = userAvatarRepository;
         this.userRepository = userRepository;
     }
@@ -110,5 +117,28 @@ public class UserAvatarServiceImpl implements UserAvatarService {
         newUserAvatar.setUser(user);
 
         return newUserAvatar;
+    }
+
+    private Dimension checkImageDimensions(AvatarBytesAndMetaDto avatarFile) {
+        Dimension imageDimension;
+
+        try {
+            imageDimension = imageProcessingService.getImageDimension(avatarFile.getFileContents(), avatarFile.getFileExtension());
+        } catch (NoImageReaderForFileType e) {
+            log.error("An exception occurred while attempting to determine the dimensions of the uploaded avatar image file", e);
+            throw new UserAvatarSaveException("Unable to process avatar image file");
+        }
+
+        if (imageDimension.width != REQUIRED_WIDTH_IN_PIXELS) {
+            log.error("Unable to generate a new UserAvatar object because the uploaded image's width is not equal to required value (" + REQUIRED_WIDTH_IN_PIXELS + "):", imageDimension.width);
+            throw new InvalidAvatarInputException("The avatar file image's width is not valid");
+        }
+
+        if (imageDimension.height != REQUIRED_HEIGHT_IN_PIXELS) {
+            log.error("Unable to generate a new UserAvatar object because the uploaded image's height is not equal to required value (" + REQUIRED_HEIGHT_IN_PIXELS + "):", imageDimension.height);
+            throw new InvalidAvatarInputException("The avatar file image's height is not valid");
+        }
+
+        return imageDimension;
     }
 }
