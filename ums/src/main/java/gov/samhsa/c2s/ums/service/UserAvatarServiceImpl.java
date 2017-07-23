@@ -56,10 +56,8 @@ public class UserAvatarServiceImpl implements UserAvatarService {
         Optional<UserAvatar> currentUserAvatar = userAvatarRepository.findByUserId(userId);
 
         if (currentUserAvatar.isPresent()) {   // Replace existing avatar with new avatar
-            UserAvatar updatedUserAvatar = buildUserAvatar(currentUserAvatar.get(), avatarFile, fileWidthPixels, fileHeightPixels, user);
-
             try {
-                savedUserAvatar = userAvatarRepository.save(updatedUserAvatar);
+                savedUserAvatar = userAvatarRepository.save(buildUserAvatar(currentUserAvatar.get(), avatarFile, fileWidthPixels, fileHeightPixels, user));
             } catch (RuntimeException e) {
                 log.error("A RuntimeException occurred while attempting to update a user avatar", e);
                 throw new UserAvatarSaveException("Unable to save user avatar");
