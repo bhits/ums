@@ -16,14 +16,12 @@ import gov.samhsa.c2s.ums.infrastructure.ScimService;
 import gov.samhsa.c2s.ums.service.dto.AccessDecisionDto;
 import gov.samhsa.c2s.ums.service.dto.UserDto;
 import gov.samhsa.c2s.ums.service.exception.UserNotFoundException;
-import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
@@ -70,15 +68,7 @@ public class UserServiceImplTest {
     private DemographicsRepository demographicsRepository;
 
     @InjectMocks
-    private UserServiceImpl userServiceImpl;
-
-    @Before
-    public void setUp() {
-        localeRepository = mock(LocaleRepository.class);
-        scimService = mock(ScimService.class);
-        userServiceImpl = new UserServiceImpl(localeRepository, scimService);
-        MockitoAnnotations.initMocks(this);
-    }
+    private UserServiceImpl sut;
 
     @Test
     public void testDisableUser_Given_UserIsFoundById() {
@@ -95,7 +85,7 @@ public class UserServiceImplTest {
         when(userRepository.save(user)).thenReturn(user);
 
         //Act
-        userServiceImpl.disableUser(userId, Optional.of(""));
+        sut.disableUser(userId, Optional.of(""));
 
         //Assert
         verify(userRepository).save(user);
@@ -118,7 +108,7 @@ public class UserServiceImplTest {
         when(userRepository.findByIdAndDisabled(userId, false)).thenReturn(Optional.empty());
 
         //Act
-        userServiceImpl.disableUser(userId, Optional.of(""));
+        sut.disableUser(userId, Optional.of(""));
 
         //Assert
         //ExpectedException annotated by @rule is thrown;
@@ -140,7 +130,7 @@ public class UserServiceImplTest {
         when(userRepository.save(user)).thenReturn(user);
 
         //Act
-        userServiceImpl.enableUser(userId, Optional.of(""));
+        sut.enableUser(userId, Optional.of(""));
 
         //Assert
         verify(userRepository).save(user);
@@ -164,7 +154,7 @@ public class UserServiceImplTest {
         when(userRepository.save(user)).thenReturn(user);
 
         //Act
-        userServiceImpl.enableUser(userId, Optional.of(""));
+        sut.enableUser(userId, Optional.of(""));
 
         //Assert
         //ExpectedException annotated by @rule is thrown.
@@ -183,7 +173,7 @@ public class UserServiceImplTest {
         when(modelMapper.map(user, UserDto.class)).thenReturn(getUserResponseDto);
 
         //Act
-        UserDto getUserResponseDto1 = userServiceImpl.getUser(userId);
+        UserDto getUserResponseDto1 = sut.getUser(userId);
 
         //Assert
         assertEquals(getUserResponseDto, getUserResponseDto1);
@@ -202,7 +192,7 @@ public class UserServiceImplTest {
         when(modelMapper.map(user, UserDto.class)).thenReturn(getUserResponseDto);
 
         //Act
-        UserDto userDto = userServiceImpl.getUserByUserAuthId(oAuth2UserId);
+        UserDto userDto = sut.getUserByUserAuthId(oAuth2UserId);
 
         //Assert
         assertEquals(getUserResponseDto, userDto);
@@ -220,7 +210,7 @@ public class UserServiceImplTest {
         when(localeRepository.findByCode(localeCode)).thenReturn(locale);
 
         //Act
-        userServiceImpl.updateUserLocale(userId, localeCode);
+        sut.updateUserLocale(userId, localeCode);
 
         //Assert
         verify(userRepository).save(user);
@@ -238,7 +228,7 @@ public class UserServiceImplTest {
         when(localeRepository.findByCode(localeCode)).thenReturn(locale);
 
         //Act
-        userServiceImpl.updateUserLocaleByUserAuthId(userAuthId, localeCode);
+        sut.updateUserLocaleByUserAuthId(userAuthId, localeCode);
 
         //Assert
         verify(userRepository).save(user);
@@ -274,7 +264,7 @@ public class UserServiceImplTest {
         when(userPatientRelationshipRepository.findAllByIdUserIdAndIdPatientId(userId, patientId)).thenReturn(userPatientRelationships);
 
         //Act
-        AccessDecisionDto accessDecisionDto = userServiceImpl.accessDecision(userAuthId, patientMrn);
+        AccessDecisionDto accessDecisionDto = sut.accessDecision(userAuthId, patientMrn);
 
         //Assert
         assertEquals(new AccessDecisionDto(true), accessDecisionDto);
@@ -330,7 +320,7 @@ public class UserServiceImplTest {
                 .thenReturn(demographicsPage);
 
         //Act
-        Page<UserDto> userDtos = userServiceImpl.searchUsersByDemographic(firstName, lastName, birthDate, genderCode, null, null, Optional.of(0), Optional.of(10));
+        Page<UserDto> userDtos = sut.searchUsersByDemographic(firstName, lastName, birthDate, genderCode, null, null, Optional.of(0), Optional.of(10));
 
         //Assert
         assertEquals(userDtos.getTotalElements(), 2);
@@ -365,7 +355,7 @@ public class UserServiceImplTest {
                 .thenReturn(demographicsPage);
 
         //Act
-        Page<UserDto> userDtos = userServiceImpl.searchUsersByDemographic(firstName, lastName, birthDate, genderCode, null, null, Optional.of(0), Optional.of(10));
+        Page<UserDto> userDtos = sut.searchUsersByDemographic(firstName, lastName, birthDate, genderCode, null, null, Optional.of(0), Optional.of(10));
 
         //Assert
         assertEquals(userDtos.getTotalElements(), 0);
