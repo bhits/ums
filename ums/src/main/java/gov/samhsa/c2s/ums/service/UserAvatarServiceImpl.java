@@ -11,7 +11,7 @@ import gov.samhsa.c2s.ums.service.exception.UserAvatarDeleteException;
 import gov.samhsa.c2s.ums.service.exception.UserAvatarNotFoundException;
 import gov.samhsa.c2s.ums.service.exception.UserAvatarSaveException;
 import gov.samhsa.c2s.ums.service.exception.UserNotFoundException;
-import gov.samhsa.c2s.ums.service.exception.checkedexceptions.NoImageReaderForFileType;
+import gov.samhsa.c2s.ums.service.exception.checkedexceptions.NoImageReaderForFileTypeException;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -118,7 +118,7 @@ public class UserAvatarServiceImpl implements UserAvatarService {
 
         try {
             imageDimension = imageProcessingService.getImageDimension(avatarFile.getFileContents(), avatarFile.getFileExtension());
-        } catch (NoImageReaderForFileType e) {
+        } catch (NoImageReaderForFileTypeException e) {
             log.error("An exception occurred while attempting to determine the dimensions of the uploaded avatar image file", e);
             throw new UserAvatarSaveException("Unable to process avatar image file");
         }

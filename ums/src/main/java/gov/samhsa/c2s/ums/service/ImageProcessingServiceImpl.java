@@ -1,6 +1,6 @@
 package gov.samhsa.c2s.ums.service;
 
-import gov.samhsa.c2s.ums.service.exception.checkedexceptions.NoImageReaderForFileType;
+import gov.samhsa.c2s.ums.service.exception.checkedexceptions.NoImageReaderForFileTypeException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -18,7 +18,7 @@ import java.util.Iterator;
 @Slf4j
 public class ImageProcessingServiceImpl implements ImageProcessingService {
     @Override
-    public Dimension getImageDimension(byte[] imageFileBytes, String fileExtension) throws NoImageReaderForFileType {
+    public Dimension getImageDimension(byte[] imageFileBytes, String fileExtension) throws NoImageReaderForFileTypeException {
         Dimension imageDimension = null;
         Iterator<ImageReader> iter = ImageIO.getImageReadersBySuffix(fileExtension);
 
@@ -43,7 +43,7 @@ public class ImageProcessingServiceImpl implements ImageProcessingService {
 
         if (imageDimension == null) {
             log.error("No ImageReader compatible with the following file extension type could be found: " + fileExtension);
-            throw new NoImageReaderForFileType("Not a known image file extension: " + fileExtension);
+            throw new NoImageReaderForFileTypeException("Not a known image file extension: " + fileExtension);
         }
 
         return imageDimension;
