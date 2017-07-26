@@ -12,6 +12,7 @@ import gov.samhsa.c2s.ums.service.exception.UserAvatarNotFoundException;
 import gov.samhsa.c2s.ums.service.exception.UserAvatarSaveException;
 import gov.samhsa.c2s.ums.service.exception.UserNotFoundException;
 import gov.samhsa.c2s.ums.service.exception.checkedexceptions.NoImageReaderForFileTypeException;
+import gov.samhsa.c2s.ums.service.exception.checkedexceptions.TempCacheFileException;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,6 +27,7 @@ import java.util.Optional;
 public class UserAvatarServiceImpl implements UserAvatarService {
     private static final Long REQUIRED_WIDTH_IN_PIXELS = 48L;  // TODO: Replace this hardcoded constant with externalized configurable value
     private static final Long REQUIRED_HEIGHT_IN_PIXELS = 48L;  // TODO: Replace this hardcoded constant with externalized configurable value
+    private static final Long MAX_FILE_SIZE_IN_BYTES = 50000L;  // TODO: Replace this hardcoded constant with externalized configurable value
 
     private final ModelMapper modelMapper;
     private final ImageProcessingService imageProcessingService;
@@ -95,8 +97,7 @@ public class UserAvatarServiceImpl implements UserAvatarService {
 
         // TODO: Add check to ensure file extension is one of the permitted types
 
-        // TODO: Add check to ensure file size is equal or less than configured max file size
-
+        Long imageFileSize = checkImageFileSize(avatarFile);
 
         // Ensure avatar image's height and width are valid
         Dimension imageDimension = checkImageDimensions(avatarFile);
@@ -105,7 +106,7 @@ public class UserAvatarServiceImpl implements UserAvatarService {
         newUserAvatar.setFileContents(avatarFile.getFileContents());
         newUserAvatar.setFileExtension(avatarFile.getFileExtension());
         newUserAvatar.setFileName(avatarFile.getFileName());
-        newUserAvatar.setFileSizeBytes(avatarFile.getFileSizeBytes());
+        newUserAvatar.setFileSizeBytes(imageFileSize);
         newUserAvatar.setFileHeightPixels((long) imageDimension.height);
         newUserAvatar.setFileWidthPixels((long) imageDimension.width);
         newUserAvatar.setUser(user);
@@ -134,5 +135,23 @@ public class UserAvatarServiceImpl implements UserAvatarService {
         }
 
         return imageDimension;
+    }
+
+    private Long checkImageFileSize(AvatarBytesAndMetaDto avatarFile) {
+        Long imageFileSize;
+
+        try {
+            imageFileSize = imageProcessingService.getImageFileSizeBytes(avatarFile.getFileContents());
+        } catch (TempCacheFileException e) {
+            log.error("An exception occurred while attempting to determine the file size of the uploaded avatar image file", e);
+            throw new UserAvatarSaveException("Unable to process avatar image file");
+        }
+
+        if (imageFileSize > MAX_FILE_SIZE_IN_BYTES) {
+            log.warn("Unable to generate a new UserAvatar object because the uploaded image file's size is greater than the max allowed file size (Max Size: " + MAX_FILE_SIZE_IN_BYTES + "):", imageFileSize);
+            throw new InvalidAvatarInputException("The avatar file's size is greater than the allowed maximum");
+        }
+
+        return imageFileSize;
     }
 }
