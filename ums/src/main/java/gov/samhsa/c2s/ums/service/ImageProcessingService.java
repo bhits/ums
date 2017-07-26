@@ -7,5 +7,5 @@ import java.awt.Dimension;
 
 @Service
 public interface ImageProcessingService {
-    Dimension getImageDimension(byte[] imgFile, String fileExtension) throws NoImageReaderForFileType;
+    Dimension getImageDimension(byte[] imageFileBytes, String fileExtension) throws NoImageReaderForFileType;
 }
