@@ -124,12 +124,12 @@ public class UserAvatarServiceImpl implements UserAvatarService {
         }
 
         if (imageDimension.width != REQUIRED_WIDTH_IN_PIXELS) {
-            log.error("Unable to generate a new UserAvatar object because the uploaded image's width is not equal to required value (" + REQUIRED_WIDTH_IN_PIXELS + "):", imageDimension.width);
+            log.warn("Unable to generate a new UserAvatar object because the uploaded image's width is not equal to required value (" + REQUIRED_WIDTH_IN_PIXELS + "):", imageDimension.width);
             throw new InvalidAvatarInputException("The avatar file image's width is not valid");
         }
 
         if (imageDimension.height != REQUIRED_HEIGHT_IN_PIXELS) {
-            log.error("Unable to generate a new UserAvatar object because the uploaded image's height is not equal to required value (" + REQUIRED_HEIGHT_IN_PIXELS + "):", imageDimension.height);
+            log.warn("Unable to generate a new UserAvatar object because the uploaded image's height is not equal to required value (" + REQUIRED_HEIGHT_IN_PIXELS + "):", imageDimension.height);
             throw new InvalidAvatarInputException("The avatar file image's height is not valid");
         }
 
