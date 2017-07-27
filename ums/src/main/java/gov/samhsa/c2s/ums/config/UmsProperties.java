@@ -23,6 +23,9 @@ public class UmsProperties {
     private Gender gender;
     @Valid
     private Mrn mrn;
+    @NotNull
+    @Valid
+    private Avatars avatars;
     private Pagination pagination;
     @NotNull
     @Valid
@@ -109,5 +112,12 @@ public class UmsProperties {
          */
         @NotNull
         private Algorithm algorithm = Algorithm.NONE;
+    }
+
+    @Data
+    public static class Avatars {
+        @NotNull
+        @Min(1)
+        private Long maxFileSize;   // Max allowed avatar image file size in bytes
     }
 }

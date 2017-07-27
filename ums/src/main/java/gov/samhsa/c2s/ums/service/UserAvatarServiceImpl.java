@@ -1,5 +1,6 @@
 package gov.samhsa.c2s.ums.service;
 
+import gov.samhsa.c2s.ums.config.UmsProperties;
 import gov.samhsa.c2s.ums.domain.User;
 import gov.samhsa.c2s.ums.domain.UserAvatar;
 import gov.samhsa.c2s.ums.domain.UserAvatarRepository;
@@ -27,18 +28,20 @@ import java.util.Optional;
 public class UserAvatarServiceImpl implements UserAvatarService {
     private static final Long REQUIRED_WIDTH_IN_PIXELS = 48L;  // TODO: Replace this hardcoded constant with externalized configurable value
     private static final Long REQUIRED_HEIGHT_IN_PIXELS = 48L;  // TODO: Replace this hardcoded constant with externalized configurable value
-    private static final Long MAX_FILE_SIZE_IN_BYTES = 50000L;  // TODO: Replace this hardcoded constant with externalized configurable value
 
+    private final UmsProperties umsProperties;
     private final ModelMapper modelMapper;
     private final ImageProcessingService imageProcessingService;
     private final UserAvatarRepository userAvatarRepository;
     private final UserRepository userRepository;
 
     @Autowired
-    public UserAvatarServiceImpl(ModelMapper modelMapper,
+    public UserAvatarServiceImpl(UmsProperties umsProperties,
+                                 ModelMapper modelMapper,
                                  ImageProcessingService imageProcessingService,
                                  UserAvatarRepository userAvatarRepository,
                                  UserRepository userRepository) {
+        this.umsProperties = umsProperties;
         this.modelMapper = modelMapper;
         this.imageProcessingService = imageProcessingService;
         this.userAvatarRepository = userAvatarRepository;
@@ -139,6 +142,7 @@ public class UserAvatarServiceImpl implements UserAvatarService {
 
     private Long checkImageFileSize(AvatarBytesAndMetaDto avatarFile) {
         Long imageFileSize;
+        Long maxImageFileSize = umsProperties.getAvatars().getMaxFileSize();
 
         try {
             imageFileSize = imageProcessingService.getImageFileSizeBytes(avatarFile.getFileContents());
@@ -147,8 +151,8 @@ public class UserAvatarServiceImpl implements UserAvatarService {
             throw new UserAvatarSaveException("Unable to process avatar image file");
         }
 
-        if (imageFileSize > MAX_FILE_SIZE_IN_BYTES) {
-            log.warn("Unable to generate a new UserAvatar object because the uploaded image file's size is greater than the max allowed file size (Max Size: " + MAX_FILE_SIZE_IN_BYTES + "):", imageFileSize);
+        if (imageFileSize > maxImageFileSize) {
+            log.warn("Unable to generate a new UserAvatar object because the uploaded image file's size is greater than the max allowed file size (Max Size: " + maxImageFileSize + "):", imageFileSize);
             throw new InvalidAvatarInputException("The avatar file's size is greater than the allowed maximum");
         }
 

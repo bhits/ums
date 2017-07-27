@@ -64,6 +64,9 @@ c2s:
       provider:
         -
           system: http://hl7.org/fhir/sid/us-npi
+    avatars:
+      # The max allowed avatar image file size in bytes
+      max-file-size: 50000
     Pagination:
       defaultSize: 10
       maxSize: 100
