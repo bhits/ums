@@ -2,6 +2,7 @@ package gov.samhsa.c2s.ums.config;
 
 import lombok.Data;
 import org.hibernate.validator.constraints.NotBlank;
+import org.hibernate.validator.constraints.NotEmpty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
@@ -19,14 +20,24 @@ public class UmsProperties {
 
     @Valid
     private Ssn ssn;
+
     @Valid
     private Gender gender;
+
     @Valid
     private Mrn mrn;
+
+    @NotNull
+    @Valid
+    private Avatars avatars;
+
+    @Valid
     private Pagination pagination;
+
     @NotNull
     @Valid
     private Fhir fhir;
+
     @Valid
     private Map<String, List<RequiredIdentifierSystem>> requiredIdentifierSystemsByRole = new HashMap<>();
 
@@ -109,5 +120,23 @@ public class UmsProperties {
          */
         @NotNull
         private Algorithm algorithm = Algorithm.NONE;
+    }
+
+    @Data
+    public static class Avatars {
+        @NotNull
+        @Min(1)
+        private Long maxFileSize;   // Max allowed avatar image file size in bytes
+
+        @NotEmpty
+        private List<String> allowedFileTypesList;
+
+        @NotNull
+        @Min(1)
+        private Long requiredImageWidth;   // Required avatar image width in pixels
+
+        @NotNull
+        @Min(1)
+        private Long requiredImageHeight;   // Required avatar image height in pixels
     }
 }

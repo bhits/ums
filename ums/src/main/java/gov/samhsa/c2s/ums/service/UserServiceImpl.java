@@ -14,6 +14,7 @@ import gov.samhsa.c2s.ums.domain.PatientRepository;
 import gov.samhsa.c2s.ums.domain.Role;
 import gov.samhsa.c2s.ums.domain.RoleRepository;
 import gov.samhsa.c2s.ums.domain.Telecom;
+import gov.samhsa.c2s.ums.domain.TelecomRepository;
 import gov.samhsa.c2s.ums.domain.User;
 import gov.samhsa.c2s.ums.domain.UserPatientRelationship;
 import gov.samhsa.c2s.ums.domain.UserPatientRelationshipRepository;
@@ -32,7 +33,6 @@ import gov.samhsa.c2s.ums.service.dto.TelecomDto;
 import gov.samhsa.c2s.ums.service.dto.UpdateUserLimitedFieldsDto;
 import gov.samhsa.c2s.ums.service.dto.UserDto;
 import gov.samhsa.c2s.ums.service.exception.InvalidIdentifierSystemException;
-import gov.samhsa.c2s.ums.service.exception.LoggedInUserNotFound;
 import gov.samhsa.c2s.ums.service.exception.MissingEmailException;
 import gov.samhsa.c2s.ums.service.exception.PatientNotFoundException;
 import gov.samhsa.c2s.ums.service.exception.UnassignableIdentifierException;
@@ -87,42 +87,32 @@ public class UserServiceImpl implements UserService {
     private MrnService mrnService;
     @Autowired
     private PatientRepository patientRepository;
-
     @Autowired
     private RoleRepository roleRepository;
     @Autowired
     private StateCodeRepository stateCodeRepository;
     @Autowired
     private CountryCodeRepository countryCodeRepository;
-
     @Autowired
     private UserPatientRelationshipRepository userPatientRelationshipRepository;
-
     @Autowired
     private DemographicsRepository demographicsRepository;
-
     @Autowired
     private FhirPatientService fhirPatientService;
-
     @Autowired
     private IdentifierSystemRepository identifierSystemRepository;
     @Autowired
+    private TelecomRepository telecomRepository;
+    @Autowired
     private IdentifierRepository identifierRepository;
-
     @Autowired
     private UserToMrnConverter userToMrnConverter;
-
     @Autowired
     private PatientToMrnConverter patientToMrnConverter;
-
-    private final LocaleRepository localeRepository;
-    private final ScimService scimService;
-
     @Autowired
-    public UserServiceImpl(LocaleRepository localeRepository, ScimService scimService) {
-        this.localeRepository = localeRepository;
-        this.scimService = scimService;
-    }
+    private LocaleRepository localeRepository;
+    @Autowired
+    private ScimService scimService;
 
     @Override
     @Transactional
@@ -202,7 +192,7 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.findByIdAndDisabled(userId, false)
                 .orElseThrow(() -> new UserNotFoundException("User Not Found!"));
         user.setDisabled(true);
-        user.setLastUpdatedBy(lastUpdatedBy.orElseThrow(LoggedInUserNotFound::new));
+        user.setLastUpdatedBy(lastUpdatedBy.orElse(null));
         //
         /**
          * Use OAuth API to set users.active to false.
@@ -222,7 +212,7 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.findByIdAndDisabled(userId, true)
                 .orElseThrow(() -> new UserNotFoundException("User Not Found!"));
         user.setDisabled(false);
-        user.setLastUpdatedBy(lastUpdatedBy.orElseThrow(LoggedInUserNotFound::new));
+        user.setLastUpdatedBy(lastUpdatedBy.orElse(null));
 
         /**
          * Use OAuth API to set users.active to true.
@@ -313,26 +303,45 @@ public class UserServiceImpl implements UserService {
         }
 
         //update telephone
-        List<Telecom> telecoms = user.getDemographics().getTelecoms();
-        if (userDto.getTelecoms() != null) {
-            userDto.getTelecoms().stream().forEach(telecomDto -> {
-                Optional<Telecom> tempTeleCom = telecoms.stream().filter(telecom -> telecom.getSystem().toString().equals(telecomDto.getSystem()) && telecom.getUse().toString().equals(telecomDto.getUse())).findFirst();
-                if (tempTeleCom.isPresent()) {
-                    tempTeleCom.get().setValue(telecomDto.getValue());
-                } else {
-                    Telecom telecom = mapTelecomDtoToTelcom(new Telecom(), telecomDto);
-                    telecom.setDemographics(user.getDemographics());
-                    telecoms.add(telecom);
-                }
-            });
-        }
+        final List<Telecom> telecoms = user.getDemographics().getTelecoms();
+        final List<TelecomDto> telecomDtos = Optional.ofNullable(userDto.getTelecoms()).orElseGet(Collections::emptyList);
 
-        if (umsProperties.getFhir().getPublish().isEnabled() && user.getDemographics().getPatient() != null) {
-            userDto.setMrn(userToMrnConverter.convert(user));
-            fhirPatientService.updateFhirPatient(userDto);
-        }
+        // Assert emails
+        Optional<Patient> patientOptional = Optional.of(user)
+                .map(User::getDemographics)
+                .map(Demographics::getPatient);
+        assertEmails(userDto, patientOptional.isPresent());
 
-        User updatedUser = userRepository.save(user);
+        // Find telecoms to remove
+        final List<Telecom> telecomsToRemove = telecoms.stream()
+                .filter(telecom -> telecomDtos.stream()
+                        .noneMatch(telecomDto -> deepEquals(telecom, telecomDto)))
+                .collect(toList());
+
+        telecomRepository.deleteInBatch(telecomsToRemove);
+
+        // Find telecoms to add
+        final List<Telecom> telecomsToAdd = telecomDtos.stream()
+                .filter(telecomDto -> telecoms.stream()
+                        .noneMatch(telecom -> deepEquals(telecom, telecomDto)))
+                .map(telecomDto -> mapTelecomDtoToTelcom(new Telecom(), telecomDto))
+                .collect(toList());
+
+        telecomsToAdd.stream().forEach(telecom -> telecom.setDemographics(user.getDemographics()));
+        telecomRepository.save(telecomsToAdd);
+        user.getDemographics().getTelecoms().addAll(telecomsToAdd);
+
+        patientOptional
+                .ifPresent(patient -> {
+                    userDto.getRegistrationPurposeEmail().ifPresent(patient::setRegistrationPurposeEmail);
+                    patientRepository.save(patient);
+                    if (umsProperties.getFhir().getPublish().isEnabled()) {
+                        userDto.setMrn(userToMrnConverter.convert(user));
+                        fhirPatientService.updateFhirPatient(userDto);
+                    }
+                });
+
+        final User updatedUser = userRepository.save(user);
 
         return modelMapper.map(updatedUser, UserDto.class);
     }
@@ -719,4 +728,18 @@ public class UserServiceImpl implements UserService {
         }
     }
 
+    private void assertEmails(UserDto userDto, boolean patientPresent) {
+        final boolean userHasEmail = userDto.getTelecoms().stream()
+                .anyMatch(telecom -> telecom.getSystem().equals(Telecom.System.EMAIL.toString()));
+        final boolean hasRegistrationPurposeEmail = userDto.getRegistrationPurposeEmail().filter(StringUtils::hasText).isPresent();
+        if ((!userHasEmail) && (patientPresent && !hasRegistrationPurposeEmail)) {
+            throw new MissingEmailException("At least one of personal email OR a registration purpose email is required");
+        }
+    }
+
+    private boolean deepEquals(Telecom telecom, TelecomDto telecomDto) {
+        return telecom.getSystem().toString().equals(telecomDto.getSystem()) &&
+                telecom.getValue().equals(telecomDto.getValue()) &&
+                telecom.getUse().toString().equals(telecomDto.getUse());
+    }
 }

@@ -25,13 +25,11 @@ import gov.samhsa.c2s.ums.service.dto.UsernameUsedDto;
 import gov.samhsa.c2s.ums.service.dto.VerificationResponseDto;
 import gov.samhsa.c2s.ums.service.exception.EmailNotFoundException;
 import gov.samhsa.c2s.ums.service.exception.EmailTokenExpiredException;
-import gov.samhsa.c2s.ums.service.exception.LoggedInUserNotFound;
 import gov.samhsa.c2s.ums.service.exception.PasswordConfirmationFailedException;
 import gov.samhsa.c2s.ums.service.exception.ScopeDoesNotExistInDBException;
 import gov.samhsa.c2s.ums.service.exception.UserActivationCannotBeVerifiedException;
 import gov.samhsa.c2s.ums.service.exception.UserActivationNotFoundException;
 import gov.samhsa.c2s.ums.service.exception.UserIsAlreadyVerifiedException;
-import gov.samhsa.c2s.ums.service.exception.UserNotFoundException;
 import gov.samhsa.c2s.ums.service.exception.VerificationFailedException;
 import org.cloudfoundry.identity.uaa.scim.ScimUser;
 import org.modelmapper.ModelMapper;
@@ -91,7 +89,7 @@ public class UserActivationServiceImpl implements UserActivationService {
     @Override
     public UserActivationResponseDto initiateUserActivation(Long userId, String xForwardedProto, String xForwardedHost, int xForwardedPort, Optional<String> lastUpdatedBy) {
         // Find user
-        final User user = userRepository.findById(userId).orElseThrow(UserNotFoundException::new);
+        final User user = userRepository.findById(userId).orElse(null);
 
         String emailToken = emailTokenGenerator.generateEmailToken();
         final Instant emailTokenExpirationDate = Instant.now().plus(Period.ofDays(emailSenderProperties.getEmailTokenExpirationInDays()));
@@ -114,7 +112,7 @@ public class UserActivationServiceImpl implements UserActivationService {
         response.setEmail(user.getDemographics().getTelecoms().stream().filter(telecom -> telecom.getSystem().equals(Telecom.System.EMAIL)).map(Telecom::getValue).findFirst().get());
         response.setGenderCode(user.getDemographics().getAdministrativeGenderCode().getCode());
 
-        user.setLastUpdatedBy(lastUpdatedBy.orElseThrow(LoggedInUserNotFound::new));
+        user.setLastUpdatedBy(lastUpdatedBy.orElse(null));
         userRepository.save(user);
 
         //If user has roles which is not required send email
