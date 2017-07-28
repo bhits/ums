@@ -1,36 +1,46 @@
 package gov.samhsa.c2s.ums.service;
 
+import gov.samhsa.c2s.ums.config.UmsProperties;
 import gov.samhsa.c2s.ums.domain.User;
 import gov.samhsa.c2s.ums.domain.UserAvatar;
 import gov.samhsa.c2s.ums.domain.UserAvatarRepository;
 import gov.samhsa.c2s.ums.domain.UserRepository;
+import gov.samhsa.c2s.ums.service.dto.AvatarBytesAndMetaDto;
 import gov.samhsa.c2s.ums.service.dto.UserAvatarDto;
 import gov.samhsa.c2s.ums.service.exception.InvalidAvatarInputException;
+import gov.samhsa.c2s.ums.service.exception.UserAvatarDeleteException;
 import gov.samhsa.c2s.ums.service.exception.UserAvatarNotFoundException;
 import gov.samhsa.c2s.ums.service.exception.UserAvatarSaveException;
 import gov.samhsa.c2s.ums.service.exception.UserNotFoundException;
+import gov.samhsa.c2s.ums.service.exception.checkedexceptions.NoImageReaderForFileTypeException;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
+import java.awt.Dimension;
+import java.util.List;
+import java.util.Optional;
 
 @Service
 @Slf4j
 public class UserAvatarServiceImpl implements UserAvatarService {
-    private static final Long REQUIRED_WIDTH_IN_PIXELS = 460L;  // TODO: Replace this hardcoded constant with externalized configurable value
-    private static final Long REQUIRED_HEIGHT_IN_PIXELS = 460L;  // TODO: Replace this hardcoded constant with externalized configurable value
-
+    private final UmsProperties umsProperties;
     private final ModelMapper modelMapper;
+    private final ImageProcessingService imageProcessingService;
     private final UserAvatarRepository userAvatarRepository;
     private final UserRepository userRepository;
 
     @Autowired
-    public UserAvatarServiceImpl(ModelMapper modelMapper, UserAvatarRepository userAvatarRepository, UserRepository userRepository) {
+    public UserAvatarServiceImpl(UmsProperties umsProperties,
+                                 ModelMapper modelMapper,
+                                 ImageProcessingService imageProcessingService,
+                                 UserAvatarRepository userAvatarRepository,
+                                 UserRepository userRepository) {
+        this.umsProperties = umsProperties;
         this.modelMapper = modelMapper;
+        this.imageProcessingService = imageProcessingService;
         this.userAvatarRepository = userAvatarRepository;
         this.userRepository = userRepository;
     }
@@ -47,67 +57,115 @@ public class UserAvatarServiceImpl implements UserAvatarService {
 
     @Override
     @Transactional
-    public UserAvatarDto saveUserAvatar(Long userId, MultipartFile avatarFile, Long fileWidthPixels, Long fileHeightPixels) {
+    public UserAvatarDto saveUserAvatar(Long userId, AvatarBytesAndMetaDto avatarFile) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("User Not Found!"));
 
-        UserAvatar savedUserAvatar = userAvatarRepository.save(buildNewUserAvatar(avatarFile, fileWidthPixels, fileHeightPixels, user));
+        UserAvatar savedUserAvatar;
+        Optional<UserAvatar> currentUserAvatar = userAvatarRepository.findByUserId(userId);
+
+        UserAvatar newUserAvatar = currentUserAvatar
+                .map(userAvatar -> buildUserAvatar(userAvatar, avatarFile, user))
+                .orElseGet(() -> buildUserAvatar(new UserAvatar(), avatarFile, user));
+
+        try {
+            savedUserAvatar = userAvatarRepository.save(newUserAvatar);
+        } catch (RuntimeException e) {
+            log.error("A RuntimeException occurred while attempting to save a user avatar", e);
+            throw new UserAvatarSaveException("Unable to save user avatar");
+        }
 
         return modelMapper.map(savedUserAvatar, UserAvatarDto.class);
     }
 
-    private UserAvatar buildNewUserAvatar(MultipartFile avatarFile, Long fileWidthPixels, Long fileHeightPixels, User user) {
-        if (avatarFile == null) {
-            log.error("Unable to generate a new UserAvatar object in buildNewUserAvatar method because value of avatarFile parameter is null");
+    @Override
+    @Transactional
+    public void deleteUserAvatar(Long userId) {
+        try {
+            userAvatarRepository.deleteByUserId(userId);
+        } catch (RuntimeException e) {
+            log.error("A RuntimeException occurred while attempting to delete a user's avatar", e);
+            throw new UserAvatarDeleteException("Unable to delete user's avatar");
+        }
+    }
+
+    private UserAvatar buildUserAvatar(UserAvatar userAvatar, AvatarBytesAndMetaDto avatarFile, User user) {
+        if (avatarFile.getFileContents() == null || avatarFile.getFileContents().length <= 0) {
+            log.error("Unable to generate a new UserAvatar object because value of avatarFile.getFileContents is null or the length is less than or equal to zero");
             throw new InvalidAvatarInputException("The avatar file cannot be null");
         }
 
-        // TODO: Add check to ensure file extension is one of the permitted types
+        assertImageFileTypeAllowed(avatarFile);
 
-        // TODO: Add check to ensure file size is equal or less than configured max file size
+        Long imageFileSize = checkImageFileSize(avatarFile);
+        // Ensure avatar image's height and width are valid
+        Dimension imageDimension = checkImageDimensions(avatarFile);
 
-        // TODO: Add check for viruses in file via call to ClamAV antivirus scanner service
+        userAvatar.setFileContents(avatarFile.getFileContents());
+        userAvatar.setFileExtension(avatarFile.getFileExtension());
+        userAvatar.setFileName(avatarFile.getFileName());
+        userAvatar.setFileSizeBytes(imageFileSize);
+        userAvatar.setFileHeightPixels((long) imageDimension.height);
+        userAvatar.setFileWidthPixels((long) imageDimension.width);
+        userAvatar.setUser(user);
 
-        if (fileWidthPixels == null || !fileWidthPixels.equals(REQUIRED_WIDTH_IN_PIXELS)) {
-            log.error("Unable to generate a new UserAvatar object in buildNewUserAvatar method because value of fileWidthPixels parameter is null or not equal to required value (" + REQUIRED_WIDTH_IN_PIXELS + "):", fileWidthPixels);
-            throw new InvalidAvatarInputException("The avatar file image width is not valid");
-        }
-
-        if (fileHeightPixels == null || !fileHeightPixels.equals(REQUIRED_HEIGHT_IN_PIXELS)) {
-            log.error("Unable to generate a new UserAvatar object in buildNewUserAvatar method because value of fileHeightPixels parameter is null or not equal to required value (" + REQUIRED_HEIGHT_IN_PIXELS + "):", fileHeightPixels);
-            throw new InvalidAvatarInputException("The avatar file image height is not valid");
-        }
-
-        byte[] uploadedFileBytes;
-
-        try {
-            // extract file content as byte array
-            uploadedFileBytes = avatarFile.getBytes();
-        }catch(IOException e){
-            log.error("An IOException occurred while invoking avatarFile.getBytes from inside the buildNewUserAvatar method", e);
-            throw new UserAvatarSaveException("An error occurred while attempting to save a new user avatar");
-        }
-
-        UserAvatar newUserAvatar = new UserAvatar();
-        newUserAvatar.setFileContents(uploadedFileBytes);
-        newUserAvatar.setFileExtension(extractExtensionFromFileName(avatarFile.getOriginalFilename()));
-        newUserAvatar.setFileName(avatarFile.getOriginalFilename());
-        newUserAvatar.setFileSizeBytes(avatarFile.getSize());
-        newUserAvatar.setFileHeightPixels(fileHeightPixels);
-        newUserAvatar.setFileWidthPixels(fileWidthPixels);
-        newUserAvatar.setUser(user);
-
-        return newUserAvatar;
+        return userAvatar;
     }
 
-    private String extractExtensionFromFileName(String fileName) {
-        int indexOfLastDot = fileName.lastIndexOf(".");
+    private Dimension checkImageDimensions(AvatarBytesAndMetaDto avatarFile) {
+        Long requiredImageWidth = umsProperties.getAvatars().getRequiredImageWidth();
+        Long requiredImageHeight = umsProperties.getAvatars().getRequiredImageHeight();
 
-        if (indexOfLastDot < 0) {
-            log.error("Unable to extract file extension from file name in object in extractExtensionFromFileName method because the index of the '.' character in the file name string could not be located", fileName);
-            throw new InvalidAvatarInputException("Unable to determine the file extension");
+        Dimension imageDimension;
+
+        try {
+            imageDimension = imageProcessingService.getImageDimension(avatarFile.getFileContents(), avatarFile.getFileExtension());
+        } catch (NoImageReaderForFileTypeException e) {
+            log.error("An exception occurred while attempting to determine the dimensions of the uploaded avatar image file", e);
+            throw new UserAvatarSaveException("Unable to process avatar image file");
         }
 
-        return fileName.substring(indexOfLastDot + 1);
+        if (imageDimension.width != requiredImageWidth) {
+            log.warn("Unable to generate a new UserAvatar object because the uploaded image's width is not equal to required value (" + requiredImageWidth + "): " + imageDimension.width);
+            throw new InvalidAvatarInputException("The avatar file image's width is not valid");
+        }
+
+        if (imageDimension.height != requiredImageHeight) {
+            log.warn("Unable to generate a new UserAvatar object because the uploaded image's height is not equal to required value (" + requiredImageHeight + "): " + imageDimension.height);
+            throw new InvalidAvatarInputException("The avatar file image's height is not valid");
+        }
+
+        return imageDimension;
+    }
+
+    private Long checkImageFileSize(AvatarBytesAndMetaDto avatarFile) {
+        Long maxImageFileSize = umsProperties.getAvatars().getMaxFileSize();
+        Long imageFileSize = imageProcessingService.getImageFileSizeBytes(avatarFile.getFileContents());
+
+        if (imageFileSize > maxImageFileSize) {
+            log.warn("Unable to generate a new UserAvatar object because the uploaded image file's size is greater than the max allowed file size (Max Size: " + maxImageFileSize + "): " + imageFileSize);
+            throw new InvalidAvatarInputException("The avatar file's size is greater than the allowed maximum");
+        }
+
+        return imageFileSize;
+    }
+
+    private void assertImageFileTypeAllowed(AvatarBytesAndMetaDto avatarFile) {
+        String imageFileType;
+
+        try {
+            imageFileType = imageProcessingService.getImageFileType(avatarFile.getFileContents(), avatarFile.getFileExtension());
+        } catch (NoImageReaderForFileTypeException e) {
+            log.error("An exception occurred while attempting to determine the file type of the uploaded avatar image file", e);
+            throw new InvalidAvatarInputException("The avatar file's type is not allowed or not recognized");
+        }
+
+        List<String> allowedFileTypesList = umsProperties.getAvatars().getAllowedFileTypesList();
+
+        if (allowedFileTypesList.parallelStream().noneMatch(fileType -> fileType.equalsIgnoreCase(imageFileType))) {
+            log.warn("Unable to generate a new UserAvatar object because the uploaded image file's type not allowed: " + imageFileType);
+            log.debug("Allowed Image File Types: " + allowedFileTypesList.toString());
+            throw new InvalidAvatarInputException("The avatar file's type is not allowed or not recognized");
+        }
     }
 }
