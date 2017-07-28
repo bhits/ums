@@ -13,7 +13,6 @@ import gov.samhsa.c2s.ums.service.exception.UserAvatarNotFoundException;
 import gov.samhsa.c2s.ums.service.exception.UserAvatarSaveException;
 import gov.samhsa.c2s.ums.service.exception.UserNotFoundException;
 import gov.samhsa.c2s.ums.service.exception.checkedexceptions.NoImageReaderForFileTypeException;
-import gov.samhsa.c2s.ums.service.exception.checkedexceptions.TempCacheFileException;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -140,15 +139,8 @@ public class UserAvatarServiceImpl implements UserAvatarService {
     }
 
     private Long checkImageFileSize(AvatarBytesAndMetaDto avatarFile) {
-        Long imageFileSize;
         Long maxImageFileSize = umsProperties.getAvatars().getMaxFileSize();
-
-        try {
-            imageFileSize = imageProcessingService.getImageFileSizeBytes(avatarFile.getFileContents());
-        } catch (TempCacheFileException e) {
-            log.error("An exception occurred while attempting to determine the file size of the uploaded avatar image file", e);
-            throw new UserAvatarSaveException("Unable to process avatar image file");
-        }
+        Long imageFileSize = imageProcessingService.getImageFileSizeBytes(avatarFile.getFileContents());
 
         if (imageFileSize > maxImageFileSize) {
             log.warn("Unable to generate a new UserAvatar object because the uploaded image file's size is greater than the max allowed file size (Max Size: " + maxImageFileSize + "): " + imageFileSize);

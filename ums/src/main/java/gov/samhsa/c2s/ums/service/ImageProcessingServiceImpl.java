@@ -1,7 +1,6 @@
 package gov.samhsa.c2s.ums.service;
 
 import gov.samhsa.c2s.ums.service.exception.checkedexceptions.NoImageReaderForFileTypeException;
-import gov.samhsa.c2s.ums.service.exception.checkedexceptions.TempCacheFileException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -11,8 +10,6 @@ import javax.imageio.stream.ImageInputStream;
 import javax.imageio.stream.MemoryCacheImageInputStream;
 import java.awt.Dimension;
 import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Base64;
 import java.util.Iterator;
@@ -53,34 +50,10 @@ public class ImageProcessingServiceImpl implements ImageProcessingService {
     }
 
     @Override
-    public Long getImageFileSizeBytes(byte[] imageFileBytes) throws TempCacheFileException {
+    public Long getImageFileSizeBytes(byte[] imageFileBytes) {
         byte[] imageFileDataBytes = extractDataPartOfDataURI(imageFileBytes);
 
-        File tempCacheFile;
-
-        try {
-            tempCacheFile = File.createTempFile("avatar", null);
-        } catch (IOException e) {
-            log.error("Unable to create temporary cache file", e);
-            throw new TempCacheFileException("Unable to create temporary cache file");
-        }
-
-        tempCacheFile.deleteOnExit();   // Invoking deleteOnExit ensures that this file will be deleted when the Java VM shuts down if it wasn't already deleted
-        tempCacheFile.setExecutable(false);   // While setExecutable to false tells the underlying file system not to allow this file to be executed, there is no guarantee that this will work since support for it is system dependent
-
-        try (FileOutputStream fos = new FileOutputStream(tempCacheFile)) {
-            fos.write(imageFileDataBytes);
-            fos.flush();  // Calling flush on the FileOutputStream ensures that any data still in the output stream's buffer is written to the actual file prior to exiting this try block.
-            // Explicitly closing the FileOutputStream is not necessary here because the FileOutputStream was initialized using the try-with-resources syntax
-        } catch (IOException e) {
-            log.error("An exception occurred while attempting to write image to temporary cache file", e);
-            tempCacheFile.delete();   // In the event of an exception when writing to the file, be sure to delete the file.
-            throw new TempCacheFileException("Unable to write to temporary cache file");
-        }
-
-        Long fileSizeBytes = tempCacheFile.length();
-        tempCacheFile.delete();   // Delete the temporary cache file
-        return fileSizeBytes;
+        return (long) imageFileDataBytes.length;
     }
 
     @Override
