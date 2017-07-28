@@ -28,8 +28,8 @@ VALUES
    'systemSupport',
    'System Support'),
   ('6',
-   'staffUser',
-   'Staff User');
+   'staff',
+   'Staff');
 
 --
 -- Insert data for table relationship
