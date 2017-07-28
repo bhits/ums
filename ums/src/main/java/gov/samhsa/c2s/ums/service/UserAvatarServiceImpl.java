@@ -21,6 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.awt.Dimension;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -98,7 +99,7 @@ public class UserAvatarServiceImpl implements UserAvatarService {
             throw new InvalidAvatarInputException("The avatar file cannot be null");
         }
 
-        // TODO: Add check to ensure file extension is one of the permitted types
+        assertImageFileTypeAllowed(avatarFile);
 
         Long imageFileSize = checkImageFileSize(avatarFile);
         // Ensure avatar image's height and width are valid
@@ -155,5 +156,24 @@ public class UserAvatarServiceImpl implements UserAvatarService {
         }
 
         return imageFileSize;
+    }
+
+    private void assertImageFileTypeAllowed(AvatarBytesAndMetaDto avatarFile) {
+        String imageFileType;
+
+        try {
+            imageFileType = imageProcessingService.getImageFileType(avatarFile.getFileContents(), avatarFile.getFileExtension());
+        } catch (NoImageReaderForFileTypeException e) {
+            log.error("An exception occurred while attempting to determine the file type of the uploaded avatar image file", e);
+            throw new InvalidAvatarInputException("The avatar file's type is not allowed or not recognized");
+        }
+
+        List<String> allowedFileTypesList = umsProperties.getAvatars().getAllowedFileTypesList();
+
+        if (allowedFileTypesList.parallelStream().noneMatch(fileType -> fileType.equalsIgnoreCase(imageFileType))) {
+            log.warn("Unable to generate a new UserAvatar object because the uploaded image file's type not allowed: " + imageFileType);
+            log.debug("Allowed Image File Types: " + allowedFileTypesList.toString());
+            throw new InvalidAvatarInputException("The avatar file's type is not allowed or not recognized");
+        }
     }
 }

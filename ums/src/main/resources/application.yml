@@ -67,6 +67,12 @@ c2s:
     avatars:
       # The max allowed avatar image file size in bytes
       max-file-size: 50000
+      # List of allowed avatar image file types; an image file's type is determined by examining the image file itself, not by simply matching the file extension
+      #   NOTE: JPEG type files can have either a .jpg or a .jpeg extension, but you only should include 'JPEG' in the list below to allow this file type
+      #         No matter what extension the file actually has, the type is still JPEG so that is what you must include below and it'll allow both .jpg & .jpeg extensions
+      #         If you try list 'JPG' below, it will not be recognized.
+      allowed-file-types-list:
+        - JPEG
     Pagination:
       defaultSize: 10
       maxSize: 100
