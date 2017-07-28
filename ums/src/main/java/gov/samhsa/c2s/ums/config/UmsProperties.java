@@ -19,17 +19,24 @@ public class UmsProperties {
 
     @Valid
     private Ssn ssn;
+
     @Valid
     private Gender gender;
+
     @Valid
     private Mrn mrn;
+
     @NotNull
     @Valid
     private Avatars avatars;
+
+    @Valid
     private Pagination pagination;
+
     @NotNull
     @Valid
     private Fhir fhir;
+    
     @Valid
     private Map<String, List<RequiredIdentifierSystem>> requiredIdentifierSystemsByRole = new HashMap<>();
 
