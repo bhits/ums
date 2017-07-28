@@ -92,7 +92,7 @@ public class UserAvatarServiceImpl implements UserAvatarService {
         }
     }
 
-    private UserAvatar buildUserAvatar(UserAvatar originalUserAvatar, AvatarBytesAndMetaDto avatarFile, User user) {
+    private UserAvatar buildUserAvatar(UserAvatar userAvatar, AvatarBytesAndMetaDto avatarFile, User user) {
         if (avatarFile.getFileContents() == null || avatarFile.getFileContents().length <= 0) {
             log.error("Unable to generate a new UserAvatar object because value of avatarFile.getFileContents is null or the length is less than or equal to zero");
             throw new InvalidAvatarInputException("The avatar file cannot be null");
@@ -101,20 +101,18 @@ public class UserAvatarServiceImpl implements UserAvatarService {
         // TODO: Add check to ensure file extension is one of the permitted types
 
         Long imageFileSize = checkImageFileSize(avatarFile);
-
         // Ensure avatar image's height and width are valid
         Dimension imageDimension = checkImageDimensions(avatarFile);
 
-        UserAvatar newUserAvatar = originalUserAvatar;
-        newUserAvatar.setFileContents(avatarFile.getFileContents());
-        newUserAvatar.setFileExtension(avatarFile.getFileExtension());
-        newUserAvatar.setFileName(avatarFile.getFileName());
-        newUserAvatar.setFileSizeBytes(imageFileSize);
-        newUserAvatar.setFileHeightPixels((long) imageDimension.height);
-        newUserAvatar.setFileWidthPixels((long) imageDimension.width);
-        newUserAvatar.setUser(user);
+        userAvatar.setFileContents(avatarFile.getFileContents());
+        userAvatar.setFileExtension(avatarFile.getFileExtension());
+        userAvatar.setFileName(avatarFile.getFileName());
+        userAvatar.setFileSizeBytes(imageFileSize);
+        userAvatar.setFileHeightPixels((long) imageDimension.height);
+        userAvatar.setFileWidthPixels((long) imageDimension.width);
+        userAvatar.setUser(user);
 
-        return newUserAvatar;
+        return userAvatar;
     }
 
     private Dimension checkImageDimensions(AvatarBytesAndMetaDto avatarFile) {
@@ -128,12 +126,12 @@ public class UserAvatarServiceImpl implements UserAvatarService {
         }
 
         if (imageDimension.width != REQUIRED_WIDTH_IN_PIXELS) {
-            log.warn("Unable to generate a new UserAvatar object because the uploaded image's width is not equal to required value (" + REQUIRED_WIDTH_IN_PIXELS + "):", imageDimension.width);
+            log.warn("Unable to generate a new UserAvatar object because the uploaded image's width is not equal to required value (" + REQUIRED_WIDTH_IN_PIXELS + "): " + imageDimension.width);
             throw new InvalidAvatarInputException("The avatar file image's width is not valid");
         }
 
         if (imageDimension.height != REQUIRED_HEIGHT_IN_PIXELS) {
-            log.warn("Unable to generate a new UserAvatar object because the uploaded image's height is not equal to required value (" + REQUIRED_HEIGHT_IN_PIXELS + "):", imageDimension.height);
+            log.warn("Unable to generate a new UserAvatar object because the uploaded image's height is not equal to required value (" + REQUIRED_HEIGHT_IN_PIXELS + "): " + imageDimension.height);
             throw new InvalidAvatarInputException("The avatar file image's height is not valid");
         }
 
@@ -152,7 +150,7 @@ public class UserAvatarServiceImpl implements UserAvatarService {
         }
 
         if (imageFileSize > maxImageFileSize) {
-            log.warn("Unable to generate a new UserAvatar object because the uploaded image file's size is greater than the max allowed file size (Max Size: " + maxImageFileSize + "):", imageFileSize);
+            log.warn("Unable to generate a new UserAvatar object because the uploaded image file's size is greater than the max allowed file size (Max Size: " + maxImageFileSize + "): " + imageFileSize);
             throw new InvalidAvatarInputException("The avatar file's size is greater than the allowed maximum");
         }
 
