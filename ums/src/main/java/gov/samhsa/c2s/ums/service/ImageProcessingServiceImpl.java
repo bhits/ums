@@ -83,6 +83,36 @@ public class ImageProcessingServiceImpl implements ImageProcessingService {
         return fileSizeBytes;
     }
 
+    @Override
+    public String getImageFileType(byte[] imageFileBytes, String fileExtension) throws NoImageReaderForFileTypeException {
+        String imageFileType = null;
+        Iterator<ImageReader> iter = ImageIO.getImageReadersBySuffix(fileExtension);
+
+        byte[] imageFileDataBytes = extractDataPartOfDataURI(imageFileBytes);
+
+        // Loop through all ImageReader found for fileExtension and try each one
+        while(iter.hasNext()) {
+            ImageReader reader = iter.next();
+            try (ByteArrayInputStream imgByteAryStream = new ByteArrayInputStream(imageFileDataBytes);
+                 ImageInputStream stream = new MemoryCacheImageInputStream(imgByteAryStream)) {
+
+                reader.setInput(stream);
+                imageFileType = reader.getFormatName();
+            } catch (IOException e) {
+                log.warn("Error reading image file from byte array", e);
+            } finally {
+                reader.dispose();  // ImageReader must be disposed of in finally block because try-with-resources only works with classes that implement Closeable
+            }
+        }
+
+        if (imageFileType == null) {
+            log.error("No ImageReader compatible with the following file extension type could be found: " + fileExtension);
+            throw new NoImageReaderForFileTypeException("Not a known image file extension: " + fileExtension);
+        }
+
+        return imageFileType;
+    }
+
     /**
      * Extract only the data part of a base64 encoded Data URI represented as a byte[]
      * <p>

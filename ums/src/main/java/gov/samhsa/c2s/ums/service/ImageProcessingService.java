@@ -11,4 +11,6 @@ public interface ImageProcessingService {
     Dimension getImageDimension(byte[] imageFileBytes, String fileExtension) throws NoImageReaderForFileTypeException;
 
     Long getImageFileSizeBytes(byte[] imageFileBytes) throws TempCacheFileException;
+
+    String getImageFileType(byte[] imageFileBytes, String fileExtension) throws NoImageReaderForFileTypeException;
 }
