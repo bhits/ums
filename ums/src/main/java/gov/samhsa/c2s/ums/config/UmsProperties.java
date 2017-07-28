@@ -130,5 +130,13 @@ public class UmsProperties {
 
         @NotEmpty
         private List<String> allowedFileTypesList;
+
+        @NotNull
+        @Min(1)
+        private Long requiredImageWidth;   // Required avatar image width in pixels
+
+        @NotNull
+        @Min(1)
+        private Long requiredImageHeight;   // Required avatar image height in pixels
     }
 }

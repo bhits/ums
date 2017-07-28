@@ -73,6 +73,10 @@ c2s:
       #         If you try list 'JPG' below, it will not be recognized.
       allowed-file-types-list:
         - JPEG
+      # The required avatar image width in pixels
+      required-image-width: 48
+      # The required avatar image height in pixels
+      required-image-height: 48
     Pagination:
       defaultSize: 10
       maxSize: 100

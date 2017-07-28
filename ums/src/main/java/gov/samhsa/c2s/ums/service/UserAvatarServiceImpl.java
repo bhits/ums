@@ -26,9 +26,6 @@ import java.util.Optional;
 @Service
 @Slf4j
 public class UserAvatarServiceImpl implements UserAvatarService {
-    private static final Long REQUIRED_WIDTH_IN_PIXELS = 48L;  // TODO: Replace this hardcoded constant with externalized configurable value
-    private static final Long REQUIRED_HEIGHT_IN_PIXELS = 48L;  // TODO: Replace this hardcoded constant with externalized configurable value
-
     private final UmsProperties umsProperties;
     private final ModelMapper modelMapper;
     private final ImageProcessingService imageProcessingService;
@@ -116,6 +113,9 @@ public class UserAvatarServiceImpl implements UserAvatarService {
     }
 
     private Dimension checkImageDimensions(AvatarBytesAndMetaDto avatarFile) {
+        Long requiredImageWidth = umsProperties.getAvatars().getRequiredImageWidth();
+        Long requiredImageHeight = umsProperties.getAvatars().getRequiredImageHeight();
+
         Dimension imageDimension;
 
         try {
@@ -125,13 +125,13 @@ public class UserAvatarServiceImpl implements UserAvatarService {
             throw new UserAvatarSaveException("Unable to process avatar image file");
         }
 
-        if (imageDimension.width != REQUIRED_WIDTH_IN_PIXELS) {
-            log.warn("Unable to generate a new UserAvatar object because the uploaded image's width is not equal to required value (" + REQUIRED_WIDTH_IN_PIXELS + "): " + imageDimension.width);
+        if (imageDimension.width != requiredImageWidth) {
+            log.warn("Unable to generate a new UserAvatar object because the uploaded image's width is not equal to required value (" + requiredImageWidth + "): " + imageDimension.width);
             throw new InvalidAvatarInputException("The avatar file image's width is not valid");
         }
 
-        if (imageDimension.height != REQUIRED_HEIGHT_IN_PIXELS) {
-            log.warn("Unable to generate a new UserAvatar object because the uploaded image's height is not equal to required value (" + REQUIRED_HEIGHT_IN_PIXELS + "): " + imageDimension.height);
+        if (imageDimension.height != requiredImageHeight) {
+            log.warn("Unable to generate a new UserAvatar object because the uploaded image's height is not equal to required value (" + requiredImageHeight + "): " + imageDimension.height);
             throw new InvalidAvatarInputException("The avatar file image's height is not valid");
         }
 
