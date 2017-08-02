@@ -3,7 +3,6 @@ package gov.samhsa.c2s.ums.service;
 import gov.samhsa.c2s.ums.config.EmailSenderProperties;
 import gov.samhsa.c2s.ums.domain.Demographics;
 import gov.samhsa.c2s.ums.domain.Patient;
-import gov.samhsa.c2s.ums.domain.RoleRepository;
 import gov.samhsa.c2s.ums.domain.Scope;
 import gov.samhsa.c2s.ums.domain.ScopeRepository;
 import gov.samhsa.c2s.ums.domain.Telecom;
@@ -42,6 +41,7 @@ import org.springframework.util.StringUtils;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.Period;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
@@ -66,9 +66,6 @@ public class UserActivationServiceImpl implements UserActivationService {
     private UserRepository userRepository;
 
     @Autowired
-    private RoleRepository roleRepository;
-
-    @Autowired
     private EmailTokenGenerator emailTokenGenerator;
 
     @Autowired
@@ -87,7 +84,7 @@ public class UserActivationServiceImpl implements UserActivationService {
     private UserScopeAssignmentRepository userScopeAssignmentRepository;
 
     @Override
-    public UserActivationResponseDto initiateUserActivation(Long userId, String xForwardedProto, String xForwardedHost, int xForwardedPort, Optional<String> lastUpdatedBy) {
+    public UserActivationResponseDto initiateUserActivation(Long userId, String xForwardedProto, String xForwardedHost, String xForwardedPort, Optional<String> lastUpdatedBy) {
         // Find user
         final User user = userRepository.findById(userId).orElse(null);
 
@@ -126,7 +123,7 @@ public class UserActivationServiceImpl implements UserActivationService {
 
     }
 
-    private void sendEmailWithVerificationLink(User user, UserActivation saved, String xForwardedProto, String xForwardedHost, int xForwardedPort){
+    private void sendEmailWithVerificationLink(User user, UserActivation saved, String xForwardedProto, String xForwardedHost, String xForwardedPort) {
         // Send email with verification link
         String email = Optional.of(user)
                 // Try to find registrationPurposeEmail first
@@ -146,7 +143,8 @@ public class UserActivationServiceImpl implements UserActivationService {
                         // Throw exception if no email address can be found
                         .orElseThrow(EmailNotFoundException::new));
         emailSender.sendEmailWithVerificationLink(
-                xForwardedProto, xForwardedHost, xForwardedPort,
+                getFirstStringValueFromCommaSeparatedString(xForwardedProto), xForwardedHost,
+                Integer.parseInt(getFirstStringValueFromCommaSeparatedString(xForwardedPort)),
                 email,
                 saved.getEmailToken(),
                 getRecipientFullName(user), new Locale(user.getLocale().getCode()));
@@ -221,7 +219,7 @@ public class UserActivationServiceImpl implements UserActivationService {
 
     @Override
     @Transactional
-    public UserActivationResponseDto activateUser(UserActivationRequestDto userActivationRequest, String xForwardedProto, String xForwardedHost, int xForwardedPort) {
+    public UserActivationResponseDto activateUser(UserActivationRequestDto userActivationRequest, String xForwardedProto, String xForwardedHost, String xForwardedPort) {
         // Verify password
         assertPasswordAndConfirmPassword(userActivationRequest);
         // Find user creation process with emailToken and verificationCode
@@ -273,7 +271,8 @@ public class UserActivationServiceImpl implements UserActivationService {
         else {
             // Send email with confirmation
             emailSender.sendEmailToConfirmVerification(
-                    xForwardedProto, xForwardedHost, xForwardedPort,
+                    getFirstStringValueFromCommaSeparatedString(xForwardedProto),
+                    xForwardedHost, Integer.parseInt(getFirstStringValueFromCommaSeparatedString(xForwardedPort)),
                     user.getDemographics().getTelecoms().stream().filter(telecom -> telecom.getSystem().equals(Telecom.System.EMAIL)).map(Telecom::getValue).findFirst().get(),
                     getRecipientFullName(user), new Locale(user.getLocale().getCode()));
             return response;
@@ -341,5 +340,9 @@ public class UserActivationServiceImpl implements UserActivationService {
         return scimService.checkUsername(username);
     }
 
-
+    private String getFirstStringValueFromCommaSeparatedString(String commaSeparatedString) {
+        //Remove whitespace and split by comma
+        List<String> commaSeparatedStringList = Arrays.asList(commaSeparatedString.split("\\s*,\\s*"));
+        return commaSeparatedStringList.get(0);
+    }
 }

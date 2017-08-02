@@ -12,22 +12,17 @@ import gov.samhsa.c2s.ums.domain.User;
 import gov.samhsa.c2s.ums.domain.UserActivation;
 import gov.samhsa.c2s.ums.domain.UserActivationRepository;
 import gov.samhsa.c2s.ums.domain.UserRepository;
-import gov.samhsa.c2s.ums.domain.UserScopeAssignment;
 import gov.samhsa.c2s.ums.domain.UserScopeAssignmentRepository;
 import gov.samhsa.c2s.ums.domain.reference.AdministrativeGenderCode;
 import gov.samhsa.c2s.ums.infrastructure.EmailSender;
 import gov.samhsa.c2s.ums.infrastructure.ScimService;
 import gov.samhsa.c2s.ums.service.dto.ScopeAssignmentRequestDto;
-import gov.samhsa.c2s.ums.service.dto.UserActivationRequestDto;
 import gov.samhsa.c2s.ums.service.dto.UserActivationResponseDto;
 import gov.samhsa.c2s.ums.service.dto.UserVerificationRequestDto;
 import gov.samhsa.c2s.ums.service.dto.UsernameUsedDto;
 import gov.samhsa.c2s.ums.service.dto.VerificationResponseDto;
-import gov.samhsa.c2s.ums.service.exception.PasswordConfirmationFailedException;
-import gov.samhsa.c2s.ums.service.exception.ScopeDoesNotExistInDBException;
 import gov.samhsa.c2s.ums.service.exception.UserActivationNotFoundException;
 import gov.samhsa.c2s.ums.service.exception.UserIsAlreadyVerifiedException;
-import org.cloudfoundry.identity.uaa.scim.ScimUser;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -35,13 +30,8 @@ import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
-import org.mockito.stubbing.OngoingStubbing;
 import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.ui.Model;
 
-import java.math.BigInteger;
-import java.sql.Date;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.Period;
@@ -50,21 +40,16 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static gov.samhsa.c2s.common.unit.matcher.ArgumentMatchers.matching;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.argThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.springframework.data.domain.ExampleMatcher.matching;
 
 @RunWith(MockitoJUnitRunner.class)
 public class UserActivationServiceImplTest {
     Long userId = 30L;
     String xForwardedProto = "xForwardedProto";
     String xForwardedHost = "xForwardedHost";
-    int xForwardedPort = 344;
+    String xForwardedPort = "344";
 
     @Mock
     ModelMapper modelMapper;
