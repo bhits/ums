@@ -53,11 +53,6 @@ import static java.util.Comparator.comparing;
 @Service
 public class UserActivationServiceImpl implements UserActivationService {
 
-    private static final String SECURE_PROTO = "https";
-    private static final String DEFAULT_SECURE_PORT = "443";
-    private static final String INSECURE_PROTO = "http";
-    private static final String DEFAULT_INSECURE_PORT = "80";
-
     @Autowired
     private ModelMapper modelMapper;
 
