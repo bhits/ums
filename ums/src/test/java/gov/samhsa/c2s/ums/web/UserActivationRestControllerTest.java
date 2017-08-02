@@ -22,7 +22,7 @@ public class UserActivationRestControllerTest {
 
     public static final String xForwardProto = "X-Forwarded-Proto";
     public static final String xForwardHost = "X-Forwarded-Host";
-    public static final int xForwardPort = 233;
+    public static final String xForwardPort = "233";
 
     @Mock
     UserActivationService userActivationService;

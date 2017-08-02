@@ -15,7 +15,7 @@ import java.util.Optional;
 public interface UserActivationService {
 
     @Transactional
-    UserActivationResponseDto initiateUserActivation(Long userId, String xForwardedProto, String xForwardedHost, int xForwardedPort, Optional<String> lastUpdatedBy);
+    UserActivationResponseDto initiateUserActivation(Long userId, String xForwardedProto, String xForwardedHost, String xForwardedPort, Optional<String> lastUpdatedBy);
 
     @Transactional(readOnly = true)
     UserActivationResponseDto findUserActivationInfoByUserId(Long userId);
@@ -24,7 +24,7 @@ public interface UserActivationService {
     EmailTokenDto getUserEmailToken(Long userId);
 
     @Transactional
-    UserActivationResponseDto activateUser(UserActivationRequestDto userActivationRequest, String xForwardedProto, String xForwardedHost, int xForwardedPort);
+    UserActivationResponseDto activateUser(UserActivationRequestDto userActivationRequest, String xForwardedProto, String xForwardedHost, String xForwardedPort);
 
     @Transactional(readOnly = true)
     VerificationResponseDto verify(UserVerificationRequestDto userVerificationRequest);
