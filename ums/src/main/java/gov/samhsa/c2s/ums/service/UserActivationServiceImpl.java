@@ -148,7 +148,8 @@ public class UserActivationServiceImpl implements UserActivationService {
                         // Throw exception if no email address can be found
                         .orElseThrow(EmailNotFoundException::new));
         emailSender.sendEmailWithVerificationLink(
-                xForwardedProto, xForwardedHost, getXForwardedPort(xForwardedProto, xForwardedPort),
+                getFirstStringValueFromCommaSeparatedString(xForwardedProto), xForwardedHost,
+                Integer.parseInt(getFirstStringValueFromCommaSeparatedString(xForwardedPort)),
                 email,
                 saved.getEmailToken(),
                 getRecipientFullName(user), new Locale(user.getLocale().getCode()));
@@ -275,7 +276,8 @@ public class UserActivationServiceImpl implements UserActivationService {
         else {
             // Send email with confirmation
             emailSender.sendEmailToConfirmVerification(
-                    xForwardedProto, xForwardedHost, getXForwardedPort(xForwardedProto, xForwardedPort),
+                    getFirstStringValueFromCommaSeparatedString(xForwardedProto),
+                    xForwardedHost, Integer.parseInt(getFirstStringValueFromCommaSeparatedString(xForwardedPort)),
                     user.getDemographics().getTelecoms().stream().filter(telecom -> telecom.getSystem().equals(Telecom.System.EMAIL)).map(Telecom::getValue).findFirst().get(),
                     getRecipientFullName(user), new Locale(user.getLocale().getCode()));
             return response;
@@ -343,16 +345,9 @@ public class UserActivationServiceImpl implements UserActivationService {
         return scimService.checkUsername(username);
     }
 
-    private int getXForwardedPort(String xForwardedProto, String xForwardedPorts) {
+    private String getFirstStringValueFromCommaSeparatedString(String commaSeparatedString) {
         //Remove whitespace and split by comma
-        List<String> ports = Arrays.asList(xForwardedPorts.split("\\s*,\\s*"));
-
-        if (xForwardedProto.equalsIgnoreCase(SECURE_PROTO) && ports.contains(DEFAULT_SECURE_PORT)) {
-            return Integer.parseInt(DEFAULT_SECURE_PORT);
-        } else if (xForwardedProto.equalsIgnoreCase(INSECURE_PROTO) && ports.contains(DEFAULT_INSECURE_PORT)) {
-            return Integer.parseInt(DEFAULT_INSECURE_PORT);
-        } else {
-            return Integer.parseInt(ports.get(0));
-        }
+        List<String> commaSeparatedStringList = Arrays.asList(commaSeparatedString.split("\\s*,\\s*"));
+        return commaSeparatedStringList.get(0);
     }
 }
