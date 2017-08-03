@@ -1,6 +1,7 @@
 package gov.samhsa.c2s.ums.service.fhir;
 
 
+import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.rest.client.IGenericClient;
 import ca.uhn.fhir.validation.FhirValidator;
 import ca.uhn.fhir.validation.ValidationResult;
@@ -53,6 +54,8 @@ public class FhirPatientServiceImpl implements FhirPatientService {
     };
     @Autowired
     private UmsProperties umsProperties;
+    @Autowired
+    private FhirContext fhirContext;
     Function<UserDto, Patient> userDtoToPatient = new Function<UserDto, Patient>() {
         @Override
         public Patient apply(UserDto userDto) {
@@ -88,6 +91,14 @@ public class FhirPatientServiceImpl implements FhirPatientService {
     @Override
     public void publishFhirPatient(UserDto userDto) {
         final Patient patient = createFhirPatient(userDto);
+        if(logger.isDebugEnabled()){
+            logger.debug("FHIR Patient:");
+            logger.debug(fhirContext.newXmlParser().setPrettyPrint(true)
+                    .encodeResourceToString(patient));
+            logger.debug(fhirContext.newJsonParser().setPrettyPrint(true)
+                    .encodeResourceToString(patient));
+        }
+
         final ValidationResult validationResult = fhirValidator.validateWithResult(patient);
         if (validationResult.isSuccessful()) {
             fhirClient.create().resource(patient).execute();
