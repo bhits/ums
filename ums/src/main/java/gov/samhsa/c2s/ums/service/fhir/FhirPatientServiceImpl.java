@@ -1,19 +1,19 @@
 package gov.samhsa.c2s.ums.service.fhir;
 
 
+import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.rest.client.IGenericClient;
 import ca.uhn.fhir.validation.FhirValidator;
 import ca.uhn.fhir.validation.ValidationResult;
 import gov.samhsa.c2s.ums.config.UmsProperties;
 import gov.samhsa.c2s.ums.service.dto.UserDto;
 import gov.samhsa.c2s.ums.service.exception.FHIRFormatErrorException;
+import lombok.extern.slf4j.Slf4j;
 import org.hl7.fhir.dstu3.model.ContactPoint;
 import org.hl7.fhir.dstu3.model.Enumerations;
 import org.hl7.fhir.dstu3.model.IdType;
 import org.hl7.fhir.dstu3.model.Identifier;
 import org.hl7.fhir.dstu3.model.Patient;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -21,8 +21,8 @@ import java.sql.Date;
 import java.util.function.Function;
 
 @Service
+@Slf4j
 public class FhirPatientServiceImpl implements FhirPatientService {
-    private final Logger logger = LoggerFactory.getLogger(FhirPatientServiceImpl.class);
 
     Function<String, Enumerations.AdministrativeGender> getPatientGender = new Function<String, Enumerations.AdministrativeGender>() {
         @Override
@@ -81,6 +81,8 @@ public class FhirPatientServiceImpl implements FhirPatientService {
         }
     };
     @Autowired
+    private FhirContext fhirContext;
+    @Autowired
     private IGenericClient fhirClient;
     @Autowired
     private FhirValidator fhirValidator;
@@ -88,6 +90,14 @@ public class FhirPatientServiceImpl implements FhirPatientService {
     @Override
     public void publishFhirPatient(UserDto userDto) {
         final Patient patient = createFhirPatient(userDto);
+        if (log.isDebugEnabled()) {
+            log.debug("FHIR Patient:");
+            log.debug(fhirContext.newXmlParser().setPrettyPrint(true)
+                    .encodeResourceToString(patient));
+            log.debug(fhirContext.newJsonParser().setPrettyPrint(true)
+                    .encodeResourceToString(patient));
+        }
+
         final ValidationResult validationResult = fhirValidator.validateWithResult(patient);
         if (validationResult.isSuccessful()) {
             fhirClient.create().resource(patient).execute();
@@ -103,10 +113,10 @@ public class FhirPatientServiceImpl implements FhirPatientService {
         final ValidationResult validationResult = fhirValidator.validateWithResult(patient);
         if (validationResult.isSuccessful()) {
             if (umsProperties.getFhir().getPublish().isUseCreateForUpdate()) {
-                logger.debug("Calling FHIR Patient Create for Update based on the configuration");
+                log.debug("Calling FHIR Patient Create for Update based on the configuration");
                 fhirClient.create().resource(patient).execute();
             } else {
-                logger.debug("Calling FHIR Patient Update for Update based on the configuration");
+                log.debug("Calling FHIR Patient Update for Update based on the configuration");
                 fhirClient.update().resource(patient)
                         .conditional()
                         .where(Patient.IDENTIFIER.exactly().systemAndCode(umsProperties.getMrn().getCodeSystem(), patient.getId()))
