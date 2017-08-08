@@ -6,10 +6,12 @@ import gov.samhsa.c2s.ums.service.dto.LookupDto;
 import gov.samhsa.c2s.ums.service.dto.RoleDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 
 @RestController
