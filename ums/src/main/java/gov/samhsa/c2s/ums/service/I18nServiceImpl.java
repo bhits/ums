@@ -10,26 +10,14 @@ import java.util.Optional;
 
 @Service
 public class I18nServiceImpl implements I18nService {
-    private final String ROLE = "ROLE";
-    private final String ADMINISTRATIVE_GENDER_CODE = "ADMINISTRATIVE_GENDER_CODE";
 
     @Autowired
     I18nMessageRepository i18nMessageRepository;
 
     @Override
-    public Optional<I18nMessage> getI18nRoleName(String id) {
-        String PROPERTY_NAME = "NAME";
+    public Optional<I18nMessage> getI18nMessage(String className, String id, String methodName) {
         String locale = LocaleContextHolder.getLocale().getLanguage();
-        String key = ROLE.concat(".").concat(id).concat(".").concat(PROPERTY_NAME);
-        return i18nMessageRepository.findByKeyAndLocale( key, locale );
+        String key = className.concat(".").concat(id).concat(".").concat(methodName);
+        return i18nMessageRepository.findByKeyAndLocale(key, locale);
     }
-
-    @Override
-    public Optional<I18nMessage> getI18nGenderDisplayName(String id) {
-        String PROPERTY_NAME = "DISPLAY_NAME";
-        String locale = LocaleContextHolder.getLocale().getLanguage();
-        String key = ADMINISTRATIVE_GENDER_CODE.concat(".").concat(id).concat(".").concat(PROPERTY_NAME);
-        return i18nMessageRepository.findByKeyAndLocale( key, locale );
-    }
-
 }

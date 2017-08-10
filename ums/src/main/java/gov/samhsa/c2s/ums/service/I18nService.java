@@ -7,10 +7,8 @@ import java.util.Optional;
 
 
 public interface I18nService {
-    @Transactional
-    Optional<I18nMessage> getI18nRoleName(String id);
 
     @Transactional
-    Optional<I18nMessage> getI18nGenderDisplayName(String id);
+    Optional<I18nMessage> getI18nMessage(String className, String id, String methodName);
 
 }

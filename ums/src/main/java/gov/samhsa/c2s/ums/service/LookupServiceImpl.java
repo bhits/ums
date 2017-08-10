@@ -1,7 +1,13 @@
 package gov.samhsa.c2s.ums.service;
 
 import gov.samhsa.c2s.ums.config.UmsProperties;
-import gov.samhsa.c2s.ums.domain.*;
+import gov.samhsa.c2s.ums.domain.I18nMessage;
+import gov.samhsa.c2s.ums.domain.IdentifierSystemRepository;
+import gov.samhsa.c2s.ums.domain.Locale;
+import gov.samhsa.c2s.ums.domain.LocaleRepository;
+import gov.samhsa.c2s.ums.domain.RelationshipRepository;
+import gov.samhsa.c2s.ums.domain.Role;
+import gov.samhsa.c2s.ums.domain.RoleRepository;
 import gov.samhsa.c2s.ums.domain.reference.AdministrativeGenderCode;
 import gov.samhsa.c2s.ums.domain.reference.AdministrativeGenderCodeRepository;
 import gov.samhsa.c2s.ums.domain.reference.CountryCode;
@@ -83,9 +89,9 @@ public class LookupServiceImpl implements LookupService {
     public List<LookupDto> getAdministrativeGenderCodes() {
         final List<AdministrativeGenderCode> genderCodes = administrativeGenderCodeRepository.findAll();
 
-        genderCodes.stream().forEach( genderCode ->{
-            Optional<I18nMessage>  i18nMessageOptional = i18nService.getI18nGenderDisplayName(genderCode.getId().toString());
-            if(i18nMessageOptional.isPresent()){
+        genderCodes.stream().forEach(genderCode -> {
+            Optional<I18nMessage> i18nMessageOptional = i18nService.getI18nMessage("ADMINISTRATIVE_GENDER_CODE", genderCode.getId().toString(), "DISPLAY_NAME");
+            if (i18nMessageOptional.isPresent()) {
                 genderCode.setDisplayName(i18nMessageOptional.get().getMessage());
             }
         });
@@ -101,8 +107,8 @@ public class LookupServiceImpl implements LookupService {
         final List<Role> roles = roleRepository.findAll();
 
         roles.stream().forEach(role -> {
-            Optional<I18nMessage>  i18nMessageOptional = i18nService.getI18nRoleName(role.getId().toString());
-            if(i18nMessageOptional.isPresent()){
+            Optional<I18nMessage> i18nMessageOptional = i18nService.getI18nMessage("ROLE", role.getId().toString(), "NAME");
+            if (i18nMessageOptional.isPresent()) {
                 role.setName(i18nMessageOptional.get().getMessage());
             }
         });
