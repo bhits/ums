@@ -200,7 +200,7 @@ public class LookupServiceImplTest {
 
         when(modelMapper.map(role1, RoleDto.class)).thenReturn(roleDto1);
         when(modelMapper.map(role2, RoleDto.class)).thenReturn(roleDto2);
-        when(i18nService.getI18nMessage("ROLE" , role1.getId().toString(), "NAME")).thenReturn(Optional.of(i18nMessage));
+        when(i18nService.getI18nMessage(role1, "NAME")).thenReturn(Optional.of(i18nMessage));
 
         //Act
         List<RoleDto> getRoles = lookupServiceImpl.getRoles();
