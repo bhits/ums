@@ -1,11 +1,10 @@
 package gov.samhsa.c2s.ums.service;
 
+import gov.samhsa.c2s.common.i18n.service.I18nService;
 import gov.samhsa.c2s.ums.config.UmsProperties;
-import gov.samhsa.c2s.ums.domain.I18nMessage;
 import gov.samhsa.c2s.ums.domain.IdentifierSystemRepository;
 import gov.samhsa.c2s.ums.domain.Locale;
 import gov.samhsa.c2s.ums.domain.LocaleRepository;
-import gov.samhsa.c2s.ums.domain.RelationshipRepository;
 import gov.samhsa.c2s.ums.domain.Role;
 import gov.samhsa.c2s.ums.domain.RoleRepository;
 import gov.samhsa.c2s.ums.domain.reference.AdministrativeGenderCode;
@@ -51,9 +50,6 @@ public class LookupServiceImpl implements LookupService {
     private RoleRepository roleRepository;
 
     @Autowired
-    private RelationshipRepository relationshipRepository;
-
-    @Autowired
     private IdentifierSystemRepository identifierSystemRepository;
 
     @Autowired
@@ -89,15 +85,13 @@ public class LookupServiceImpl implements LookupService {
     public List<LookupDto> getAdministrativeGenderCodes() {
         final List<AdministrativeGenderCode> genderCodes = administrativeGenderCodeRepository.findAll();
 
-        genderCodes.stream().forEach(genderCode -> {
-            Optional<I18nMessage> i18nMessageOptional = i18nService.getI18nMessage(genderCode, "DISPLAY_NAME");
-            if (i18nMessageOptional.isPresent()) {
-                genderCode.setDisplayName(i18nMessageOptional.get().getMessage());
-            }
-        });
-
         return genderCodes.stream()
-                .map(administrativeGenderCode -> modelMapper.map(administrativeGenderCode, LookupDto.class))
+                .map(administrativeGenderCode -> {
+                    final LookupDto lookupDto = modelMapper.map(administrativeGenderCode, LookupDto.class);
+                    lookupDto.setDisplayName(i18nService.getI18nMessage(administrativeGenderCode, "displayName",
+                            administrativeGenderCode::getDisplayName));
+                    return lookupDto;
+                })
                 .collect(toList());
     }
 
@@ -106,14 +100,12 @@ public class LookupServiceImpl implements LookupService {
     public List<RoleDto> getRoles() {
         final List<Role> roles = roleRepository.findAll();
 
-        roles.stream().forEach(role -> {
-            Optional<I18nMessage> i18nMessageOptional = i18nService.getI18nMessage(role, "NAME");
-            if (i18nMessageOptional.isPresent()) {
-                role.setName(i18nMessageOptional.get().getMessage());
-            }
-        });
         return roles.stream()
-                .map(role -> modelMapper.map(role, RoleDto.class))
+                .map(role -> {
+                    final RoleDto roleDto = modelMapper.map(role, RoleDto.class);
+                    roleDto.setName(i18nService.getI18nMessage(role, "name", role::getName));
+                    return roleDto;
+                })
                 .collect(toList());
     }
 

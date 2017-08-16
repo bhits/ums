@@ -30,14 +30,14 @@ insert into i18n_message values (12, 'ROLE.6.NAME','(ES)Role name for Staff','es
 -- Insert i18n messages for Administrative Gender Code
 --
 
-insert into i18n_message values (13, 'ADMINISTRATIVEGENDERCODE.1.DISPLAY_NAME','Administrative gender code display name for male','en', 'Male');
-insert into i18n_message values (14, 'ADMINISTRATIVEGENDERCODE.1.DISPLAY_NAME','(ES)Administrative gender code display name for male','es', '(ES)Male');
-insert into i18n_message values (15, 'ADMINISTRATIVEGENDERCODE.2.DISPLAY_NAME','Administrative gender code display name for female','en', 'Female');
-insert into i18n_message values (16, 'ADMINISTRATIVEGENDERCODE.2.DISPLAY_NAME','(ES)Administrative gender code display name for female','es', '(ES)Female');
+insert into i18n_message values (13, 'ADMINISTRATIVE_GENDER_CODE.1.DISPLAY_NAME','Administrative gender code display name for male','en', 'Male');
+insert into i18n_message values (14, 'ADMINISTRATIVE_GENDER_CODE.1.DISPLAY_NAME','(ES)Administrative gender code display name for male','es', '(ES)Male');
+insert into i18n_message values (15, 'ADMINISTRATIVE_GENDER_CODE.2.DISPLAY_NAME','Administrative gender code display name for female','en', 'Female');
+insert into i18n_message values (16, 'ADMINISTRATIVE_GENDER_CODE.2.DISPLAY_NAME','(ES)Administrative gender code display name for female','es', '(ES)Female');
 
-insert into i18n_message values (17, 'ADMINISTRATIVEGENDERCODE.3.DISPLAY_NAME','Administrative gender code display name for Other','en', 'Other');
-insert into i18n_message values (18, 'ADMINISTRATIVEGENDERCODE.3.DISPLAY_NAME','(ES)Administrative gender code display name for other','es', '(ES)Other');
+insert into i18n_message values (17, 'ADMINISTRATIVE_GENDER_CODE.3.DISPLAY_NAME','Administrative gender code display name for Other','en', 'Other');
+insert into i18n_message values (18, 'ADMINISTRATIVE_GENDER_CODE.3.DISPLAY_NAME','(ES)Administrative gender code display name for other','es', '(ES)Other');
 
-insert into i18n_message values (19, 'ADMINISTRATIVEGENDERCODE.4.DISPLAY_NAME','Administrative gender code display name for unknown','en', 'Unknown');
-insert into i18n_message values (20, 'ADMINISTRATIVEGENDERCODE.4.DISPLAY_NAME','(ES)Administrative gender code display name for unknown','es', '(ES)Unknown');
+insert into i18n_message values (19, 'ADMINISTRATIVE_GENDER_CODE.4.DISPLAY_NAME','Administrative gender code display name for unknown','en', 'Unknown');
+insert into i18n_message values (20, 'ADMINISTRATIVE_GENDER_CODE.4.DISPLAY_NAME','(ES)Administrative gender code display name for unknown','es', '(ES)Unknown');
 

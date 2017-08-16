@@ -1,5 +1,6 @@
 package gov.samhsa.c2s.ums.domain;
 
+import gov.samhsa.c2s.common.i18n.I18nEnabled;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
@@ -16,9 +17,9 @@ import java.util.Set;
 @Entity
 @Data
 @Audited
-@ToString(exclude = {"scopes","users"})
-@EqualsAndHashCode(exclude= {"scopes","users"})
-public class Role {
+@ToString(exclude = {"scopes", "users"})
+@EqualsAndHashCode(exclude = {"scopes", "users"})
+public class Role implements I18nEnabled {
     /**
      * The id.
      */
@@ -29,15 +30,17 @@ public class Role {
     @NotNull
     private String code;
 
-
     @NotNull
     private String name;
-
 
     @ManyToMany(cascade = CascadeType.ALL)
     private Set<Scope> scopes;
 
-    @ManyToMany(cascade = CascadeType.ALL, mappedBy ="roles" )
+    @ManyToMany(cascade = CascadeType.ALL, mappedBy = "roles")
     private Set<User> users;
 
+    @Override
+    public String getIdAsString() {
+        return longToString(getId());
+    }
 }

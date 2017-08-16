@@ -1,6 +1,11 @@
 package gov.samhsa.c2s.ums.service;
 
-import gov.samhsa.c2s.ums.domain.*;
+import gov.samhsa.c2s.common.i18n.service.I18nService;
+import gov.samhsa.c2s.ums.domain.Locale;
+import gov.samhsa.c2s.ums.domain.LocaleRepository;
+import gov.samhsa.c2s.ums.domain.RelationshipRepository;
+import gov.samhsa.c2s.ums.domain.Role;
+import gov.samhsa.c2s.ums.domain.RoleRepository;
 import gov.samhsa.c2s.ums.domain.reference.AdministrativeGenderCode;
 import gov.samhsa.c2s.ums.domain.reference.AdministrativeGenderCodeRepository;
 import gov.samhsa.c2s.ums.domain.reference.CountryCode;
@@ -18,9 +23,11 @@ import org.modelmapper.ModelMapper;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
+import java.util.function.Supplier;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -194,13 +201,13 @@ public class LookupServiceImplTest {
         roleDtos.add(roleDto1);
         roleDtos.add(roleDto2);
 
-        I18nMessage i18nMessage = mock(I18nMessage.class);
+        final String i18nMessage = "i18nMessage";
 
         when(roleRepository.findAll()).thenReturn(roles);
 
         when(modelMapper.map(role1, RoleDto.class)).thenReturn(roleDto1);
         when(modelMapper.map(role2, RoleDto.class)).thenReturn(roleDto2);
-        when(i18nService.getI18nMessage(role1, "NAME")).thenReturn(Optional.of(i18nMessage));
+        when(i18nService.getI18nMessage(eq(role1), eq("name"), any(Supplier.class))).thenReturn(i18nMessage);
 
         //Act
         List<RoleDto> getRoles = lookupServiceImpl.getRoles();
@@ -208,6 +215,5 @@ public class LookupServiceImplTest {
         //Assert
         assertEquals(roleDtos, getRoles);
     }
-
 }
 
