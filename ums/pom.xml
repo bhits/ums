@@ -26,7 +26,7 @@
 		<cloudfoundry-identity-model.version>3.2.1</cloudfoundry-identity-model.version>
         <modelmapper.version>0.7.8</modelmapper.version>
         <commons-lang3.version>3.5</commons-lang3.version>
-        <c2s.common-libraries.version>1.14.0-SNAPSHOT</c2s.common-libraries.version>
+        <c2s.common-libraries.version>1.14.0</c2s.common-libraries.version>
         <hapi.fhir.version>2.2</hapi.fhir.version>
         <docker.maven.version>0.4.13</docker.maven.version>
         <common-unit.version>1.9.0</common-unit.version>
