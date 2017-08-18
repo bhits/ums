@@ -1,5 +1,6 @@
 package gov.samhsa.c2s.ums.service;
 
+import gov.samhsa.c2s.common.i18n.service.I18nService;
 import gov.samhsa.c2s.ums.domain.Locale;
 import gov.samhsa.c2s.ums.domain.LocaleRepository;
 import gov.samhsa.c2s.ums.domain.RelationshipRepository;
@@ -22,8 +23,11 @@ import org.modelmapper.ModelMapper;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Supplier;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -47,6 +51,9 @@ public class LookupServiceImplTest {
 
     @Mock
     RoleRepository roleRepository;
+
+    @Mock
+    I18nService i18nService;
 
     @Mock
     RelationshipRepository relationshipRepository;
@@ -179,7 +186,9 @@ public class LookupServiceImplTest {
     public void testGetRoles() {
         //Arrange
         Role role1 = mock(Role.class);
+        role1.setId(1L);
         Role role2 = mock(Role.class);
+        role2.setId(2L);
 
         List<Role> roles = new ArrayList<>();
         roles.add(role1);
@@ -192,10 +201,13 @@ public class LookupServiceImplTest {
         roleDtos.add(roleDto1);
         roleDtos.add(roleDto2);
 
+        final String i18nMessage = "i18nMessage";
+
         when(roleRepository.findAll()).thenReturn(roles);
 
         when(modelMapper.map(role1, RoleDto.class)).thenReturn(roleDto1);
         when(modelMapper.map(role2, RoleDto.class)).thenReturn(roleDto2);
+        when(i18nService.getI18nMessage(eq(role1), eq("name"), any(Supplier.class))).thenReturn(i18nMessage);
 
         //Act
         List<RoleDto> getRoles = lookupServiceImpl.getRoles();
@@ -203,6 +215,5 @@ public class LookupServiceImplTest {
         //Assert
         assertEquals(roleDtos, getRoles);
     }
-
 }
 

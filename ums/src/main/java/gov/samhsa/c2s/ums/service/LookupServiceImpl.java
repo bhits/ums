@@ -1,10 +1,10 @@
 package gov.samhsa.c2s.ums.service;
 
+import gov.samhsa.c2s.common.i18n.service.I18nService;
 import gov.samhsa.c2s.ums.config.UmsProperties;
 import gov.samhsa.c2s.ums.domain.IdentifierSystemRepository;
 import gov.samhsa.c2s.ums.domain.Locale;
 import gov.samhsa.c2s.ums.domain.LocaleRepository;
-import gov.samhsa.c2s.ums.domain.RelationshipRepository;
 import gov.samhsa.c2s.ums.domain.Role;
 import gov.samhsa.c2s.ums.domain.RoleRepository;
 import gov.samhsa.c2s.ums.domain.reference.AdministrativeGenderCode;
@@ -50,10 +50,10 @@ public class LookupServiceImpl implements LookupService {
     private RoleRepository roleRepository;
 
     @Autowired
-    private RelationshipRepository relationshipRepository;
+    private IdentifierSystemRepository identifierSystemRepository;
 
     @Autowired
-    private IdentifierSystemRepository identifierSystemRepository;
+    private I18nService i18nService;
 
     @Override
     @Transactional(readOnly = true)
@@ -84,8 +84,14 @@ public class LookupServiceImpl implements LookupService {
     @Override
     public List<LookupDto> getAdministrativeGenderCodes() {
         final List<AdministrativeGenderCode> genderCodes = administrativeGenderCodeRepository.findAll();
+
         return genderCodes.stream()
-                .map(administrativeGenderCode -> modelMapper.map(administrativeGenderCode, LookupDto.class))
+                .map(administrativeGenderCode -> {
+                    final LookupDto lookupDto = modelMapper.map(administrativeGenderCode, LookupDto.class);
+                    lookupDto.setDisplayName(i18nService.getI18nMessage(administrativeGenderCode, "displayName",
+                            administrativeGenderCode::getDisplayName));
+                    return lookupDto;
+                })
                 .collect(toList());
     }
 
@@ -93,8 +99,13 @@ public class LookupServiceImpl implements LookupService {
     @Transactional(readOnly = true)
     public List<RoleDto> getRoles() {
         final List<Role> roles = roleRepository.findAll();
+
         return roles.stream()
-                .map(role -> modelMapper.map(role, RoleDto.class))
+                .map(role -> {
+                    final RoleDto roleDto = modelMapper.map(role, RoleDto.class);
+                    roleDto.setName(i18nService.getI18nMessage(role, "name", role::getName));
+                    return roleDto;
+                })
                 .collect(toList());
     }
 
