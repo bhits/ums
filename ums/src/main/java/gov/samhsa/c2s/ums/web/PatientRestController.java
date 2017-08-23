@@ -35,7 +35,7 @@ public class PatientRestController {
 
     @GetMapping(value = "/{patientId}/mrn-identifier-system")
     @ResponseStatus(HttpStatus.OK)
-    public IdentifierSystemDto getUserById(@PathVariable String patientId) {
+    public IdentifierSystemDto getPatientMrnIdentifierSystemByPatientId(@PathVariable String patientId) {
         return patientService.getPatientMrnIdentifierSystemByPatientId(patientId);
     }
 
