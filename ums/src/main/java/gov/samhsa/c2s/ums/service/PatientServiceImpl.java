@@ -3,6 +3,7 @@ package gov.samhsa.c2s.ums.service;
 import gov.samhsa.c2s.ums.config.UmsProperties;
 import gov.samhsa.c2s.ums.domain.Demographics;
 import gov.samhsa.c2s.ums.domain.DemographicsRepository;
+import gov.samhsa.c2s.ums.domain.Identifier;
 import gov.samhsa.c2s.ums.domain.Patient;
 import gov.samhsa.c2s.ums.domain.PatientRepository;
 import gov.samhsa.c2s.ums.domain.RelationshipRepository;
@@ -10,6 +11,7 @@ import gov.samhsa.c2s.ums.domain.User;
 import gov.samhsa.c2s.ums.domain.UserPatientRelationship;
 import gov.samhsa.c2s.ums.domain.UserPatientRelationshipRepository;
 import gov.samhsa.c2s.ums.domain.UserRepository;
+import gov.samhsa.c2s.ums.service.dto.IdentifierSystemDto;
 import gov.samhsa.c2s.ums.service.dto.PatientDto;
 import gov.samhsa.c2s.ums.service.exception.PatientNotFoundException;
 import gov.samhsa.c2s.ums.service.exception.UserNotFoundException;
@@ -75,5 +77,17 @@ public class PatientServiceImpl implements PatientService {
             patientDtos.add(patientDto);
         });
         return patientDtos;
+    }
+
+    @Override
+    @Transactional
+    public IdentifierSystemDto getPatientMrnIdentifierSystemByPatientId(String patientId) {
+        //patientId is MRN, not Patient.id
+        final Patient patient = demographicsRepository.findOneByIdentifiersValueAndIdentifiersIdentifierSystemSystem(patientId, umsProperties.getMrn().getCodeSystem())
+                .map(Demographics::getPatient)
+                .orElseThrow(() -> new PatientNotFoundException("Patient Not Found!"));
+
+        Identifier patientMrnIdentifier = patient.getDemographics().getIdentifiers().stream().filter(i -> i.getValue().equalsIgnoreCase(patientId)).findFirst().orElseThrow(() -> new PatientNotFoundException("Patient Not Found!"));
+        return  modelMapper.map(patientMrnIdentifier.getIdentifierSystem(), IdentifierSystemDto.class);
     }
 }
