@@ -1,5 +1,6 @@
 package gov.samhsa.c2s.ums.service;
 
+import gov.samhsa.c2s.ums.service.dto.IdentifierSystemDto;
 import gov.samhsa.c2s.ums.service.dto.PatientDto;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -11,6 +12,9 @@ public interface PatientService {
     @Transactional(readOnly = true)
     PatientDto getPatientByPatientId(String patientId, Optional<String> userAuthId);
 
-     @Transactional(readOnly = true)
+    @Transactional(readOnly = true)
     List<PatientDto> getPatientByUserAuthId(String userAuthId);
+
+    @Transactional(readOnly = true)
+    IdentifierSystemDto getPatientMrnIdentifierSystemByPatientId(String patientId);
 }
