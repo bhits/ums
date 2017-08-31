@@ -6,6 +6,7 @@ import ca.uhn.fhir.rest.client.IGenericClient;
 import ca.uhn.fhir.validation.FhirValidator;
 import ca.uhn.fhir.validation.ValidationResult;
 import gov.samhsa.c2s.ums.config.UmsProperties;
+import gov.samhsa.c2s.ums.service.dto.FhirPatientDto;
 import gov.samhsa.c2s.ums.service.dto.UserDto;
 import gov.samhsa.c2s.ums.service.exception.FHIRFormatErrorException;
 import lombok.extern.slf4j.Slf4j;
@@ -15,7 +16,11 @@ import org.hl7.fhir.dstu3.model.IdType;
 import org.hl7.fhir.dstu3.model.Identifier;
 import org.hl7.fhir.dstu3.model.Patient;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.RestTemplate;
 
 import java.sql.Date;
 import java.util.function.Function;
@@ -23,6 +28,9 @@ import java.util.function.Function;
 @Service
 @Slf4j
 public class FhirPatientServiceImpl implements FhirPatientService {
+
+    @Autowired
+    private UmsProperties umsProperties;
 
     Function<String, Enumerations.AdministrativeGender> getPatientGender = new Function<String, Enumerations.AdministrativeGender>() {
         @Override
@@ -51,8 +59,7 @@ public class FhirPatientServiceImpl implements FhirPatientService {
 
         }
     };
-    @Autowired
-    private UmsProperties umsProperties;
+
     Function<UserDto, Patient> userDtoToPatient = new Function<UserDto, Patient>() {
         @Override
         public Patient apply(UserDto userDto) {
@@ -100,7 +107,20 @@ public class FhirPatientServiceImpl implements FhirPatientService {
 
         final ValidationResult validationResult = fhirValidator.validateWithResult(patient);
         if (validationResult.isSuccessful()) {
-            fhirClient.create().resource(patient).execute();
+            RestTemplate restTemplate =  new RestTemplate();
+            MultiValueMap<String, String> headers = new LinkedMultiValueMap<String, String>();
+            headers.add("Content-Type", "application/json");
+            FhirPatientDto fhirPatientDto = new FhirPatientDto(patient);
+//            HttpEntity<FhirPatientDto> request = new HttpEntity<FhirPatientDto>(fhirPatientDto, headers);
+            HttpEntity<Patient> request = new HttpEntity<Patient>(patient, headers);
+            String url  = umsProperties.getFhir().getPublish().getServerUrl();
+            try {
+                Object result = restTemplate.postForObject(url, patient, Object.class);
+                log.error("Result" ,result);
+            }catch(Exception e){
+                log.error("Error Message" ,e);
+            }
+//             fhirClient.create().resource(patient).execute();
         } else {
             throw new FHIRFormatErrorException("FHIR Patient Validation is not successful" + validationResult.getMessages());
         }

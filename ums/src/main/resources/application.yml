@@ -95,9 +95,11 @@ c2s:
       #  - provider
     fhir:
       publish:
-        enabled: false
+        enabled: true
         # configure fhir server base url
-        serverUrl: http://bhitsdevhie01/hapi-fhir-jpaserver/baseStu3
+#        serverUrl: http://bhitsdevhie01/hapi-fhir-jpaserver/baseStu3
+        serverUrl: http://localhost:8470/Patient
+#        serverUrl: http://localhost:8080/iexhub/Patient
         clientSocketTimeoutInMs: 768000
         use-create-for-update: false
 
