@@ -8,6 +8,8 @@ import gov.samhsa.c2s.ums.domain.UserScopeAssignmentRepository;
 import gov.samhsa.c2s.ums.infrastructure.dto.IdentifierDto;
 import gov.samhsa.c2s.ums.infrastructure.dto.SearchResultsWrapperWithId;
 import gov.samhsa.c2s.ums.infrastructure.exception.IdCannotBeFoundException;
+import gov.samhsa.c2s.ums.service.dto.TelecomDto;
+import gov.samhsa.c2s.ums.service.dto.UserDto;
 import gov.samhsa.c2s.ums.service.dto.UsernameUsedDto;
 import org.cloudfoundry.identity.uaa.resources.SearchResults;
 import org.cloudfoundry.identity.uaa.scim.ScimGroupMember;
@@ -23,7 +25,9 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.web.client.RestOperations;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import static gov.samhsa.c2s.common.unit.matcher.ArgumentMatchers.matching;
 import static org.junit.Assert.assertEquals;
@@ -176,6 +180,29 @@ public class ScimServiceImplTest {
 
         //Assert
         verify(restTemplate).put(eq(usersEndpoint+"/"+userId), any(HttpEntity.class));
+    }
+
+    @Test
+    public void testUpdateUser() {
+        //Arrange
+        String userId = "userId";
+        ScimUser scimUser = new ScimUser();
+        scimUser.setVersion(1);
+        UserDto userDto = mock(UserDto.class);
+        when(restTemplate.getForObject(usersEndpoint + "/{userId}", ScimUser.class, userId)).thenReturn(scimUser);
+
+        TelecomDto telecomDto = mock(TelecomDto.class);
+        List<TelecomDto> telecomDtoList = new ArrayList();
+        telecomDtoList.add(telecomDto);
+        when(userDto.getTelecoms()).thenReturn(telecomDtoList);
+        when(telecomDto.getSystem()).thenReturn("EMAIL");
+        when(telecomDto.getValue()).thenReturn("email@email.com");
+
+        //Act
+        scimServiceImpl.updateEmail(userId, userDto);
+
+        //Assert
+        verify(restTemplate).put(eq(usersEndpoint + "/" + userId), any(HttpEntity.class));
     }
 
     @Test
