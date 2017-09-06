@@ -20,7 +20,11 @@ import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.web.client.RestOperations;
@@ -36,11 +40,13 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.argThat;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-@RunWith(MockitoJUnitRunner.class)
+@RunWith(PowerMockRunner.class)
+@PrepareForTest(ScimUser.class)
 public class ScimServiceImplTest {
     @Rule
     public ExpectedException thrown = ExpectedException.none();
@@ -183,13 +189,19 @@ public class ScimServiceImplTest {
     }
 
     @Test
-    public void testUpdateUser() {
+    public void testUpdateUserBasicInfo() {
         //Arrange
         String userId = "userId";
-        ScimUser scimUser = new ScimUser();
-        scimUser.setVersion(1);
+        ScimUser scimUser = PowerMockito.mock(ScimUser.class);
+
         UserDto userDto = mock(UserDto.class);
         when(restTemplate.getForObject(usersEndpoint + "/{userId}", ScimUser.class, userId)).thenReturn(scimUser);
+
+        when(userDto.getFirstName()).thenReturn("FirstName");
+        when(userDto.getLastName()).thenReturn("LastName");
+
+        ScimUser.Name name=new ScimUser.Name();
+        doReturn(name).when(scimUser).getName();
 
         TelecomDto telecomDto = mock(TelecomDto.class);
         List<TelecomDto> telecomDtoList = new ArrayList();
@@ -199,7 +211,7 @@ public class ScimServiceImplTest {
         when(telecomDto.getValue()).thenReturn("email@email.com");
 
         //Act
-        scimServiceImpl.updateEmail(userId, userDto);
+        scimServiceImpl.updateUserBasicInfo(userId, userDto);
 
         //Assert
         verify(restTemplate).put(eq(usersEndpoint + "/" + userId), any(HttpEntity.class));
