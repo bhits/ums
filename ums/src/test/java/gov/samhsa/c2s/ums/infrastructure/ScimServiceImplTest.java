@@ -8,6 +8,8 @@ import gov.samhsa.c2s.ums.domain.UserScopeAssignmentRepository;
 import gov.samhsa.c2s.ums.infrastructure.dto.IdentifierDto;
 import gov.samhsa.c2s.ums.infrastructure.dto.SearchResultsWrapperWithId;
 import gov.samhsa.c2s.ums.infrastructure.exception.IdCannotBeFoundException;
+import gov.samhsa.c2s.ums.service.dto.TelecomDto;
+import gov.samhsa.c2s.ums.service.dto.UserDto;
 import gov.samhsa.c2s.ums.service.dto.UsernameUsedDto;
 import org.cloudfoundry.identity.uaa.resources.SearchResults;
 import org.cloudfoundry.identity.uaa.scim.ScimGroupMember;
@@ -18,12 +20,18 @@ import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.web.client.RestOperations;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import static gov.samhsa.c2s.common.unit.matcher.ArgumentMatchers.matching;
 import static org.junit.Assert.assertEquals;
@@ -32,11 +40,13 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.argThat;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-@RunWith(MockitoJUnitRunner.class)
+@RunWith(PowerMockRunner.class)
+@PrepareForTest(ScimUser.class)
 public class ScimServiceImplTest {
     @Rule
     public ExpectedException thrown = ExpectedException.none();
@@ -176,6 +186,35 @@ public class ScimServiceImplTest {
 
         //Assert
         verify(restTemplate).put(eq(usersEndpoint+"/"+userId), any(HttpEntity.class));
+    }
+
+    @Test
+    public void testUpdateUserBasicInfo() {
+        //Arrange
+        String userId = "userId";
+        ScimUser scimUser = PowerMockito.mock(ScimUser.class);
+
+        UserDto userDto = mock(UserDto.class);
+        when(restTemplate.getForObject(usersEndpoint + "/{userId}", ScimUser.class, userId)).thenReturn(scimUser);
+
+        when(userDto.getFirstName()).thenReturn("FirstName");
+        when(userDto.getLastName()).thenReturn("LastName");
+
+        ScimUser.Name name=new ScimUser.Name();
+        doReturn(name).when(scimUser).getName();
+
+        TelecomDto telecomDto = mock(TelecomDto.class);
+        List<TelecomDto> telecomDtoList = new ArrayList();
+        telecomDtoList.add(telecomDto);
+        when(userDto.getTelecoms()).thenReturn(telecomDtoList);
+        when(telecomDto.getSystem()).thenReturn("EMAIL");
+        when(telecomDto.getValue()).thenReturn("email@email.com");
+
+        //Act
+        scimServiceImpl.updateUserBasicInfo(userId, userDto);
+
+        //Assert
+        verify(restTemplate).put(eq(usersEndpoint + "/" + userId), any(HttpEntity.class));
     }
 
     @Test

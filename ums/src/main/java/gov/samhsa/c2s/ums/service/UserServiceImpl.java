@@ -343,6 +343,7 @@ public class UserServiceImpl implements UserService {
 
         final User updatedUser = userRepository.save(user);
 
+        scimService.updateUserBasicInfo(user.getUserAuthId(),userDto);
         return modelMapper.map(updatedUser, UserDto.class);
     }
 
