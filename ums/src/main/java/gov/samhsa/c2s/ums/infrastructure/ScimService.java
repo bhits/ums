@@ -22,7 +22,7 @@ public interface ScimService {
 
     void activateUser(String userId);
 
-    void updateEmail(String userId,UserDto userDto);
+    void updateUserBasicInfo(String userId,UserDto userDto);
 
     void updateUserWithNewGroup(UserActivation userActivation, Scope scope);
 

@@ -50,8 +50,7 @@ public class ScimServiceImpl implements ScimService {
     private RestOperations restTemplate;
 
     @Autowired
-    UserService userService;
-
+    private UserService userService;
 
     @Autowired
     public ScimServiceImpl(@Value("${c2s.ums.scim.url}") String uaaBaseUrl) {
@@ -144,9 +143,13 @@ public class ScimServiceImpl implements ScimService {
     }
 
     @Override
-    public void updateEmail(String userId, UserDto userDto) {
+    public void updateUserBasicInfo(String userId, UserDto userDto) {
         //Get scim user by userId
-        final ScimUser scimUser = restTemplate.getForObject(usersEndpoint + "/{userId}", ScimUser.class, userId);
+        ScimUser scimUser = restTemplate.getForObject(usersEndpoint + "/{userId}", ScimUser.class, userId);
+
+        //Set the value of first name and last name in uaa
+        scimUser.getName().setGivenName(userDto.getFirstName());
+        scimUser.getName().setFamilyName(userDto.getLastName());
 
         //Get the value of email in telecomDto
         Optional<TelecomDto> telecomDto = userDto.getTelecoms().stream().filter(telecomDto1 -> telecomDto1.getSystem().toString().equals("EMAIL")).findFirst();
