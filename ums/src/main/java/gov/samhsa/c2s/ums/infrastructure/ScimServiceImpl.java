@@ -144,6 +144,10 @@ public class ScimServiceImpl implements ScimService {
 
     @Override
     public void updateUserBasicInfo(String userId, UserDto userDto) {
+        //Assert arguments
+        Assert.hasText(userId, "User ID must exist");
+        Assert.notNull(userDto, "UserDto cannot be null");
+
         //Get scim user by userId
         ScimUser scimUser = restTemplate.getForObject(usersEndpoint + "/{userId}", ScimUser.class, userId);
 
