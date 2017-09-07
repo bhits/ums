@@ -3,6 +3,9 @@ package gov.samhsa.c2s.ums.service.fhir;
 
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.rest.client.IGenericClient;
+import ca.uhn.fhir.rest.gclient.IClientExecutable;
+import ca.uhn.fhir.rest.gclient.ICreateTyped;
+import ca.uhn.fhir.rest.gclient.IUpdateTyped;
 import ca.uhn.fhir.validation.FhirValidator;
 import ca.uhn.fhir.validation.ValidationResult;
 import gov.samhsa.c2s.ums.config.UmsProperties;
@@ -100,11 +103,10 @@ public class FhirPatientServiceImpl implements FhirPatientService {
 
         final ValidationResult validationResult = fhirValidator.validateWithResult(patient);
         if (validationResult.isSuccessful()) {
-            fhirClient.create().resource(patient).execute();
+            applyRequestEncoding(fhirClient.create().resource(patient)).execute();
         } else {
             throw new FHIRFormatErrorException("FHIR Patient Validation is not successful" + validationResult.getMessages());
         }
-
     }
 
     @Override
@@ -114,10 +116,10 @@ public class FhirPatientServiceImpl implements FhirPatientService {
         if (validationResult.isSuccessful()) {
             if (umsProperties.getFhir().getPublish().isUseCreateForUpdate()) {
                 log.debug("Calling FHIR Patient Create for Update based on the configuration");
-                fhirClient.create().resource(patient).execute();
+                applyRequestEncoding(fhirClient.create().resource(patient)).execute();
             } else {
                 log.debug("Calling FHIR Patient Update for Update based on the configuration");
-                fhirClient.update().resource(patient)
+                applyRequestEncoding(fhirClient.update().resource(patient))
                         .conditional()
                         .where(Patient.IDENTIFIER.exactly().systemAndCode(umsProperties.getMrn().getCodeSystem(), patient.getId()))
                         .execute();
@@ -145,6 +147,27 @@ public class FhirPatientServiceImpl implements FhirPatientService {
                 .map(String::trim)
                 .ifPresent(ssnValue -> patient.addIdentifier().setSystem(umsProperties.getSsn().getCodeSystem())
                         .setValue(ssnValue));
+    }
+
+    private ICreateTyped applyRequestEncoding(ICreateTyped request) {
+        return (ICreateTyped) applyRequestEncodingFromConfig(request);
+    }
+
+    private IUpdateTyped applyRequestEncoding(IUpdateTyped request) {
+        return (IUpdateTyped) applyRequestEncodingFromConfig(request);
+    }
+
+    private IClientExecutable applyRequestEncodingFromConfig(IClientExecutable request) {
+        switch (umsProperties.getFhir().getPublish().getEncoding()) {
+            case XML:
+                request.encodedXml();
+                break;
+            case JSON:
+            default:
+                request.encodedJson();
+                break;
+        }
+        return request;
     }
 }
 
