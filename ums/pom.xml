@@ -26,13 +26,15 @@
 		<cloudfoundry-identity-model.version>3.2.1</cloudfoundry-identity-model.version>
         <modelmapper.version>1.0.0</modelmapper.version>
         <commons-lang3.version>3.5</commons-lang3.version>
-        <c2s.common-libraries.version>1.14.0</c2s.common-libraries.version>
         <hapi.fhir.version>2.2</hapi.fhir.version>
         <docker.maven.version>0.4.13</docker.maven.version>
         <common-unit.version>1.9.0</common-unit.version>
         <power-mock.version>1.6.5</power-mock.version>
         <jacoco.version>0.7.7.201606060606</jacoco.version>
         <maven-enforcer-plugin.version>3.0.0-M1</maven-enforcer-plugin.version>
+        <c2s.i18n-jpa-support.version>1.16.0</c2s.i18n-jpa-support.version>
+        <c2s.common-util.version>1.16.0</c2s.common-util.version>
+        <c2s.validator-extension.version>1.16.0</c2s.validator-extension.version>
     </properties>
 
     <dependencies>
@@ -127,7 +129,7 @@
         <dependency>
             <groupId>gov.samhsa.c2s</groupId>
             <artifactId>i18n-jpa-support</artifactId>
-            <version>${c2s.common-libraries.version}</version>
+            <version>${c2s.i18n-jpa-support.version}</version>
         </dependency>
         <dependency>
             <groupId>org.modelmapper</groupId>
@@ -174,7 +176,7 @@
 		<dependency>
 			<groupId>gov.samhsa.c2s</groupId>
 			<artifactId>common-util</artifactId>
-			<version>${c2s.common-libraries.version}</version>
+			<version>${c2s.common-util.version}</version>
 			<exclusions>
 				<exclusion>
 					<groupId>org.springframework.boot</groupId>
@@ -232,7 +234,7 @@
             <dependency>
                 <groupId>gov.samhsa.c2s</groupId>
                 <artifactId>validator-extension</artifactId>
-                <version>${c2s.common-libraries.version}</version>
+                <version>${c2s.validator-extension.version}</version>
             </dependency>
             <!-- HAPI FHIR JARS -->
             <dependency>
