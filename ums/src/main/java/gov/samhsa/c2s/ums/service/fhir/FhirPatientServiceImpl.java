@@ -73,7 +73,7 @@ public class FhirPatientServiceImpl implements FhirPatientService {
 
             //optional fields
             userDto.getAddresses().stream().forEach(addressDto ->
-                    fhirPatient.addAddress().addLine(addressDto.getLine1()).addLine(addressDto.getLine2()).setCity(addressDto.getCity()).setState(addressDto.getStateCode()).setPostalCode(addressDto.getPostalCode())
+                    fhirPatient.addAddress().addLine(addressDto.getLine1()).addLine(addressDto.getLine2()).setCity(addressDto.getCity()).setState(addressDto.getStateCode()).setPostalCode(addressDto.getPostalCode()).setCountry(addressDto.getCountryCode())
             );
 
             userDto.getTelecoms().stream().forEach(telecomDto ->
