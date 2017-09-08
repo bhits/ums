@@ -343,6 +343,10 @@ public class UserServiceImpl implements UserService {
 
         final User updatedUser = userRepository.save(user);
 
+        // If system account exists, also update basic user info in authorization server
+        Optional.of(user)
+                .map(User::getUserAuthId)
+                .ifPresent(userAuthId -> scimService.updateUserBasicInfo(userAuthId, userDto));
         return modelMapper.map(updatedUser, UserDto.class);
     }
 

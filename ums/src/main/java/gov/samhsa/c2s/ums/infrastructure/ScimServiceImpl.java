@@ -8,6 +8,9 @@ import gov.samhsa.c2s.ums.domain.UserScopeAssignmentRepository;
 import gov.samhsa.c2s.ums.infrastructure.dto.IdentifierDto;
 import gov.samhsa.c2s.ums.infrastructure.dto.SearchResultsWrapperWithId;
 import gov.samhsa.c2s.ums.infrastructure.exception.IdCannotBeFoundException;
+import gov.samhsa.c2s.ums.service.UserService;
+import gov.samhsa.c2s.ums.service.dto.TelecomDto;
+import gov.samhsa.c2s.ums.service.dto.UserDto;
 import gov.samhsa.c2s.ums.service.dto.UsernameUsedDto;
 import org.cloudfoundry.identity.uaa.resources.SearchResults;
 import org.cloudfoundry.identity.uaa.scim.ScimGroupMember;
@@ -25,7 +28,10 @@ import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestOperations;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 @Service
 public class ScimServiceImpl implements ScimService {
@@ -42,6 +48,9 @@ public class ScimServiceImpl implements ScimService {
     @Autowired
     @Qualifier(ApplicationContextConfig.OAUTH2_REST_TEMPLATE_CLIENT_CREDENTIALS)
     private RestOperations restTemplate;
+
+    @Autowired
+    private UserService userService;
 
     @Autowired
     public ScimServiceImpl(@Value("${c2s.ums.scim.url}") String uaaBaseUrl) {
@@ -131,6 +140,39 @@ public class ScimServiceImpl implements ScimService {
         HttpEntity<ScimUser> entity = new HttpEntity<ScimUser>(scimUser, headers);
 
         restTemplate.put(usersEndpoint+"/"+ userId,entity);
+    }
+
+    @Override
+    public void updateUserBasicInfo(String userId, UserDto userDto) {
+        //Assert arguments
+        Assert.hasText(userId, "User ID must exist");
+        Assert.notNull(userDto, "UserDto cannot be null");
+
+        //Get scim user by userId
+        ScimUser scimUser = restTemplate.getForObject(usersEndpoint + "/{userId}", ScimUser.class, userId);
+
+        //Set the value of first name and last name in uaa
+        scimUser.getName().setGivenName(userDto.getFirstName());
+        scimUser.getName().setFamilyName(userDto.getLastName());
+
+        //Get the value of email in telecomDto
+        Optional<TelecomDto> telecomDto = userDto.getTelecoms().stream().filter(telecomDto1 -> telecomDto1.getSystem().toString().equals("EMAIL")).findFirst();
+
+        if (telecomDto.isPresent()) {
+            List<ScimUser.Email> emails = new ArrayList();
+            String email = telecomDto.get().getValue();
+            ScimUser.Email emailToAdd = new ScimUser.Email();
+            emailToAdd.setValue(email);
+            emails.add(emailToAdd);
+            //Set the updated email
+            scimUser.setEmails(emails);
+        }
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("If-Match", String.valueOf(scimUser.getVersion()));
+        HttpEntity<ScimUser> entity = new HttpEntity<ScimUser>(scimUser, headers);
+
+        restTemplate.put(usersEndpoint + "/" + userId, entity);
     }
 
     @Override

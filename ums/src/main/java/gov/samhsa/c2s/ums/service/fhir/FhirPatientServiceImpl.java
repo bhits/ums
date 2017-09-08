@@ -3,10 +3,12 @@ package gov.samhsa.c2s.ums.service.fhir;
 
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.rest.client.IGenericClient;
+import ca.uhn.fhir.rest.gclient.IClientExecutable;
+import ca.uhn.fhir.rest.gclient.ICreateTyped;
+import ca.uhn.fhir.rest.gclient.IUpdateTyped;
 import ca.uhn.fhir.validation.FhirValidator;
 import ca.uhn.fhir.validation.ValidationResult;
 import gov.samhsa.c2s.ums.config.UmsProperties;
-import gov.samhsa.c2s.ums.service.dto.FhirPatientDto;
 import gov.samhsa.c2s.ums.service.dto.UserDto;
 import gov.samhsa.c2s.ums.service.exception.FHIRFormatErrorException;
 import lombok.extern.slf4j.Slf4j;
@@ -16,11 +18,7 @@ import org.hl7.fhir.dstu3.model.IdType;
 import org.hl7.fhir.dstu3.model.Identifier;
 import org.hl7.fhir.dstu3.model.Patient;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
-import org.springframework.web.client.RestTemplate;
 
 import java.sql.Date;
 import java.util.function.Function;
@@ -28,9 +26,6 @@ import java.util.function.Function;
 @Service
 @Slf4j
 public class FhirPatientServiceImpl implements FhirPatientService {
-
-    @Autowired
-    private UmsProperties umsProperties;
 
     Function<String, Enumerations.AdministrativeGender> getPatientGender = new Function<String, Enumerations.AdministrativeGender>() {
         @Override
@@ -59,7 +54,8 @@ public class FhirPatientServiceImpl implements FhirPatientService {
 
         }
     };
-
+    @Autowired
+    private UmsProperties umsProperties;
     Function<UserDto, Patient> userDtoToPatient = new Function<UserDto, Patient>() {
         @Override
         public Patient apply(UserDto userDto) {
@@ -107,24 +103,10 @@ public class FhirPatientServiceImpl implements FhirPatientService {
 
         final ValidationResult validationResult = fhirValidator.validateWithResult(patient);
         if (validationResult.isSuccessful()) {
-            RestTemplate restTemplate =  new RestTemplate();
-            MultiValueMap<String, String> headers = new LinkedMultiValueMap<String, String>();
-            headers.add("Content-Type", "application/json");
-            FhirPatientDto fhirPatientDto = new FhirPatientDto(patient);
-//            HttpEntity<FhirPatientDto> request = new HttpEntity<FhirPatientDto>(fhirPatientDto, headers);
-            HttpEntity<Patient> request = new HttpEntity<Patient>(patient, headers);
-            String url  = umsProperties.getFhir().getPublish().getServerUrl();
-            try {
-                Object result = restTemplate.postForObject(url, patient, Object.class);
-                log.error("Result" ,result);
-            }catch(Exception e){
-                log.error("Error Message" ,e);
-            }
-//             fhirClient.create().resource(patient).execute();
+            applyRequestEncoding(fhirClient.create().resource(patient)).execute();
         } else {
             throw new FHIRFormatErrorException("FHIR Patient Validation is not successful" + validationResult.getMessages());
         }
-
     }
 
     @Override
@@ -134,10 +116,10 @@ public class FhirPatientServiceImpl implements FhirPatientService {
         if (validationResult.isSuccessful()) {
             if (umsProperties.getFhir().getPublish().isUseCreateForUpdate()) {
                 log.debug("Calling FHIR Patient Create for Update based on the configuration");
-                fhirClient.create().resource(patient).execute();
+                applyRequestEncoding(fhirClient.create().resource(patient)).execute();
             } else {
                 log.debug("Calling FHIR Patient Update for Update based on the configuration");
-                fhirClient.update().resource(patient)
+                applyRequestEncoding(fhirClient.update().resource(patient))
                         .conditional()
                         .where(Patient.IDENTIFIER.exactly().systemAndCode(umsProperties.getMrn().getCodeSystem(), patient.getId()))
                         .execute();
@@ -165,6 +147,27 @@ public class FhirPatientServiceImpl implements FhirPatientService {
                 .map(String::trim)
                 .ifPresent(ssnValue -> patient.addIdentifier().setSystem(umsProperties.getSsn().getCodeSystem())
                         .setValue(ssnValue));
+    }
+
+    private ICreateTyped applyRequestEncoding(ICreateTyped request) {
+        return (ICreateTyped) applyRequestEncodingFromConfig(request);
+    }
+
+    private IUpdateTyped applyRequestEncoding(IUpdateTyped request) {
+        return (IUpdateTyped) applyRequestEncodingFromConfig(request);
+    }
+
+    private IClientExecutable applyRequestEncodingFromConfig(IClientExecutable request) {
+        switch (umsProperties.getFhir().getPublish().getEncoding()) {
+            case XML:
+                request.encodedXml();
+                break;
+            case JSON:
+            default:
+                request.encodedJson();
+                break;
+        }
+        return request;
     }
 }
 
