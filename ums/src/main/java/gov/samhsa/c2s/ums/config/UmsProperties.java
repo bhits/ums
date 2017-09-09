@@ -1,5 +1,6 @@
 package gov.samhsa.c2s.ums.config;
 
+import ca.uhn.fhir.rest.server.EncodingEnum;
 import lombok.Data;
 import org.hibernate.validator.constraints.NotBlank;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -107,6 +108,8 @@ public class UmsProperties {
             private String clientSocketTimeoutInMs;
             @NotBlank
             private boolean useCreateForUpdate = false;
+            @NotNull
+            private EncodingEnum encoding = EncodingEnum.JSON;
         }
     }
 
