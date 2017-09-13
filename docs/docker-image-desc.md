@@ -5,7 +5,7 @@ The UMS manages User Registration, Activation, Disable and register as a patient
 
 # Supported Source Code Tags and Current `Dockerfile` Link
 
-[`0.3.0 (latest)`](https://github.com/bhits-dev/ums/releases/tag/0.3.0), [`0.2.0`](https://github.com/bhits-dev/ums/releases/tag/0.2.0), [`0.1.0`](https://github.com/bhits-dev/ums/releases/tag/0.1.0)
+[`0.4.0 (latest)`](https://github.com/bhits-dev/ums/releases/tag/0.4.0), [`0.3.0`](https://github.com/bhits-dev/ums/releases/tag/0.3.0), [`0.2.0`](https://github.com/bhits-dev/ums/releases/tag/0.2.0), [`0.1.0`](https://github.com/bhits-dev/ums/releases/tag/0.1.0)
 
 [`Current Dockerfile`](../ums/src/main/docker/Dockerfile)
 
