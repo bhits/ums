@@ -95,9 +95,9 @@ c2s:
       #  - provider
     fhir:
       publish:
-        enabled: true
+        enabled: false
         # configure fhir server base url
-        serverUrl: http://localhost:8470
+        serverUrl: http://bhitsdevhie01/hapi-fhir-jpaserver/baseStu3
         clientSocketTimeoutInMs: 768000
         use-create-for-update: false
         encoding: json
