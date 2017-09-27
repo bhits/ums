@@ -85,7 +85,7 @@ c2s:
     email-sender:
       # c2s-ui endpoint
       c2s-ui-route: /c2s-ui
-      c2s-ui-verification-relative-path: "/account/verification"
+      c2s-ui-verification-relative-path: "/account-verification"
       c2s-ui-verification-email-token-arg-name: "emailToken"
       c2s-ui-verification-user-preferred-locale-arg-name: "userPreferredLocale"
       brand: Consent2Share
