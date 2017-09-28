@@ -14,4 +14,6 @@ public interface MrnService {
      * @return the string
      */
     String generateMrn();
+
+    String getCodeSystem();
 }
