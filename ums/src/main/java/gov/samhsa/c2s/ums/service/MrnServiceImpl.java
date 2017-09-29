@@ -25,6 +25,11 @@ public class MrnServiceImpl implements MrnService {
         return generateRandomMrn();
     }
 
+    @Override
+    public String getCodeSystem() {
+        return this.umsProperties.getMrn().getCodeSystem();
+    }
+
     /**
      * Generate random mrn.
      *

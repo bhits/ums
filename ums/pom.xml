@@ -35,12 +35,18 @@
         <c2s.i18n-jpa-support.version>1.16.0</c2s.i18n-jpa-support.version>
         <c2s.common-util.version>1.16.0</c2s.common-util.version>
         <c2s.validator-extension.version>1.16.0</c2s.validator-extension.version>
+        <logstash-logback-encoder.version>4.11</logstash-logback-encoder.version>
     </properties>
 
     <dependencies>
         <dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-sleuth</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>net.logstash.logback</groupId>
+            <artifactId>logstash-logback-encoder</artifactId>
+            <version>${logstash-logback-encoder.version}</version>
         </dependency>
         <!-- Discovery Config -->
         <dependency>
