@@ -84,7 +84,7 @@ c2s:
       url: http://localhost:8080/uaa
     email-sender:
       # c2s-ui endpoint
-      c2s-ui-route: /c2s-ui
+      c2s-ui-route: /${c2s.c2s-ui.context-path}
       c2s-ui-verification-relative-path: "/account/verification"
       c2s-ui-verification-email-token-arg-name: "emailToken"
       c2s-ui-verification-user-preferred-locale-arg-name: "userPreferredLocale"
@@ -101,7 +101,6 @@ c2s:
         clientSocketTimeoutInMs: 768000
         use-create-for-update: false
         encoding: json
-
 security:
   oauth2:
     client:
