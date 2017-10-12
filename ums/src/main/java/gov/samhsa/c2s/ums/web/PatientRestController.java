@@ -23,13 +23,18 @@ public class PatientRestController {
     private PatientService patientService;
 
     @GetMapping(value = "/{patientId}")
-    PatientDto getPatientByPatientId(@PathVariable String patientId,
-                                     @RequestParam Optional<String> userAuthId) {
+    public PatientDto getPatientByPatientId(@PathVariable String patientId,
+                                            @RequestParam Optional<String> userAuthId) {
         return patientService.getPatientByPatientId(patientId, userAuthId);
     }
 
+    @GetMapping
+    public PatientDto getPatientByIdentifierValueAndIdentifierSystem(@RequestParam String identifierValue, @RequestParam String identifierSystem) {
+        return patientService.getPatientByIdentifierValueAndIdentifierSystem(identifierValue, identifierSystem);
+    }
+
     @GetMapping(value = "/authId/{userAuthId}")
-    List<PatientDto> getPatientByUserAuthId(@PathVariable String userAuthId) {
+    public List<PatientDto> getPatientByUserAuthId(@PathVariable String userAuthId) {
         return patientService.getPatientByUserAuthId(userAuthId);
     }
 
@@ -38,6 +43,4 @@ public class PatientRestController {
     public IdentifierSystemDto getPatientMrnIdentifierSystemByPatientId(@PathVariable String patientId) {
         return patientService.getPatientMrnIdentifierSystemByPatientId(patientId);
     }
-
-
 }
