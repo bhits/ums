@@ -24,6 +24,7 @@ import gov.samhsa.c2s.ums.domain.reference.AdministrativeGenderCodeRepository;
 import gov.samhsa.c2s.ums.domain.reference.CountryCodeRepository;
 import gov.samhsa.c2s.ums.domain.reference.StateCodeRepository;
 import gov.samhsa.c2s.ums.domain.valueobject.UserPatientRelationshipId;
+import gov.samhsa.c2s.ums.infrastructure.FisClient;
 import gov.samhsa.c2s.ums.infrastructure.ScimService;
 import gov.samhsa.c2s.ums.service.dto.AccessDecisionDto;
 import gov.samhsa.c2s.ums.service.dto.AddressDto;
@@ -38,7 +39,6 @@ import gov.samhsa.c2s.ums.service.exception.PatientNotFoundException;
 import gov.samhsa.c2s.ums.service.exception.UnassignableIdentifierException;
 import gov.samhsa.c2s.ums.service.exception.UserActivationNotFoundException;
 import gov.samhsa.c2s.ums.service.exception.UserNotFoundException;
-import gov.samhsa.c2s.ums.service.fhir.FhirPatientService;
 import gov.samhsa.c2s.ums.service.mapping.PatientToMrnConverter;
 import gov.samhsa.c2s.ums.service.mapping.UserToMrnConverter;
 import lombok.extern.slf4j.Slf4j;
@@ -98,8 +98,6 @@ public class UserServiceImpl implements UserService {
     @Autowired
     private DemographicsRepository demographicsRepository;
     @Autowired
-    private FhirPatientService fhirPatientService;
-    @Autowired
     private IdentifierSystemRepository identifierSystemRepository;
     @Autowired
     private TelecomRepository telecomRepository;
@@ -113,6 +111,9 @@ public class UserServiceImpl implements UserService {
     private LocaleRepository localeRepository;
     @Autowired
     private ScimService scimService;
+
+    @Autowired
+    private FisClient fisClient;
 
     @Override
     @Transactional
@@ -176,7 +177,7 @@ public class UserServiceImpl implements UserService {
             // Publish FHIR Patient to FHir Service
             if (umsProperties.getFhir().getPublish().isEnabled()) {
                 userDto.setMrn(patientToMrnConverter.convert(patient));
-                fhirPatientService.publishFhirPatient(userDto);
+                fisClient.publishFhirPatient(modelMapper.map(user, UserDto.class));
             }
         }
 
@@ -337,7 +338,7 @@ public class UserServiceImpl implements UserService {
                     patientRepository.save(patient);
                     if (umsProperties.getFhir().getPublish().isEnabled()) {
                         userDto.setMrn(userToMrnConverter.convert(user));
-                        fhirPatientService.updateFhirPatient(userDto);
+                        fisClient.updateFhirPatient(modelMapper.map(user, UserDto.class));
                     }
                 });
 

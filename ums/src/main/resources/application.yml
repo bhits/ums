@@ -5,9 +5,11 @@ logging:
   level:
     gov.samhsa.c2s.ums: debug
     org.modelmapper: debug
-
 info:
   component: User Management Service
+hystrix.command.default.execution.timeout.enabled: false
+ribbon:
+  ReadTimeout: 50000
 spring:
   datasource:
     # configure url, username and password per environment
@@ -96,11 +98,6 @@ c2s:
     fhir:
       publish:
         enabled: false
-        # configure fhir server base url
-        serverUrl: http://bhitsdevhie01/hapi-fhir-jpaserver/baseStu3
-        clientSocketTimeoutInMs: 768000
-        use-create-for-update: false
-        encoding: json
 security:
   oauth2:
     client:
@@ -127,7 +124,3 @@ c2s:
   ums:
     scim:
       url: http://uaa.c2s.com:8080/uaa
-    fhir:
-      publish:
-        # configure fhir server base url
-        serverUrl: http://hapi-fhir.c2s.com:8080/hapi-fhir-jpaserver/baseStu3
