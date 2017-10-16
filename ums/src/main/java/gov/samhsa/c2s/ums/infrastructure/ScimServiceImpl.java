@@ -179,7 +179,7 @@ public class ScimServiceImpl implements ScimService {
     @Override
     public void updateUserLimitedInfo(String userId, UpdateUserLimitedFieldsDto updateUserLimitedFieldsDto) {
         //Assert arguments
-        Assert.notNull(updateUserLimitedFieldsDto, "UserDto cannot be null");
+        Assert.notNull(updateUserLimitedFieldsDto, "UpdateUserDto cannot be null");
 
         //Get scim user by userId
         ScimUser scimUser = restTemplate.getForObject(usersEndpoint + "/{userId}", ScimUser.class, userId);
