@@ -14,6 +14,9 @@ public class PatientToPatientDtoMap extends PropertyMap<Patient, PatientDto> {
     @Autowired
     private PatientToSsnConverter patientToSsnConverter;
 
+    @Autowired
+    private IdentifierListToIdentifierDtoListConverter identifierListToIdentifierDtoListConverter;
+
     @Override
     protected void configure() {
         map().setId(source.getId());
@@ -26,6 +29,8 @@ public class PatientToPatientDtoMap extends PropertyMap<Patient, PatientDto> {
         using(patientToSsnConverter).map(source).setSocialSecurityNumber(null);
         using(new TelecomListToTelecomDtoListConverter()).map(source.getDemographics().getTelecoms()).setTelecoms(null);
         using(new AddressListToAddressDtoListConverter()).map(source.getDemographics().getAddresses()).setAddresses(null);
+        using(identifierListToIdentifierDtoListConverter).map(source.getDemographics().getIdentifiers()).setIdentifiers(null);
+
     }
 }
 
