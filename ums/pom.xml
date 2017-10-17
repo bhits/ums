@@ -32,9 +32,8 @@
         <power-mock.version>1.6.5</power-mock.version>
         <jacoco.version>0.7.7.201606060606</jacoco.version>
         <maven-enforcer-plugin.version>3.0.0-M1</maven-enforcer-plugin.version>
-        <c2s.i18n-jpa-support.version>1.16.0</c2s.i18n-jpa-support.version>
-        <c2s.common-util.version>1.16.0</c2s.common-util.version>
-        <c2s.validator-extension.version>1.16.0</c2s.validator-extension.version>
+        <!-- TODO: upgrade common-libraries to 1.17.0 when it is released -->
+        <c2s.common-libraries.version>1.17.0-b136</c2s.common-libraries.version>
         <logstash-logback-encoder.version>4.11</logstash-logback-encoder.version>
     </properties>
 
@@ -139,7 +138,7 @@
         <dependency>
             <groupId>gov.samhsa.c2s</groupId>
             <artifactId>i18n-jpa-support</artifactId>
-            <version>${c2s.i18n-jpa-support.version}</version>
+            <version>${c2s.common-libraries.version}</version>
         </dependency>
         <dependency>
             <groupId>org.modelmapper</groupId>
@@ -186,7 +185,7 @@
 		<dependency>
 			<groupId>gov.samhsa.c2s</groupId>
 			<artifactId>common-util</artifactId>
-			<version>${c2s.common-util.version}</version>
+			<version>${c2s.common-libraries.version}</version>
 			<exclusions>
 				<exclusion>
 					<groupId>org.springframework.boot</groupId>
@@ -244,7 +243,7 @@
             <dependency>
                 <groupId>gov.samhsa.c2s</groupId>
                 <artifactId>validator-extension</artifactId>
-                <version>${c2s.validator-extension.version}</version>
+                <version>${c2s.common-libraries.version}</version>
             </dependency>
             <!-- HAPI FHIR JARS -->
             <dependency>

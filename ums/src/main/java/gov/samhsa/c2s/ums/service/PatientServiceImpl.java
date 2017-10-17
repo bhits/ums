@@ -5,8 +5,6 @@ import gov.samhsa.c2s.ums.domain.Demographics;
 import gov.samhsa.c2s.ums.domain.DemographicsRepository;
 import gov.samhsa.c2s.ums.domain.Identifier;
 import gov.samhsa.c2s.ums.domain.Patient;
-import gov.samhsa.c2s.ums.domain.PatientRepository;
-import gov.samhsa.c2s.ums.domain.RelationshipRepository;
 import gov.samhsa.c2s.ums.domain.User;
 import gov.samhsa.c2s.ums.domain.UserPatientRelationship;
 import gov.samhsa.c2s.ums.domain.UserPatientRelationshipRepository;
@@ -19,8 +17,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import javax.transaction.Transactional;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -30,8 +28,6 @@ import java.util.Optional;
 public class PatientServiceImpl implements PatientService {
 
     @Autowired
-    private PatientRepository patientRepository;
-    @Autowired
     private DemographicsRepository demographicsRepository;
     @Autowired
     private ModelMapper modelMapper;
@@ -40,12 +36,10 @@ public class PatientServiceImpl implements PatientService {
     @Autowired
     private UserPatientRelationshipRepository userPatientRelationshipRepository;
     @Autowired
-    private RelationshipRepository relationshipRepository;
-    @Autowired
     private UmsProperties umsProperties;
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public PatientDto getPatientByPatientId(String patientId, Optional<String> userAuthId) {
         //patientId is MRN, not Patient.id
         final Patient patient = demographicsRepository.findOneByIdentifiersValueAndIdentifiersIdentifierSystemSystem(patientId, umsProperties.getMrn().getCodeSystem())
@@ -63,10 +57,26 @@ public class PatientServiceImpl implements PatientService {
             }
         }
         return modelMapper.map(patient, PatientDto.class);
-
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public PatientDto getPatientByIdentifierValueAndIdentifierSystem(String identifierValue, String identifierSystem) {
+        final String mrnIdentifierSystem = umsProperties.getMrn().getCodeSystem();
+        final Patient patient = demographicsRepository.findOneByIdentifiersValueAndIdentifiersIdentifierSystemSystem(identifierValue, identifierSystem)
+                .filter(demographics -> {
+                    final boolean identifierSystemMatchesMrnSystem = mrnIdentifierSystem.equalsIgnoreCase(identifierSystem);
+                    if (!identifierSystemMatchesMrnSystem)
+                        log.debug("Identifier system must match MRN system for patients: " + mrnIdentifierSystem);
+                    return identifierSystemMatchesMrnSystem;
+                })
+                .map(Demographics::getPatient)
+                .orElseThrow(() -> new PatientNotFoundException("Patient Not Found!"));
+        return modelMapper.map(patient, PatientDto.class);
+    }
 
+    @Override
+    @Transactional(readOnly = true)
     public List<PatientDto> getPatientByUserAuthId(String userAuthId) {
         User user = userRepository.findByUserAuthIdAndDisabled(userAuthId, false).orElseThrow(() -> new UserNotFoundException("User Not Found!"));
         List<UserPatientRelationship> userPatientRelationshipList = userPatientRelationshipRepository.findAllByIdUserId(user.getId());
@@ -80,7 +90,7 @@ public class PatientServiceImpl implements PatientService {
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public IdentifierSystemDto getPatientMrnIdentifierSystemByPatientId(String patientId) {
         //patientId is MRN, not Patient.id
         final Patient patient = demographicsRepository.findOneByIdentifiersValueAndIdentifiersIdentifierSystemSystem(patientId, umsProperties.getMrn().getCodeSystem())
@@ -88,6 +98,6 @@ public class PatientServiceImpl implements PatientService {
                 .orElseThrow(() -> new PatientNotFoundException("Patient Not Found!"));
 
         Identifier patientMrnIdentifier = patient.getDemographics().getIdentifiers().stream().filter(i -> i.getValue().equalsIgnoreCase(patientId)).findFirst().orElseThrow(() -> new PatientNotFoundException("Patient Not Found!"));
-        return  modelMapper.map(patientMrnIdentifier.getIdentifierSystem(), IdentifierSystemDto.class);
+        return modelMapper.map(patientMrnIdentifier.getIdentifierSystem(), IdentifierSystemDto.class);
     }
 }
