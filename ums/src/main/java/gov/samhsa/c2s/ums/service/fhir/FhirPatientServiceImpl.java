@@ -108,11 +108,11 @@ public class FhirPatientServiceImpl implements FhirPatientService {
 
             //Add identifiers
             setIdentifiersForLimitedFields(fhirPatient, user, mrnIdentifierSystem);
-            setIdentifiersForLimitedFields(fhirPatient,user,ssnIdentifierSystem);
+            setIdentifiersForLimitedFields(fhirPatient, user, ssnIdentifierSystem);
 
             //Optional fields
             user.getDemographics().getAddresses().stream().forEach(address ->
-                 fhirPatient.addAddress().addLine(address.getLine2()).addLine(address.getLine1()).setCity(address.getCity()).setState(address.getStateCode().getDisplayName()).setPostalCode(address.getPostalCode()).setCountry(address.getCountryCode().getDisplayName()));
+                    fhirPatient.addAddress().addLine(address.getLine2()).addLine(address.getLine1()).setCity(address.getCity()).setState(address.getStateCode().getDisplayName()).setPostalCode(address.getPostalCode()).setCountry(address.getCountryCode().getDisplayName()));
 
             user.getDemographics().getTelecoms().stream().forEach(telecom ->
                     fhirPatient.addTelecom()
@@ -216,7 +216,7 @@ public class FhirPatientServiceImpl implements FhirPatientService {
                         .setValue(ssnValue));
     }
 
-    private void setIdentifiersForLimitedFields(Patient patient, User user,String idSystem) {
+    private void setIdentifiersForLimitedFields(Patient patient, User user, String idSystem) {
         user.getDemographics().getIdentifiers().stream()
                 .filter(identifier -> {
                     final String system = identifier.getIdentifierSystem().getSystem();
@@ -228,7 +228,7 @@ public class FhirPatientServiceImpl implements FhirPatientService {
                     final Identifier fhirIdentifier = patient.addIdentifier();
                     fhirIdentifier.setSystem(identifierSystem);
                     fhirIdentifier.setValue(identifierValue);
-                    if(identifierSystem.equals(umsProperties.getMrn().getCodeSystem())) {
+                    if (identifierSystem.equals(umsProperties.getMrn().getCodeSystem())) {
                         fhirIdentifier.setUse(Identifier.IdentifierUse.OFFICIAL);
                         patient.setId(new IdType(identifierValue));
                     }
