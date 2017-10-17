@@ -14,23 +14,17 @@ import ca.uhn.fhir.rest.gclient.IUpdateWithQueryTyped;
 import ca.uhn.fhir.rest.server.EncodingEnum;
 import ca.uhn.fhir.validation.FhirValidator;
 import ca.uhn.fhir.validation.ValidationResult;
-import com.sun.xml.internal.ws.developer.MemberSubmissionAddressing;
 import gov.samhsa.c2s.ums.config.UmsProperties;
 import gov.samhsa.c2s.ums.domain.Address;
 import gov.samhsa.c2s.ums.domain.Demographics;
 import gov.samhsa.c2s.ums.domain.Identifier;
 import gov.samhsa.c2s.ums.domain.IdentifierSystem;
-import gov.samhsa.c2s.ums.domain.Patient;
-import gov.samhsa.c2s.ums.domain.PatientRepository;
 import gov.samhsa.c2s.ums.domain.Telecom;
 import gov.samhsa.c2s.ums.domain.User;
 import gov.samhsa.c2s.ums.domain.reference.AdministrativeGenderCode;
 import gov.samhsa.c2s.ums.domain.reference.CountryCode;
 import gov.samhsa.c2s.ums.domain.reference.StateCode;
-import org.hl7.fhir.dstu3.model.ContactPoint;
-import org.hl7.fhir.dstu3.model.Enumerations;
-import org.hl7.fhir.dstu3.model.IdType;
-import org.hl7.fhir.instance.model.api.IBaseResource;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
@@ -39,26 +33,39 @@ import org.mockito.runners.MockitoJUnitRunner;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
-import org.springframework.security.access.method.P;
 
-import java.sql.Date;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
 import static gov.samhsa.c2s.common.unit.matcher.ArgumentMatchers.matching;
-import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.argThat;
-import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @RunWith(PowerMockRunner.class)
+@PrepareForTest({Telecom.System.class, Telecom.Use.class})
 public class FhirPatientServiceImplTest {
+    final String lastName = "lastName";
+    final String firstName = "firstName";
+    final String gender = "MALE";
+    final String system1 = "mrn";
+    final String systemValue1 = "c2s-mrn";
+    final String system2 = "ssn";
+    final String systemValue2 = "1234";
+    final String address1 = "address1";
+    final String address2 = "address2";
+    final String city = "city";
+    final String stateCodeValue = "stateCode";
+    final String postalCode = "postalCode";
+    final String countryCodeValue = "countryCode";
+    final String phone = "PHONE";
+    final String telecomUse = "HOME";
+    final String telecomValue = "1234456";
+
     @Mock
     private UmsProperties umsProperties;
 
@@ -69,34 +76,28 @@ public class FhirPatientServiceImplTest {
     private FhirValidator fhirValidator;
 
     @Mock
+    private UmsProperties.Fhir fhir;
+
+    @Mock
     private IGenericClient fhirClient;
+
+    @Mock
+    private User user;
+
+    @Mock
+    private ValidationResult validationResult;
+
+    @Mock
+    private UmsProperties.Fhir.Publish publish;
+
+    @Mock
+    private IClientExecutable iClientExecutable;
 
     @InjectMocks
     private FhirPatientServiceImpl fhirPatientService;
 
-    @Test
-    @PrepareForTest({Telecom.System.class, Telecom.Use.class})
-    public void testUpdateFhirPatientWithLimitedField() {
-        //Arrange
-        final String lastName = "lastName";
-        final String firstName = "firstName";
-        final String gender = "MALE";
-        final String system1 = "mrn";
-        final String systemValue1 = "c2s-mrn";
-        final String system2 = "ssn";
-        final String systemValue2 = "1234";
-        final String address1 = "address1";
-        final String address2 = "address2";
-        final String city = "city";
-        final String stateCodeValue = "stateCode";
-        final String postalCode = "postalCode";
-        final String countryCodeValue = "countryCode";
-        final String phone = "PHONE";
-        final String telecomUse = "HOME";
-        final String telecomValue = "1234456";
-
-        User user = mock(User.class);
-        UmsProperties.Fhir fhir = mock(UmsProperties.Fhir.class);
+    @Before
+    public void setup() {
         LocalDate localDate = LocalDate.now();
         AdministrativeGenderCode administrativeGenderCode = mock(AdministrativeGenderCode.class);
         UmsProperties.Mrn mrn = PowerMockito.mock(UmsProperties.Mrn.class);
@@ -161,40 +162,52 @@ public class FhirPatientServiceImplTest {
         when(use.toString()).thenReturn(telecomUse);
         when(telecom.getValue()).thenReturn(telecomValue);
 
-        ValidationResult validationResult = mock(ValidationResult.class);
         when(fhirValidator.validateWithResult(any(org.hl7.fhir.dstu3.model.Patient.class))).thenReturn(validationResult);
         when(validationResult.isSuccessful()).thenReturn(true);
         when(umsProperties.getFhir()).thenReturn(fhir);
-        UmsProperties.Fhir.Publish publish = mock(UmsProperties.Fhir.Publish.class);
         when(fhir.getPublish()).thenReturn(publish);
-        when(publish.isUseCreateForUpdate()).thenReturn(true);
         when(publish.getEncoding()).thenReturn(EncodingEnum.JSON);
-        IClientExecutable iClientExecutable=mock(IClientExecutable.class);
         when(iClientExecutable.encodedJson()).thenReturn(iClientExecutable);
+    }
 
-        ICreate mockCreate = mock(ICreate.class);
-        when(fhirClient.create()).thenReturn(mockCreate);
-        ICreateTyped mockCreateTyped = mock(ICreateTyped.class);
-        when(mockCreate.resource(any(org.hl7.fhir.dstu3.model.Patient.class))).thenReturn(mockCreateTyped);
-        MethodOutcome mockMethodOutcome = mock(MethodOutcome.class);
-        when(mockCreateTyped.execute()).thenReturn(mockMethodOutcome);
-        IUpdate mockUpdate = mock(IUpdate.class);
-        when(fhirClient.update()).thenReturn(mockUpdate);
-        IUpdateTyped mockUpdateTyped = mock(IUpdateTyped.class);
-        when(mockUpdate.resource(any(org.hl7.fhir.dstu3.model.Patient.class))).thenReturn(mockUpdateTyped);
-        IUpdateWithQuery mockUpdateWithQuery = mock(IUpdateWithQuery.class);
-        when(mockUpdateTyped.conditional()).thenReturn(mockUpdateWithQuery);
-        IUpdateWithQueryTyped mockUpdateWithQueryTyped = mock(IUpdateWithQueryTyped.class);
-        when(mockUpdateWithQuery.where(any(ICriterion.class))).thenReturn(mockUpdateWithQueryTyped);
-        when(mockUpdateWithQueryTyped.execute()).thenReturn(mockMethodOutcome);
+    @Test
+    public void testUpdateFhirPatientWithLimitedField_Given_UseCreateForUpdateIsTrue() {
+        //Arrange
+        when(publish.isUseCreateForUpdate()).thenReturn(true);
+
+        ICreate iCreate = mock(ICreate.class);
+        when(fhirClient.create()).thenReturn(iCreate);
+        ICreateTyped iCreateTyped = mock(ICreateTyped.class);
+        when(iCreate.resource(any(org.hl7.fhir.dstu3.model.Patient.class))).thenReturn(iCreateTyped);
+        MethodOutcome methodOutcome = mock(MethodOutcome.class);
+        when(iCreateTyped.execute()).thenReturn(methodOutcome);
 
         //Act
         fhirPatientService.updateFhirPatientWithLimitedField(user);
 
         //Assert
         verify(fhirClient, times(1)).create();
-        verify(mockCreate, times(1)).resource(argThat(matching((org.hl7.fhir.dstu3.model.Patient p) -> p.getName().get(0).getFamily().equals(lastName))));
+        verify(iCreate, times(1)).resource(argThat(matching((org.hl7.fhir.dstu3.model.Patient p) -> p.getName().get(0).getFamily().equals(lastName))));
     }
 
+    @Test
+    public void testUpdateFhirPatientWithLimitedField_Given_UseCreateForUpdateIsFalse() {
+        //Arrange
+        when(publish.isUseCreateForUpdate()).thenReturn(false);
+        IUpdate iUpdate = mock(IUpdate.class);
+        when(fhirClient.update()).thenReturn(iUpdate);
+        IUpdateTyped iUpdateTyped = mock(IUpdateTyped.class);
+        when(iUpdate.resource(any(org.hl7.fhir.dstu3.model.Patient.class))).thenReturn(iUpdateTyped);
+        IUpdateWithQuery iUpdateWithQuery = mock(IUpdateWithQuery.class);
+        when(iUpdateTyped.conditional()).thenReturn(iUpdateWithQuery);
+        IUpdateWithQueryTyped iUpdateWithQueryTyped = mock(IUpdateWithQueryTyped.class);
+        when(iUpdateWithQuery.where(any(ICriterion.class))).thenReturn(iUpdateWithQueryTyped);
 
+        //Act
+        fhirPatientService.updateFhirPatientWithLimitedField(user);
+
+        //Assert
+        verify(fhirClient, times(1)).update();
+        verify(iUpdate, times(1)).resource(argThat(matching((org.hl7.fhir.dstu3.model.Patient p) -> p.getName().get(0).getFamily().equals(lastName))));
+    }
 }
