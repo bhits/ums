@@ -44,8 +44,8 @@ c2s:
       # if 'update-in-database-on-startup' is true, this system will be inserted/updated using 'c2s.ums.ssn.codeSystem' value as the key
       update-in-database-on-startup: true
     mrn:
-      codeSystem: urn:oid:1.3.6.1.4.1.21367.13.21.205
-      codeSystemOID: 1.3.6.1.4.1.21367.13.21.205
+      codeSystem: https://bhits.github.io/consent2share
+      codeSystemOID: 1.3.6.1.4.1.21367.13.20.200
       displayName: MRN
       prefix: C2S-DEV
       length: 6
@@ -84,7 +84,7 @@ c2s:
       url: http://localhost:8080/uaa
     email-sender:
       # c2s-ui endpoint
-      c2s-ui-route: /c2s-ui
+      c2s-ui-route: /${c2s.c2s-ui.context-path}
       c2s-ui-verification-relative-path: "/account/verification"
       c2s-ui-verification-email-token-arg-name: "emailToken"
       c2s-ui-verification-user-preferred-locale-arg-name: "userPreferredLocale"
@@ -95,13 +95,12 @@ c2s:
       #  - provider
     fhir:
       publish:
-        enabled: true
+        enabled: false
         # configure fhir server base url
-        serverUrl: http://localhost:8470
+        serverUrl: http://bhitsdevhie01/hapi-fhir-jpaserver/baseStu3
         clientSocketTimeoutInMs: 768000
         use-create-for-update: false
         encoding: json
-
 security:
   oauth2:
     client:

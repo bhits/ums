@@ -5,7 +5,7 @@
 
     <groupId>gov.samhsa.c2s</groupId>
     <artifactId>ums</artifactId>
-    <version>0.4.0-SNAPSHOT</version>
+    <version>0.6.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>ums</name>
@@ -35,9 +35,19 @@
         <c2s.i18n-jpa-support.version>1.16.0</c2s.i18n-jpa-support.version>
         <c2s.common-util.version>1.16.0</c2s.common-util.version>
         <c2s.validator-extension.version>1.16.0</c2s.validator-extension.version>
+        <logstash-logback-encoder.version>4.11</logstash-logback-encoder.version>
     </properties>
 
     <dependencies>
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-sleuth</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>net.logstash.logback</groupId>
+            <artifactId>logstash-logback-encoder</artifactId>
+            <version>${logstash-logback-encoder.version}</version>
+        </dependency>
         <!-- Discovery Config -->
         <dependency>
             <groupId>org.springframework.cloud</groupId>
@@ -299,6 +309,7 @@
                                         <exclude>xerces:xercesImpl:(,2.11.0]</exclude>
                                         <exclude>xml-apis:xml-apis:(,1.4.01]</exclude>
                                         <exclude>org.modelmapper:modelmapper:(,0.7.8]</exclude>
+                                        <exclude>com.itextpdf:itextpdf:*</exclude>
 
                                         <!-- TODO: commented out exclusions are either managed by Spring or already the latest version unless it is specified -->
                                         <!--<exclude>ch.qos.logback:logback-classic:(,1.1.11]</exclude>-->
