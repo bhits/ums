@@ -10,6 +10,7 @@ import gov.samhsa.c2s.ums.infrastructure.dto.SearchResultsWrapperWithId;
 import gov.samhsa.c2s.ums.infrastructure.exception.IdCannotBeFoundException;
 import gov.samhsa.c2s.ums.service.UserService;
 import gov.samhsa.c2s.ums.service.dto.TelecomDto;
+import gov.samhsa.c2s.ums.service.dto.UpdateUserLimitedFieldsDto;
 import gov.samhsa.c2s.ums.service.dto.UserDto;
 import gov.samhsa.c2s.ums.service.dto.UsernameUsedDto;
 import org.cloudfoundry.identity.uaa.resources.SearchResults;
@@ -115,7 +116,7 @@ public class ScimServiceImpl implements ScimService {
     @Override
     public void inactivateUser(String userId) {
         //get scim user by userId
-        ScimUser scimUser = restTemplate.getForObject(usersEndpoint+"/{userId}",ScimUser.class,userId);
+        ScimUser scimUser = restTemplate.getForObject(usersEndpoint + "/{userId}", ScimUser.class, userId);
 
         //set scimUser as inactive
         scimUser.setActive(false);
@@ -124,14 +125,14 @@ public class ScimServiceImpl implements ScimService {
         headers.set("If-Match", String.valueOf(scimUser.getVersion()));
         HttpEntity<ScimUser> entity = new HttpEntity<ScimUser>(scimUser, headers);
 
-        restTemplate.put(usersEndpoint+"/"+ userId,entity);
+        restTemplate.put(usersEndpoint + "/" + userId, entity);
 
     }
 
     @Override
     public void activateUser(String userId) {
         //get scim user by userId
-        final ScimUser scimUser = restTemplate.getForObject(usersEndpoint+"/{userId}", ScimUser.class,userId);
+        final ScimUser scimUser = restTemplate.getForObject(usersEndpoint + "/{userId}", ScimUser.class, userId);
 
         //set scimUser as active
         scimUser.setActive(true);
@@ -139,7 +140,7 @@ public class ScimServiceImpl implements ScimService {
         headers.set("If-Match", String.valueOf(scimUser.getVersion()));
         HttpEntity<ScimUser> entity = new HttpEntity<ScimUser>(scimUser, headers);
 
-        restTemplate.put(usersEndpoint+"/"+ userId,entity);
+        restTemplate.put(usersEndpoint + "/" + userId, entity);
     }
 
     @Override
@@ -176,6 +177,38 @@ public class ScimServiceImpl implements ScimService {
     }
 
     @Override
+    public void updateUserLimitedInfo(String userId, UpdateUserLimitedFieldsDto updateUserLimitedFieldsDto) {
+        //Assert arguments
+        Assert.notNull(updateUserLimitedFieldsDto, "UpdateUserDto cannot be null");
+
+        //Get scim user by userId
+        ScimUser scimUser = restTemplate.getForObject(usersEndpoint + "/{userId}", ScimUser.class, userId);
+
+        //Get the value of email
+        List<ScimUser.Email> emails = new ArrayList();
+        String email = updateUserLimitedFieldsDto.getHomeEmail();
+        ScimUser.Email emailToAdd = new ScimUser.Email();
+        emailToAdd.setValue(email);
+        emails.add(emailToAdd);
+        //Set the updated email
+        scimUser.setEmails(emails);
+
+        //Get the value of phoneNumber
+        List<ScimUser.PhoneNumber> phoneNumbers = new ArrayList<>();
+        String phoneNumber = updateUserLimitedFieldsDto.getHomePhone();
+        ScimUser.PhoneNumber phoneNumberToAdd = new ScimUser.PhoneNumber();
+        phoneNumberToAdd.setValue(phoneNumber);
+        //Set the updated phoneNumber
+        phoneNumbers.add(phoneNumberToAdd);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("If-Match", String.valueOf(scimUser.getVersion()));
+        HttpEntity<ScimUser> entity = new HttpEntity<ScimUser>(scimUser, headers);
+
+        restTemplate.put(usersEndpoint + "/" + userId, entity);
+    }
+
+    @Override
     public void updateUserWithNewGroup(UserActivation userActivation, Scope scope) {
         ScimGroupMember scimGroupMember = new ScimGroupMember(userActivation.getUser().getUserAuthId());
         String groupId = findGroupIdByDisplayName(scope.getScopeName());
@@ -183,10 +216,10 @@ public class ScimServiceImpl implements ScimService {
     }
 
     @Override
-    public UsernameUsedDto checkUsername(String username){
-        String filter="?filter=userName eq \""+username+"\"";
-        SearchResults<ScimUser> searchResults=restTemplate.getForObject(usersEndpoint+filter,SearchResults.class);
-        if(searchResults.getTotalResults()==0)
+    public UsernameUsedDto checkUsername(String username) {
+        String filter = "?filter=userName eq \"" + username + "\"";
+        SearchResults<ScimUser> searchResults = restTemplate.getForObject(usersEndpoint + filter, SearchResults.class);
+        if (searchResults.getTotalResults() == 0)
             return new UsernameUsedDto(false);
         else
             return new UsernameUsedDto(true);

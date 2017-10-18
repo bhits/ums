@@ -9,6 +9,7 @@ import gov.samhsa.c2s.ums.infrastructure.dto.IdentifierDto;
 import gov.samhsa.c2s.ums.infrastructure.dto.SearchResultsWrapperWithId;
 import gov.samhsa.c2s.ums.infrastructure.exception.IdCannotBeFoundException;
 import gov.samhsa.c2s.ums.service.dto.TelecomDto;
+import gov.samhsa.c2s.ums.service.dto.UpdateUserLimitedFieldsDto;
 import gov.samhsa.c2s.ums.service.dto.UserDto;
 import gov.samhsa.c2s.ums.service.dto.UsernameUsedDto;
 import org.cloudfoundry.identity.uaa.resources.SearchResults;
@@ -170,7 +171,7 @@ public class ScimServiceImplTest {
         scimServiceImpl.inactivateUser(userId);
 
         //Assert
-        verify(restTemplate).put(eq(usersEndpoint+"/"+userId), any(HttpEntity.class));
+        verify(restTemplate).put(eq(usersEndpoint + "/" + userId), any(HttpEntity.class));
     }
 
     @Test
@@ -185,7 +186,7 @@ public class ScimServiceImplTest {
         scimServiceImpl.activateUser(userId);
 
         //Assert
-        verify(restTemplate).put(eq(usersEndpoint+"/"+userId), any(HttpEntity.class));
+        verify(restTemplate).put(eq(usersEndpoint + "/" + userId), any(HttpEntity.class));
     }
 
     @Test
@@ -200,7 +201,7 @@ public class ScimServiceImplTest {
         when(userDto.getFirstName()).thenReturn("FirstName");
         when(userDto.getLastName()).thenReturn("LastName");
 
-        ScimUser.Name name=new ScimUser.Name();
+        ScimUser.Name name = new ScimUser.Name();
         doReturn(name).when(scimUser).getName();
 
         TelecomDto telecomDto = mock(TelecomDto.class);
@@ -215,6 +216,41 @@ public class ScimServiceImplTest {
 
         //Assert
         verify(restTemplate).put(eq(usersEndpoint + "/" + userId), any(HttpEntity.class));
+    }
+
+    @Test
+    public void testUpdateUserLimitedInfo() {
+        //Arrange
+        String userId = "userId";
+        ScimUser scimUser = PowerMockito.mock(ScimUser.class);
+
+        UpdateUserLimitedFieldsDto updateUserLimitedFieldsDto = mock(UpdateUserLimitedFieldsDto.class);
+        when(restTemplate.getForObject(usersEndpoint + "/{userId}", ScimUser.class, userId)).thenReturn(scimUser);
+
+        when(updateUserLimitedFieldsDto.getHomeEmail()).thenReturn("email");
+        when(updateUserLimitedFieldsDto.getHomePhone()).thenReturn("1234567");
+
+        //Act
+        scimServiceImpl.updateUserLimitedInfo(userId, updateUserLimitedFieldsDto);
+
+        //Assert
+        verify(restTemplate).put(eq(usersEndpoint + "/" + userId), any(HttpEntity.class));
+    }
+
+    @Test
+    public void testUpdateUserLimitedInfo_Given_UpdateUserLImitedFieldDtoIsNull_Then_ThrowsError() {
+        //Arrange
+        thrown.expect(IllegalArgumentException.class);
+        thrown.expectMessage("UpdateUserDto cannot be null");
+        String userId = "userId";
+
+        UpdateUserLimitedFieldsDto updateUserLimitedFieldsDto = null;
+
+        //Act
+        scimServiceImpl.updateUserLimitedInfo(userId, updateUserLimitedFieldsDto);
+
+        //Assert
+        ////ExpectedException annotated by @rule is thrown.
     }
 
     @Test
