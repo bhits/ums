@@ -23,7 +23,7 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <java.version>1.8</java.version>
         <spring.cloud.version>Dalston.SR3</spring.cloud.version>
-		<cloudfoundry-identity-model.version>4.6.0</cloudfoundry-identity-model.version>
+        <cloudfoundry-identity-model.version>4.6.0</cloudfoundry-identity-model.version>
         <modelmapper.version>1.0.0</modelmapper.version>
         <commons-lang3.version>3.5</commons-lang3.version>
         <hapi.fhir.version>2.2</hapi.fhir.version>
@@ -93,18 +93,18 @@
             <artifactId>spring-boot-configuration-processor</artifactId>
             <optional>true</optional>
         </dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-mail</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-thymeleaf</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.cloud</groupId>
-			<artifactId>spring-cloud-starter-oauth2</artifactId>
-		</dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-mail</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-thymeleaf</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-oauth2</artifactId>
+        </dependency>
         <dependency>
             <groupId>org.hibernate</groupId>
             <artifactId>hibernate-envers</artifactId>
@@ -167,36 +167,36 @@
             <scope>test</scope>
         </dependency>
 
-		<dependency>
-			<groupId>org.cloudfoundry.identity</groupId>
-			<artifactId>cloudfoundry-identity-model</artifactId>
-			<version>${cloudfoundry-identity-model.version}</version>
-			<exclusions>
-				<exclusion>
-					<groupId>org.slf4j</groupId>
-					<artifactId>slf4j-log4j12</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>javax.validation</groupId>
-					<artifactId>validation-api</artifactId>
-				</exclusion>
-			</exclusions>
-		</dependency>
-		<dependency>
-			<groupId>gov.samhsa.c2s</groupId>
-			<artifactId>common-util</artifactId>
-			<version>${c2s.common-libraries.version}</version>
-			<exclusions>
-				<exclusion>
-					<groupId>org.springframework.boot</groupId>
-					<artifactId>spring-boot-starter</artifactId>
-				</exclusion>
-			</exclusions>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.cloud</groupId>
-			<artifactId>spring-cloud-starter-feign</artifactId>
-		</dependency>
+        <dependency>
+            <groupId>org.cloudfoundry.identity</groupId>
+            <artifactId>cloudfoundry-identity-model</artifactId>
+            <version>${cloudfoundry-identity-model.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-log4j12</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>javax.validation</groupId>
+                    <artifactId>validation-api</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>gov.samhsa.c2s</groupId>
+            <artifactId>common-util</artifactId>
+            <version>${c2s.common-libraries.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-starter</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-feign</artifactId>
+        </dependency>
         <!-- HAPI FHIR JARS -->
         <dependency>
             <groupId>ca.uhn.hapi.fhir</groupId>
@@ -294,7 +294,8 @@
                                         <exclude>mysql:mysql-connector-java:(,5.1.41]</exclude>
                                         <exclude>org.apache.httpcomponents:httpclient:jar:(,4.5.2]</exclude>
                                         <exclude>org.apache.tomcat.embed:tomcat-embed-core:(,8.5.14]</exclude>
-                                        <exclude>org.apache.tomcat.embed:tomcat-embed-core:[9.0.0.M1,9.0.0.M18]</exclude>
+                                        <exclude>org.apache.tomcat.embed:tomcat-embed-core:[9.0.0.M1,9.0.0.M18]
+                                        </exclude>
                                         <exclude>org.bouncycastle:bcprov-jdk15on:(,1.55]</exclude>
                                         <exclude>org.drools:drools-core:(,6.2.0.Final)</exclude>
                                         <exclude>org.eclipse.acceleo:org.eclipse.ocl:(,3.4.2.v20140725-2242]</exclude>
@@ -302,7 +303,8 @@
                                         <exclude>org.openwms:org.openwms.configuration:(,1.0.0]</exclude>
                                         <exclude>org.openwms:org.openwms.services:(,1.0.0]</exclude>
                                         <exclude>org.springframework.batch:spring-batch-core:(,3.0.7.RELEASE]</exclude>
-                                        <exclude>org.springframework.data:spring-data-rest-webmvc:(,2.5.7.RELEASE]</exclude>
+                                        <exclude>org.springframework.data:spring-data-rest-webmvc:(,2.5.7.RELEASE]
+                                        </exclude>
                                         <exclude>org.springframework:spring-web:jar:(,4.3.6.RELEASE]</exclude>
                                         <exclude>org.springframework:spring-webmvc:(,4.3.6.RELEASE]</exclude>
                                         <exclude>xerces:xercesImpl:(,2.11.0]</exclude>
