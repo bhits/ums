@@ -27,7 +27,6 @@
         <modelmapper.version>1.0.0</modelmapper.version>
         <commons-lang3.version>3.5</commons-lang3.version>
         <docker.maven.version>0.4.13</docker.maven.version>
-        <common-unit.version>1.9.0</common-unit.version>
         <power-mock.version>1.6.5</power-mock.version>
         <jacoco.version>0.7.7.201606060606</jacoco.version>
         <maven-enforcer-plugin.version>3.0.0-M1</maven-enforcer-plugin.version>
@@ -152,6 +151,10 @@
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient</artifactId>
+        </dependency>
 
         <dependency>
             <groupId>org.powermock</groupId>
@@ -166,36 +169,6 @@
             <scope>test</scope>
         </dependency>
 
-		<dependency>
-			<groupId>org.cloudfoundry.identity</groupId>
-			<artifactId>cloudfoundry-identity-model</artifactId>
-			<version>${cloudfoundry-identity-model.version}</version>
-			<exclusions>
-				<exclusion>
-					<groupId>org.slf4j</groupId>
-					<artifactId>slf4j-log4j12</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>javax.validation</groupId>
-					<artifactId>validation-api</artifactId>
-				</exclusion>
-			</exclusions>
-		</dependency>
-		<dependency>
-			<groupId>gov.samhsa.c2s</groupId>
-			<artifactId>common-util</artifactId>
-			<version>${c2s.common-util.version}</version>
-			<exclusions>
-				<exclusion>
-					<groupId>org.springframework.boot</groupId>
-					<artifactId>spring-boot-starter</artifactId>
-				</exclusion>
-			</exclusions>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.cloud</groupId>
-			<artifactId>spring-cloud-starter-feign</artifactId>
-		</dependency>
         <dependency>
             <groupId>org.cloudfoundry.identity</groupId>
             <artifactId>cloudfoundry-identity-model</artifactId>
@@ -229,7 +202,6 @@
         <dependency>
             <groupId>gov.samhsa.c2s</groupId>
             <artifactId>common-unit</artifactId>
-            <version>${common-unit.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -258,6 +230,11 @@
             <dependency>
                 <groupId>gov.samhsa.c2s</groupId>
                 <artifactId>validator-extension</artifactId>
+                <version>${c2s.common-libraries.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>gov.samhsa.c2s</groupId>
+                <artifactId>common-unit</artifactId>
                 <version>${c2s.common-libraries.version}</version>
             </dependency>
         </dependencies>

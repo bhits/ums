@@ -443,7 +443,7 @@ public class UserServiceImpl implements UserService {
         patientOptional
                 .ifPresent((patient) -> {
                     if (umsProperties.getFhir().getPublish().isEnabled()) {
-                        fhirPatientService.updateFhirPatientWithLimitedField(updatedUser);
+                        fisClient.updateFhirPatient(modelMapper.map(user, UserDto.class));
                     }
                 });
 
