@@ -332,6 +332,9 @@ public class UserServiceImpl implements UserService {
         telecomRepository.save(telecomsToAdd);
         user.getDemographics().getTelecoms().addAll(telecomsToAdd);
 
+        final User updatedUser = userRepository.save(user);
+
+        //Update the patient in fhir
         patientOptional
                 .ifPresent(patient -> {
                     userDto.getRegistrationPurposeEmail().ifPresent(patient::setRegistrationPurposeEmail);
@@ -341,8 +344,6 @@ public class UserServiceImpl implements UserService {
                         fisClient.updateFhirPatient(modelMapper.map(user, UserDto.class));
                     }
                 });
-
-        final User updatedUser = userRepository.save(user);
 
         // If system account exists, also update basic user info in authorization server
         Optional.of(user)
@@ -426,10 +427,25 @@ public class UserServiceImpl implements UserService {
             }
         }
 
+        // Take the patient
+        Optional<Patient> patientOptional = Optional.of(user)
+                .map(User::getDemographics)
+                .map(Demographics::getPatient);
+
+        //Update in uaa
+        scimService.updateUserLimitedInfo(user.getUserAuthId(), updateUserLimitedFieldsDto);
+
         //Update last updated by
         user.setLastUpdatedBy(updateUserLimitedFieldsDto.getLastUpdatedBy());
 
         User updatedUser = userRepository.save(user);
+
+        patientOptional
+                .ifPresent((patient) -> {
+                    if (umsProperties.getFhir().getPublish().isEnabled()) {
+                        fhirPatientService.updateFhirPatientWithLimitedField(updatedUser);
+                    }
+                });
 
         return modelMapper.map(updatedUser, UserDto.class);
     }

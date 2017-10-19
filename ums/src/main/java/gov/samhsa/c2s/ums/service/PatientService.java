@@ -13,6 +13,9 @@ public interface PatientService {
     PatientDto getPatientByPatientId(String patientId, Optional<String> userAuthId);
 
     @Transactional(readOnly = true)
+    PatientDto getPatientByIdentifierValueAndIdentifierSystem(String identifierValue, String identifierSystem);
+
+    @Transactional(readOnly = true)
     List<PatientDto> getPatientByUserAuthId(String userAuthId);
 
     @Transactional(readOnly = true)

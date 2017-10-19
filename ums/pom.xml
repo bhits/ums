@@ -23,7 +23,7 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <java.version>1.8</java.version>
         <spring.cloud.version>Dalston.SR3</spring.cloud.version>
-		<cloudfoundry-identity-model.version>3.2.1</cloudfoundry-identity-model.version>
+        <cloudfoundry-identity-model.version>4.6.0</cloudfoundry-identity-model.version>
         <modelmapper.version>1.0.0</modelmapper.version>
         <commons-lang3.version>3.5</commons-lang3.version>
         <docker.maven.version>0.4.13</docker.maven.version>
@@ -31,9 +31,8 @@
         <power-mock.version>1.6.5</power-mock.version>
         <jacoco.version>0.7.7.201606060606</jacoco.version>
         <maven-enforcer-plugin.version>3.0.0-M1</maven-enforcer-plugin.version>
-        <c2s.i18n-jpa-support.version>1.16.0</c2s.i18n-jpa-support.version>
-        <c2s.common-util.version>1.16.0</c2s.common-util.version>
-        <c2s.validator-extension.version>1.16.0</c2s.validator-extension.version>
+        <!-- TODO: upgrade common-libraries to 1.17.0 when it is released -->
+        <c2s.common-libraries.version>1.17.0-b136</c2s.common-libraries.version>
         <logstash-logback-encoder.version>4.11</logstash-logback-encoder.version>
     </properties>
 
@@ -93,18 +92,18 @@
             <artifactId>spring-boot-configuration-processor</artifactId>
             <optional>true</optional>
         </dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-mail</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-thymeleaf</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.cloud</groupId>
-			<artifactId>spring-cloud-starter-oauth2</artifactId>
-		</dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-mail</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-thymeleaf</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-oauth2</artifactId>
+        </dependency>
         <dependency>
             <groupId>org.hibernate</groupId>
             <artifactId>hibernate-envers</artifactId>
@@ -138,7 +137,7 @@
         <dependency>
             <groupId>gov.samhsa.c2s</groupId>
             <artifactId>i18n-jpa-support</artifactId>
-            <version>${c2s.i18n-jpa-support.version}</version>
+            <version>${c2s.common-libraries.version}</version>
         </dependency>
         <dependency>
             <groupId>org.modelmapper</groupId>
@@ -198,6 +197,36 @@
 			<artifactId>spring-cloud-starter-feign</artifactId>
 		</dependency>
         <dependency>
+            <groupId>org.cloudfoundry.identity</groupId>
+            <artifactId>cloudfoundry-identity-model</artifactId>
+            <version>${cloudfoundry-identity-model.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-log4j12</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>javax.validation</groupId>
+                    <artifactId>validation-api</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>gov.samhsa.c2s</groupId>
+            <artifactId>common-util</artifactId>
+            <version>${c2s.common-libraries.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-starter</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-feign</artifactId>
+        </dependency>
+        <dependency>
             <groupId>gov.samhsa.c2s</groupId>
             <artifactId>common-unit</artifactId>
             <version>${common-unit.version}</version>
@@ -229,7 +258,7 @@
             <dependency>
                 <groupId>gov.samhsa.c2s</groupId>
                 <artifactId>validator-extension</artifactId>
-                <version>${c2s.validator-extension.version}</version>
+                <version>${c2s.common-libraries.version}</version>
             </dependency>
         </dependencies>
 

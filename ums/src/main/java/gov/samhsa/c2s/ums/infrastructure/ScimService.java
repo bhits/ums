@@ -1,7 +1,9 @@
 package gov.samhsa.c2s.ums.infrastructure;
 
 import gov.samhsa.c2s.ums.domain.Scope;
+import gov.samhsa.c2s.ums.domain.User;
 import gov.samhsa.c2s.ums.domain.UserActivation;
+import gov.samhsa.c2s.ums.service.dto.UpdateUserLimitedFieldsDto;
 import gov.samhsa.c2s.ums.service.dto.UserDto;
 import gov.samhsa.c2s.ums.service.dto.UsernameUsedDto;
 import org.cloudfoundry.identity.uaa.scim.ScimGroupMember;
@@ -23,6 +25,8 @@ public interface ScimService {
     void activateUser(String userId);
 
     void updateUserBasicInfo(String userId,UserDto userDto);
+
+    void updateUserLimitedInfo(String userId, UpdateUserLimitedFieldsDto updateUserLimitedFieldsDto);
 
     void updateUserWithNewGroup(UserActivation userActivation, Scope scope);
 
