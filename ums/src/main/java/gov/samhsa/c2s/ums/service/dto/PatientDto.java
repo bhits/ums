@@ -3,8 +3,10 @@ package gov.samhsa.c2s.ums.service.dto;
 import lombok.Data;
 import org.hibernate.validator.constraints.NotEmpty;
 
+import javax.validation.Valid;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 @Data
 public class PatientDto {
@@ -25,6 +27,8 @@ public class PatientDto {
     private List<AddressDto> addresses;
 
     private List<TelecomDto> telecoms;
+    @Valid
+    private Optional<List<IdentifierDto>> identifiers;
 
     private String relationship;
 

@@ -26,9 +26,7 @@
         <cloudfoundry-identity-model.version>4.6.0</cloudfoundry-identity-model.version>
         <modelmapper.version>1.0.0</modelmapper.version>
         <commons-lang3.version>3.5</commons-lang3.version>
-        <hapi.fhir.version>2.2</hapi.fhir.version>
         <docker.maven.version>0.4.13</docker.maven.version>
-        <common-unit.version>1.9.0</common-unit.version>
         <power-mock.version>1.6.5</power-mock.version>
         <jacoco.version>0.7.7.201606060606</jacoco.version>
         <maven-enforcer-plugin.version>3.0.0-M1</maven-enforcer-plugin.version>
@@ -153,6 +151,10 @@
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient</artifactId>
+        </dependency>
 
         <dependency>
             <groupId>org.powermock</groupId>
@@ -197,26 +199,11 @@
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-feign</artifactId>
         </dependency>
-        <!-- HAPI FHIR JARS -->
-        <dependency>
-            <groupId>ca.uhn.hapi.fhir</groupId>
-            <artifactId>hapi-fhir-base</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>ca.uhn.hapi.fhir</groupId>
-            <artifactId>hapi-fhir-validation-resources-dstu3</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>ca.uhn.hapi.fhir</groupId>
-            <artifactId>hapi-fhir-structures-dstu3</artifactId>
-        </dependency>
         <dependency>
             <groupId>gov.samhsa.c2s</groupId>
             <artifactId>common-unit</artifactId>
-            <version>${common-unit.version}</version>
             <scope>test</scope>
         </dependency>
-        <!-- HAPI FHIR JARS -->
     </dependencies>
 
     <dependencyManagement>
@@ -245,24 +232,11 @@
                 <artifactId>validator-extension</artifactId>
                 <version>${c2s.common-libraries.version}</version>
             </dependency>
-            <!-- HAPI FHIR JARS -->
             <dependency>
-                <groupId>ca.uhn.hapi.fhir</groupId>
-                <artifactId>hapi-fhir-base</artifactId>
-                <version>${hapi.fhir.version}</version>
+                <groupId>gov.samhsa.c2s</groupId>
+                <artifactId>common-unit</artifactId>
+                <version>${c2s.common-libraries.version}</version>
             </dependency>
-            <dependency>
-                <groupId>ca.uhn.hapi.fhir</groupId>
-                <artifactId>hapi-fhir-validation-resources-dstu3</artifactId>
-                <version>${hapi.fhir.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>ca.uhn.hapi.fhir</groupId>
-                <artifactId>hapi-fhir-structures-dstu3</artifactId>
-                <version>${hapi.fhir.version}</version>
-            </dependency>
-            <!-- HAPI FHIR JARS -->
-
         </dependencies>
 
     </dependencyManagement>
